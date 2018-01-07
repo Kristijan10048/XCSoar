@@ -75,7 +75,7 @@ public:	struct BaroMS561101BASettings
 			return ExportOutputMode(output_mode);
 		}
 
-		void Parse(const char *name, unsigned long value);
+		void Parse(StringView name, unsigned long value);
 };
 
 private:
