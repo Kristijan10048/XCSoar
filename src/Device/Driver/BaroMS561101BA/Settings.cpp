@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Internal.hpp"
 #include "Device/Util/NMEAWriter.hpp"
-//#include "Util/StringView.hxx"
+#include "Util/StringView.hxx"
 
 #include <stdio.h>
 
@@ -33,13 +33,13 @@ const char BaroMS561101BADevice::BaroMS561101BASettings::OUTPUT_MODE_NAME[] = "B
 /**
  * Parse the given BaroMS561101BA Vario setting identified by its name.
  */
-void BaroMS561101BADevice::BaroMS561101BASettings::Parse(const char *name, unsigned long value)
+void BaroMS561101BADevice::BaroMS561101BASettings::Parse(StringView name, unsigned long value)
 {
 	assert(value <= UINT_MAX);
 
-  if (StringIsEqual(name, VOLUME_NAME))
+  if (name.Equals(VOLUME_NAME))
     volume = double(value) / VOLUME_MULTIPLIER;
-  else if (StringIsEqual(name, OUTPUT_MODE_NAME))
+  else if (name.Equals(OUTPUT_MODE_NAME))
     output_mode = value;
 }
 
