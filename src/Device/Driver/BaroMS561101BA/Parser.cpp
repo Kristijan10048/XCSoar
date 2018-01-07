@@ -23,7 +23,7 @@ Copyright_License {
 
 #include "Device/Driver/BaroMS561101BA.hpp"
 #include "Internal.hpp"
-//#include "Util/IterableSplitString.hxx"
+#include "Util/IterableSplitString.hxx"
 
 bool BaroMS561101BADevice::ParseBAT(const char *content, NMEAInfo &info)
 {
