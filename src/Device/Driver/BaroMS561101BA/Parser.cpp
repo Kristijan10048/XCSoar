@@ -147,7 +147,7 @@ bool BaroMS561101BADevice::ParseSET(const char *content, NMEAInfo &info)
 {
    // e.g. SET 0 100 20 1 1 1 180 1000 100 400 100 20 5 5 100 50 0 10 21325 207 1 0 1 34
 
-  const char *values, *token;
+  const char *values;
   unsigned long value;
 
   if (!settings.version || !settings_keys)
