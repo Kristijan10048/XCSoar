@@ -81,6 +81,12 @@ BLUEFLY_SOURCES = \
 	$(DRIVER_SRC_DIR)/BlueFly/Settings.cpp \
 	$(DRIVER_SRC_DIR)/BlueFly/Register.cpp
 
+BARO_SOURCES = \
+	$(DRIVER_SRC_DIR)/BaroMS561101BA/Misc.cpp \
+	$(DRIVER_SRC_DIR)/BaroMS561101BA/Parser.cpp \
+	$(DRIVER_SRC_DIR)/BaroMS561101BA/Settings.cpp \
+	$(DRIVER_SRC_DIR)/BaroMS561101BA/Register.cpp
+
 XCTRACER_SOURCES = \
 	$(DRIVER_SRC_DIR)/XCTracer/Parser.cpp \
 	$(DRIVER_SRC_DIR)/XCTracer/Register.cpp
@@ -101,6 +107,7 @@ DRIVER_SOURCES = \
 	$(BLUEFLY_SOURCES) \
 	$(XCTRACER_SOURCES) \
 	$(THERMALEXPRESS_SOURCES) \
+	$(BARO_SOURCES)\
 	$(DRIVER_SRC_DIR)/AltairPro.cpp \
 	$(DRIVER_SRC_DIR)/BorgeltB50.cpp \
 	$(DRIVER_SRC_DIR)/CaiGpsNav.cpp \
