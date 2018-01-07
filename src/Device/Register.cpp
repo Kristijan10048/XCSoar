@@ -59,7 +59,7 @@ Copyright_License {
 #include "Device/Driver/KRT2.hpp"
 #include "Util/Macros.hpp"
 #include "Util/StringAPI.hxx"
-
+#include "Device/Driver/BaroMS561101BA.hpp"
 #include <assert.h>
 
 /** nullptr terminated array of available device drivers. */
@@ -99,6 +99,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &atr833_driver,
   &xctracer_driver,
   &thermalexpress_driver,
+  &baro_driver,
   nullptr
 };
 
