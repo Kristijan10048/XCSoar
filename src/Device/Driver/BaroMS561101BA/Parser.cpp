@@ -154,7 +154,7 @@ bool BaroMS561101BADevice::ParseSET(const char *content, NMEAInfo &info)
     /* we did not receive the previous BFV and BST, abort */
     return true;
 
-  token = StringToken(settings_keys, " ");
+ // token = StringToken(settings_keys, " ");
   values = content;
 
   /* the first value should be ignored */
@@ -162,10 +162,14 @@ bool BaroMS561101BADevice::ParseSET(const char *content, NMEAInfo &info)
     return true;
 
   mutex_settings.Lock();
-  while (token && ParseUlong(&values, value)) {
+  for (const auto token : IterableSplitString(settings_keys, ' ')) 
+  {
+    if (!ParseUlong(&values, value))
+      break;
+
     settings.Parse(token, value);
-    token = StringToken(nullptr, " ");
   }
+  
   settings_ready = true;
   settings_cond.broadcast();
   mutex_settings.Unlock();
