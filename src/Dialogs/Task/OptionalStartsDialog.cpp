@@ -36,7 +36,7 @@ Copyright_License {
 #include "UIGlobals.hpp"
 #include "Look/DialogLook.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 class OptionStartsWidget : public ListWidget, private ActionListener {
   enum Buttons {
@@ -99,22 +99,23 @@ public:
   }
 
   /* virtual methods from class List::Handler */
-  void OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned idx) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override;
 
-  void OnCursorMoved(unsigned index) override {
+  void OnCursorMoved(unsigned index) noexcept override {
     UpdateButtons();
   }
 
-  bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return index > 0;
   }
 
-  void OnActivateItem(unsigned index) override {
+  void OnActivateItem(unsigned index) noexcept override {
     Relocate(index);
   }
 
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -128,7 +129,7 @@ OptionStartsWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 
 void
 OptionStartsWidget::OnPaintItem(Canvas &canvas, PixelRect rc,
-                                unsigned DrawListIndex)
+                                unsigned DrawListIndex) noexcept
 {
   assert(DrawListIndex < task.GetOptionalStartPointCount() + 2);
   assert(GetList().GetLength() == task.GetOptionalStartPointCount() + 2);
@@ -153,7 +154,7 @@ OptionStartsWidget::OnPaintItem(Canvas &canvas, PixelRect rc,
 }
 
 void
-OptionStartsWidget::OnAction(int id)
+OptionStartsWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case RELOCATE:
@@ -212,9 +213,9 @@ dlgTaskOptionalStarts(OrderedTask &task)
   assert(task.TaskSize() > 0);
 
   OptionStartsWidget widget(task);
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateFull(UIGlobals::GetMainWindow(),
-                    _("Alternate Start Points"), &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _("Alternate Start Points"), &widget);
   widget.CreateButtons(dialog);
   dialog.EnableCursorSelection();
 

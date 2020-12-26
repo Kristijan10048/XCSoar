@@ -23,9 +23,10 @@ Copyright_License {
 
 #include "Screen/TopWindow.hpp"
 #include "Screen/Custom/TopCanvas.hpp"
-#include "Event/Globals.hpp"
-#include "Event/Poll/Queue.hpp"
-#include "Util/Macros.hpp"
+#include "Hardware/DisplayDPI.hpp"
+#include "event/Globals.hpp"
+#include "event/poll/Queue.hpp"
+#include "util/Macros.hpp"
 
 #ifdef USE_GLX
 #include "Screen/GLX/System.hpp"
@@ -37,10 +38,22 @@ Copyright_License {
 
 void
 TopWindow::CreateNative(const TCHAR *text, PixelSize size,
-                        TopWindowStyle style)
+                        TopWindowStyle style) noexcept
 {
   x_display = event_queue->GetDisplay();
   assert(x_display != nullptr);
+
+  /* query the display dimensions from Xlib to calculate the DPI
+     value */
+  const auto x_screen = DefaultScreen(x_display);
+  const auto width_pixels = DisplayWidth(x_display, x_screen);
+  const auto height_pixels = DisplayHeight(x_display, x_screen);
+  const auto width_mm = DisplayWidthMM(x_display, x_screen);
+  const auto height_mm = DisplayHeightMM(x_display, x_screen);
+  if (width_pixels > 0 && height_pixels > 0 &&
+      width_mm > 0 && height_mm > 0)
+    Display::ProvideSizeMM(width_pixels, height_pixels,
+                           width_mm, height_mm);
 
 #ifdef USE_GLX
   static constexpr int attributes[] = {
@@ -56,7 +69,7 @@ TopWindow::CreateNative(const TCHAR *text, PixelSize size,
   };
 
   int fb_cfg_count;
-  fb_cfg = glXChooseFBConfig(x_display, DefaultScreen(x_display),
+  fb_cfg = glXChooseFBConfig(x_display, x_screen,
                              attributes, &fb_cfg_count);
   if ((fb_cfg == nullptr) || (fb_cfg_count == 0)) {
     fprintf(stderr, "Failed to retrieve framebuffer configuration for GLX\n");
@@ -127,13 +140,13 @@ TopWindow::CreateNative(const TCHAR *text, PixelSize size,
 }
 
 bool
-TopWindow::IsVisible() const
+TopWindow::IsVisible() const noexcept
 {
   return event_queue->IsVisible();
 }
 
 void
-TopWindow::EnableCapture()
+TopWindow::EnableCapture() noexcept
 {
   XGrabPointer(x_display, x_window, true,
                ButtonPressMask |
@@ -144,7 +157,7 @@ TopWindow::EnableCapture()
 }
 
 void
-TopWindow::DisableCapture()
+TopWindow::DisableCapture() noexcept
 {
   XUngrabPointer(x_display, CurrentTime);
 }

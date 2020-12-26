@@ -25,8 +25,8 @@ Copyright_License {
 #ifndef TOPOGRAPHY_XSHAPE_HPP
 #define TOPOGRAPHY_XSHAPE_HPP
 
-#include "Util/ConstBuffer.hxx"
-#include "Util/AllocatedString.hxx"
+#include "util/ConstBuffer.hxx"
+#include "util/AllocatedString.hxx"
 #include "Geo/GeoBounds.hpp"
 #include "shapelib/mapserver.h"
 #include "shapelib/mapshape.h"
@@ -35,7 +35,7 @@ Copyright_License {
 #endif
 
 #include <tchar.h>
-#include <stdint.h>
+#include <cstdint>
 
 struct GeoPoint;
 

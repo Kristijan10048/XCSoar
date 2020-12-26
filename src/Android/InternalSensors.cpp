@@ -29,9 +29,9 @@ Copyright_License {
 #include "Blackboard/DeviceBlackboard.hpp"
 #include "Components.hpp"
 #include "Math/SelfTimingKalmanFilter1d.hpp"
-#include "OS/Clock.hpp"
+#include "system/Clock.hpp"
 #include "Geo/Geoid.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 Java::TrivialClass InternalSensors::gps_cls, InternalSensors::sensors_cls;
 jmethodID InternalSensors::gps_ctor_id, InternalSensors::close_method;
@@ -87,53 +87,66 @@ InternalSensors::Deinitialise(JNIEnv *env)
   sensors_cls.Clear(env);
 }
 
-InternalSensors::InternalSensors(JNIEnv* env, jobject gps_obj, jobject sensors_obj)
-    : obj_InternalGPS_(env, gps_obj),
-      obj_NonGPSSensors_(env, sensors_obj) {
+InternalSensors::InternalSensors(JNIEnv *env, jobject gps_obj,
+                                 jobject sensors_obj)
+    :obj_InternalGPS_(env, gps_obj),
+     obj_NonGPSSensors_(env, sensors_obj)
+{
   // Import the list of subscribable sensors from the NonGPSSensors object.
   getSubscribableSensors(env, sensors_obj);
 }
 
-InternalSensors::~InternalSensors() {
+InternalSensors::~InternalSensors()
+{
   // Unsubscribe from sensors and the GPS.
   cancelAllSensorSubscriptions();
   JNIEnv *env = Java::GetEnv();
   env->CallVoidMethod(obj_InternalGPS_.Get(), close_method);
 }
 
-bool InternalSensors::subscribeToSensor(int id) {
-  JNIEnv* env = Java::GetEnv();
+bool
+InternalSensors::subscribeToSensor(int id)
+{
+  JNIEnv *env = Java::GetEnv();
   return env->CallBooleanMethod(obj_NonGPSSensors_.Get(),
                                 mid_sensors_subscribeToSensor_, (jint) id);
 }
 
-bool InternalSensors::cancelSensorSubscription(int id) {
-  JNIEnv* env = Java::GetEnv();
+bool
+InternalSensors::cancelSensorSubscription(int id)
+{
+  JNIEnv *env = Java::GetEnv();
   return env->CallBooleanMethod(obj_NonGPSSensors_.Get(),
                                 mid_sensors_cancelSensorSubscription_,
-                                (jint) id);
+                                (jint)id);
 }
 
-bool InternalSensors::subscribedToSensor(int id) const {
-  JNIEnv* env = Java::GetEnv();
+bool
+InternalSensors::subscribedToSensor(int id) const
+{
+  JNIEnv *env = Java::GetEnv();
   return env->CallBooleanMethod(obj_NonGPSSensors_.Get(),
-                                mid_sensors_subscribedToSensor_, (jint) id);
+                                mid_sensors_subscribedToSensor_, (jint)id);
 }
 
-void InternalSensors::cancelAllSensorSubscriptions() {
-  JNIEnv* env = Java::GetEnv();
+void
+InternalSensors::cancelAllSensorSubscriptions()
+{
+  JNIEnv *env = Java::GetEnv();
   env->CallVoidMethod(obj_NonGPSSensors_.Get(),
                       mid_sensors_cancelAllSensorSubscriptions_);
 }
 
-InternalSensors* InternalSensors::create(JNIEnv* env, Context* context,
-                                         unsigned int index) {
+InternalSensors *
+InternalSensors::create(JNIEnv *env, Context *context, unsigned int index)
+{
   assert(sensors_cls != nullptr);
   assert(gps_cls != nullptr);
 
   // Construct InternalGPS object.
   jobject gps_obj =
     env->NewObject(gps_cls, gps_ctor_id, context->Get(), index);
+  Java::RethrowException(env);
   assert(gps_obj != nullptr);
 
   // Construct NonGPSSensors object.
@@ -150,11 +163,14 @@ InternalSensors* InternalSensors::create(JNIEnv* env, Context* context,
 }
 
 // Helper for retrieving the set of sensors to which we can subscribe.
-void InternalSensors::getSubscribableSensors(JNIEnv* env, jobject sensors_obj) {
-  jintArray ss_arr = (jintArray) env->CallObjectMethod(
-      obj_NonGPSSensors_.Get(), mid_sensors_getSubscribableSensors);
+void
+InternalSensors::getSubscribableSensors(JNIEnv *env, jobject sensors_obj)
+{
+  jintArray ss_arr = (jintArray)
+    env->CallObjectMethod(obj_NonGPSSensors_.Get(),
+                          mid_sensors_getSubscribableSensors);
   jsize ss_arr_size = env->GetArrayLength(ss_arr);
-  jint* ss_arr_elems = env->GetIntArrayElements(ss_arr, nullptr);
+  jint *ss_arr_elems = env->GetIntArrayElements(ss_arr, nullptr);
   subscribable_sensors_.assign(ss_arr_elems, ss_arr_elems + ss_arr_size);
   env->ReleaseIntArrayElements(ss_arr, ss_arr_elems, 0);
 }
@@ -165,9 +181,10 @@ void InternalSensors::getSubscribableSensors(JNIEnv* env, jobject sensors_obj) {
  */
 
 // Helper for the C++ functions called by Java (below).
-inline unsigned int getDeviceIndex(JNIEnv *env, jobject obj) {
-  jfieldID fid_index = env->GetFieldID(env->GetObjectClass(obj),
-                                       "index", "I");
+static inline unsigned int
+getDeviceIndex(JNIEnv *env, jobject obj)
+{
+  jfieldID fid_index = env->GetFieldID(env->GetObjectClass(obj), "index", "I");
   return env->GetIntField(obj, fid_index);
 }
 
@@ -180,7 +197,7 @@ Java_org_xcsoar_InternalGPS_setConnected(JNIEnv *env, jobject obj,
 {
   unsigned index = getDeviceIndex(env, obj);
 
-  ScopeLock protect(device_blackboard->mutex);
+  std::lock_guard<Mutex> lock(device_blackboard->mutex);
   NMEAInfo &basic = device_blackboard->SetRealState(index);
 
   switch (connected) {
@@ -217,7 +234,7 @@ Java_org_xcsoar_InternalGPS_setLocation(JNIEnv *env, jobject obj,
 {
   unsigned index = getDeviceIndex(env, obj);
 
-  ScopeLock protect(device_blackboard->mutex);
+  std::lock_guard<Mutex> lock(device_blackboard->mutex);
   NMEAInfo &basic = device_blackboard->SetRealState(index);
   basic.UpdateClock();
   basic.alive.Update(basic.clock);
@@ -264,8 +281,7 @@ Java_org_xcsoar_InternalGPS_setLocation(JNIEnv *env, jobject obj,
     basic.ground_speed_available.Update(basic.clock);
   }
 
-  if (hasAccuracy)
-    basic.gps.hdop = accuracy;
+  basic.gps.hdop = hasAccuracy ? accuracy : -1;
 
   if (hasAcceleration)
     basic.acceleration.ProvideGLoad(acceleration, true);
@@ -277,37 +293,42 @@ Java_org_xcsoar_InternalGPS_setLocation(JNIEnv *env, jobject obj,
 
 gcc_visibility_default
 JNIEXPORT void JNICALL
-Java_org_xcsoar_NonGPSSensors_setAcceleration(
-    JNIEnv* env, jobject obj, jfloat ddx, jfloat ddy, jfloat ddz) {
+Java_org_xcsoar_NonGPSSensors_setAcceleration(JNIEnv *env, jobject obj,
+                                              jfloat ddx, jfloat ddy,
+                                              jfloat ddz)
+{
   // TODO
   /*
   const unsigned int index = getDeviceIndex(env, obj);
-  ScopeLock protect(device_blackboard->mutex);
+  std::lock_guard<Mutex> lock(device_blackboard->mutex);
   NMEAInfo &basic = device_blackboard->SetRealState(index);
   */
 }
 
 gcc_visibility_default
 JNIEXPORT void JNICALL
-Java_org_xcsoar_NonGPSSensors_setRotation(
-    JNIEnv* env, jobject obj,
-    jfloat dtheta_x, jfloat dtheta_y, jfloat dtheta_z) {
+Java_org_xcsoar_NonGPSSensors_setRotation(JNIEnv *env, jobject obj,
+                                          jfloat dtheta_x, jfloat dtheta_y,
+                                          jfloat dtheta_z)
+{
   // TODO
   /*
   const unsigned int index = getDeviceIndex(env, obj);
-  ScopeLock protect(device_blackboard->mutex);
+  std::lock_guard<Mutex> lock(device_blackboard->mutex);
   NMEAInfo &basic = device_blackboard->SetRealState(index);
   */
 }
 
 gcc_visibility_default
 JNIEXPORT void JNICALL
-Java_org_xcsoar_NonGPSSensors_setMagneticField(
-    JNIEnv* env, jobject obj, jfloat h_x, jfloat h_y, jfloat h_z) {
+Java_org_xcsoar_NonGPSSensors_setMagneticField(JNIEnv *env, jobject obj,
+                                               jfloat h_x, jfloat h_y,
+                                               jfloat h_z)
+{
   // TODO
   /*
   const unsigned int index = getDeviceIndex(env, obj);
-  ScopeLock protect(device_blackboard->mutex);
+  std::lock_guard<Mutex> lock(device_blackboard->mutex);
   NMEAInfo &basic = device_blackboard->SetRealState(index);
   */
 }
@@ -338,14 +359,16 @@ ComputeNoncompVario(const double pressure, const double d_pressure)
 
 gcc_visibility_default
 JNIEXPORT void JNICALL
-Java_org_xcsoar_NonGPSSensors_setBarometricPressure(
-    JNIEnv* env, jobject obj, jfloat pressure, jfloat sensor_noise_variance) {
+Java_org_xcsoar_NonGPSSensors_setBarometricPressure(JNIEnv *env, jobject obj,
+                                                    jfloat pressure,
+                                                    jfloat sensor_noise_variance)
+{
   /* We use a Kalman filter to smooth Android device pressure sensor
      noise.  The filter requires two parameters: the first is the
      variance of the distribution of second derivatives of pressure
      values that we expect to see in flight, and the second is the
      maximum time between pressure sensor updates in seconds before
-     the filter gives up on smoothing and uses the raw value. 
+     the filter gives up on smoothing and uses the raw value.
      The pressure acceleration variance used here is actually wider
      than the maximum likelihood variance observed in the data: it
      turns out that the distribution is more heavy-tailed than a
@@ -358,7 +381,7 @@ Java_org_xcsoar_NonGPSSensors_setBarometricPressure(
   static SelfTimingKalmanFilter1d kalman_filter(KF_MAX_DT, KF_VAR_ACCEL);
 
   const unsigned int index = getDeviceIndex(env, obj);
-  ScopeLock protect(device_blackboard->mutex);
+  std::lock_guard<Mutex> lock(device_blackboard->mutex);
 
   /* Kalman filter updates are also protected by the blackboard
      mutex. These should not take long; we won't hog the mutex

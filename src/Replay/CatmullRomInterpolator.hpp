@@ -27,10 +27,10 @@
 #include "Math/Util.hpp"
 #include "Geo/GeoPoint.hpp"
 #include "Geo/GeoVector.hpp"
-#include "Util/Clamp.hpp"
+#include "util/Clamp.hpp"
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 
 /**
  * A Catmull-Rom splines interpolator

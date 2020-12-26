@@ -21,14 +21,14 @@ Copyright_License {
 }
 */
 
-#if !defined(ANDROID) && !defined(WIN32)
+#if !defined(ANDROID) && !defined(_WIN32)
 
 #include "PCMPlayer.hpp"
 
 #include "PCMDataSource.hpp"
 #include "AudioAlgorithms.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 #include <algorithm>
 

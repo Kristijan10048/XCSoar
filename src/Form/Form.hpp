@@ -27,7 +27,7 @@ Copyright_License {
 #include "ActionListener.hpp"
 #include "Screen/ContainerWindow.hpp"
 #include "Screen/SolidContainerWindow.hpp"
-#include "Util/StaticString.hxx"
+#include "util/tstring.hpp"
 
 #include <functional>
 
@@ -43,8 +43,7 @@ enum ModalResult {
 };
 
 /**
- * A WndForm represents a Window with a titlebar.
- * It is used to display the XML dialogs and MessageBoxes.
+ * A modal dialog.
  */
 class WndForm : public ContainerWindow,
                 public ActionListener
@@ -84,29 +83,29 @@ protected:
 
   PixelPoint last_drag;
 
-  /**
-   * The OnPaint event is called when the button needs to be drawn
-   * (derived from PaintWindow)
-   */
   void OnPaint(Canvas &canvas) override;
 
-  StaticString<256> caption;
+  tstring caption;
 
 public:
   WndForm(const DialogLook &_look);
 
   /**
    * Constructor of the WndForm class
-   * @param _main_window
-   * @param Caption Titlebar text of the Window
+   *
+   * @param caption titlebar text of the dialog
    */
   WndForm(SingleWindow &_main_window, const DialogLook &_look,
           const PixelRect &rc,
           const TCHAR *caption=nullptr,
           const WindowStyle style = WindowStyle());
 
-  /** Destructor */
-  virtual ~WndForm();
+  /**
+   * Construct a full-screen dialog.
+   */
+  WndForm(SingleWindow &_main_window, const DialogLook &_look,
+          const TCHAR *caption=nullptr,
+          const WindowStyle style={}) noexcept;
 
   void Create(SingleWindow &main_window, const PixelRect &rc,
               const TCHAR *caption=nullptr,
@@ -138,8 +137,14 @@ public:
     return client_area;
   }
 
-  unsigned GetTitleHeight() const {
-    return title_rect.GetHeight();
+  /**
+   * Calculate the dialog size from the desired effective client area
+   * size.
+   */
+  PixelSize ClientAreaToDialogSize(PixelSize s) const noexcept {
+    /* the "2" is the 1 pixel border at each side */
+    return PixelSize((unsigned)s.cx + 2,
+                     (unsigned)s.cy + title_rect.GetHeight() + 2);
   }
 
   void SetForceOpen(bool _force) {
@@ -151,7 +156,7 @@ public:
   }
 
   /** inherited from ActionListener */
-  void OnAction(int id) override {
+  void OnAction(int id) noexcept override {
     SetModalResult(id);
   }
 
@@ -182,7 +187,7 @@ public:
   bool OnMouseUp(PixelPoint p) override;
   void OnCancelMode() override;
 
-#ifdef WIN32
+#ifdef _WIN32
   bool OnCommand(unsigned id, unsigned code) override;
 #endif
 

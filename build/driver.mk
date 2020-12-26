@@ -110,6 +110,7 @@ DRIVER_SOURCES = \
 	$(BARO_SOURCES)\
 	$(DRIVER_SRC_DIR)/AltairPro.cpp \
 	$(DRIVER_SRC_DIR)/BorgeltB50.cpp \
+	$(DRIVER_SRC_DIR)/XCVario.cpp \
 	$(DRIVER_SRC_DIR)/CaiGpsNav.cpp \
 	$(DRIVER_SRC_DIR)/CaiLNav.cpp \
 	$(DRIVER_SRC_DIR)/Condor.cpp \
@@ -131,6 +132,7 @@ DRIVER_SOURCES = \
 	$(DRIVER_SRC_DIR)/Zander.cpp \
 	$(DRIVER_SRC_DIR)/Vaulter.cpp \
 	$(DRIVER_SRC_DIR)/KRT2.cpp \
+	$(DRIVER_SRC_DIR)/AirControlDisplay.cpp \
 	$(DRIVER_SRC_DIR)/ATR833.cpp
 
 $(eval $(call link-library,driver,DRIVER))

@@ -41,9 +41,9 @@ Copyright_License {
 #include "Weather/NOAAGlue.hpp"
 #include "Weather/NOAAStore.hpp"
 #include "Weather/NOAAUpdater.hpp"
-#include "Util/TrivialArray.hxx"
-#include "Util/StringAPI.hxx"
-#include "Compiler.h"
+#include "util/TrivialArray.hxx"
+#include "util/StringAPI.hxx"
+#include "util/Compiler.h"
 #include "Renderer/NOAAListRenderer.hpp"
 #include "Renderer/TwoTextRowsRenderer.hpp"
 
@@ -98,19 +98,19 @@ public:
 
 protected:
   /* virtual methods from ListItemRenderer */
-  virtual void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                           unsigned idx) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override;
 
   /* virtual methods from ListCursorHandler */
-  virtual bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return true;
   }
 
-  virtual void OnActivateItem(unsigned index) override;
+  void OnActivateItem(unsigned index) noexcept override;
 
 private:
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -166,7 +166,8 @@ NOAAListWidget::UpdateList()
 }
 
 void
-NOAAListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned index)
+NOAAListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
+                            unsigned index) noexcept
 {
   assert(index < stations.size());
 
@@ -250,13 +251,13 @@ NOAAListWidget::DetailsClicked()
 }
 
 void
-NOAAListWidget::OnActivateItem(unsigned index)
+NOAAListWidget::OnActivateItem(unsigned index) noexcept
 {
   OpenDetails(index);
 }
 
 void
-NOAAListWidget::OnAction(int id)
+NOAAListWidget::OnAction(int id) noexcept
 {
   switch ((Buttons)id) {
   case DETAILS:

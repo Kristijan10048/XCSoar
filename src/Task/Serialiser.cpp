@@ -30,11 +30,11 @@
 #include "Task/ObservationZones/AnnularSectorZone.hpp"
 #include "Task/ObservationZones/SymmetricSectorZone.hpp"
 #include "XML/DataNode.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <memory>
 
-#include <assert.h>
+#include <cassert>
 #include <tchar.h>
 
 gcc_const

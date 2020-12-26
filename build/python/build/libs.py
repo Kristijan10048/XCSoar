@@ -10,24 +10,6 @@ from build.libstdcxxmuslheaders import LibstdcxxMuslHeadersProject
 from build.sdl2 import SDL2Project
 from build.lua import LuaProject
 
-glibc = AutotoolsProject(
-    'http://mirror.netcologne.de/gnu/libc/glibc-2.23.tar.xz',
-    'http://ftp.gnu.org/gnu/glibc/glibc-2.23.tar.xz',
-    '456995968f3acadbed39f5eba31678df',
-    'include/unistd.h',
-    [
-        '--enable-kernel=2.6.35',
-        '--disable-werror',
-        '--disable-build-nscd',
-        '--disable-nscd',
-    ],
-    patches=abspath('lib/glibc/patches'),
-    shared=True,
-
-    # This is needed so glibc can find its NSS modules
-    make_args=['default-rpath=/opt/xcsoar/lib'],
-)
-
 musl = AutotoolsProject(
     'https://www.musl-libc.org/releases/musl-1.1.18.tar.gz',
     'https://fossies.org/linux/misc/musl-1.1.18.tar.gz',
@@ -40,9 +22,9 @@ musl = AutotoolsProject(
 )
 
 libstdcxx_musl_headers = LibstdcxxMuslHeadersProject(
-    'https://ftp.gnu.org/gnu/gcc/gcc-6.4.0/gcc-6.4.0.tar.xz',
-    'http://mirrors.ibiblio.org/gnu/ftp/gnu/gcc/gcc-6.4.0/gcc-6.4.0.tar.xz',
-    '850bf21eafdfe5cd5f6827148184c08c4a0852a37ccf36ce69855334d2c914d4',
+    'https://ftp.gnu.org/gnu/gcc/gcc-8.3.0/gcc-8.3.0.tar.xz',
+    'http://mirrors.ibiblio.org/gnu/ftp/gnu/gcc/gcc-8.3.0/gcc-8.3.0.tar.xz',
+    '64baadfe6cc0f4947a84cb12d7f0dfaf45bb58b7e92461639596c21e02d97d2c',
     'include/libstdc++/algorithm',
     [
         '--enable-clocale=generic',
@@ -54,9 +36,9 @@ libstdcxx_musl_headers = LibstdcxxMuslHeadersProject(
 )
 
 openssl = OpenSSLProject(
-    'https://www.openssl.org/source/openssl-1.0.2k.tar.gz',
-    'ftp://ftp.kfki.hu/pub/packages/security/openssl/openssl-1.0.2k.tar.gz',
-    '6b3977c61f2aedf0f96367dcfb5c6e578cf37e7b8d913b4ecb6643c3cb88d8c0',
+    'https://www.openssl.org/source/old/3.0/openssl-3.0.0-alpha4.tar.gz',
+    'ftp://ftp.cert.dfn.de/pub/tools/net/old/3.0/openssl/source/openssl-3.0.0-alpha4.tar.gz',
+    'd930b650e0899f5baca8b80c50e7401620c129fef6c50198400999776a39bd37',
     'include/openssl/ossl_typ.h',
 )
 
@@ -89,6 +71,16 @@ openssh = AutotoolsProject(
     use_destdir=True,
 )
 
+libsodium = AutotoolsProject(
+    'https://download.libsodium.org/libsodium/releases/libsodium-1.0.18.tar.gz',
+    "https://github.com/jedisct1/libsodium/releases/download/1.0.18-RELEASE/libsodium-1.0.18.tar.gz",
+    '6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1',
+    'include/sodium/crypto_hash_sha256.h',
+    [
+        '--disable-shared', '--enable-static',
+    ],
+)
+
 zlib = ZlibProject(
     'http://zlib.net/zlib-1.2.11.tar.xz',
     'http://downloads.sourceforge.net/project/libpng/zlib/1.2.11/zlib-1.2.11.tar.xz',
@@ -97,9 +89,9 @@ zlib = ZlibProject(
 )
 
 freetype = FreeTypeProject(
-    'http://download.savannah.gnu.org/releases/freetype/freetype-2.8.1.tar.bz2',
-    'http://downloads.sourceforge.net/project/freetype/freetype2/2.8.1/freetype-2.8.1.tar.bz2',
-    'e5435f02e02d2b87bb8e4efdcaa14b1f78c9cf3ab1ed80f94b6382fb6acc7d78',
+    'http://download.savannah.gnu.org/releases/freetype/freetype-2.10.2.tar.xz',
+    'http://downloads.sourceforge.net/project/freetype/freetype2/2.10.2/freetype-2.10.2.tar.xz',
+    '1543d61025d2e6312e0a1c563652555f17378a204a61e99928c9fcef030a2d8b',
     'lib/libfreetype.a',
     [
         '--disable-shared', '--enable-static',
@@ -108,34 +100,49 @@ freetype = FreeTypeProject(
     ],
 )
 
-curl = CurlProject(
-    'http://curl.haxx.se/download/curl-7.55.1.tar.xz',
-    'https://github.com/curl/curl/releases/download/curl-7_55_1/curl-7.55.1.tar.bz2',
-    '3eafca6e84ecb4af5f35795dee84e643d5428287e88c041122bb8dac18676bb7',
+curl = AutotoolsProject(
+    'http://curl.haxx.se/download/curl-7.71.1.tar.xz',
+    'https://github.com/curl/curl/releases/download/curl-7_71_1/curl-7.71.1.tar.xz',
+    '40f83eda27cdbeb25cd4da48cefb639af1b9395d6026d2da1825bf059239658c',
     'lib/libcurl.a',
     [
         '--disable-shared', '--enable-static',
         '--disable-debug',
+        '--disable-ares',
         '--enable-http',
-        '--enable-ipv6',
         '--enable-ftp', '--disable-file',
         '--disable-ldap', '--disable-ldaps',
         '--disable-rtsp', '--disable-proxy', '--disable-dict', '--disable-telnet',
         '--disable-tftp', '--disable-pop3', '--disable-imap', '--disable-smb',
         '--disable-smtp',
         '--disable-gopher',
+        '--disable-mqtt',
         '--disable-manual',
+        '--enable-ipv6',
         '--disable-threaded-resolver', '--disable-verbose', '--disable-sspi',
         '--disable-crypto-auth', '--disable-ntlm-wb', '--disable-tls-srp', '--disable-cookies',
-        '--without-ssl', '--without-gnutls', '--without-nss', '--without-libssh2',
+        '--disable-doh',
+        '--disable-mime',
+        '--disable-dateparse',
+        '--disable-netrc',
+        '--disable-progress-meter',
+        '--disable-dnsshuffle',
+        '--disable-alt-svc',
+        '--without-brotli',
+        '--with-ssl', '--without-gnutls',
+        '--without-mbedtls', '--without-wolfssl',
+        '--without-mesalink', '--without-bearssl',
+        '--without-nss', '--without-libssh2',
+        '--without-nghttp2', '--without-ngtcp2', '--without-nghttp3',
+        '--without-quiche',
     ],
     patches=abspath('lib/curl/patches'),
 )
 
 proj = AutotoolsProject(
-    'http://download.osgeo.org/proj/proj-4.9.3.tar.gz',
-    'https://fossies.org/linux/privat/proj-4.9.3.tar.gz',
-    'd598336ca834742735137c5674b214a1',
+    'http://download.osgeo.org/proj/proj-5.1.0.tar.gz',
+    'https://fossies.org/linux/privat/proj-5.1.0.tar.gz',
+    '6b1379a53317d9b5b8c723c1dc7bf2e3a8eb22ceb46b8807a1ce48ef65685bb3',
     'lib/libproj.a',
     [
         '--disable-shared', '--enable-static',
@@ -145,10 +152,10 @@ proj = AutotoolsProject(
     autogen=True,
 )
 
-libpng = LibPNGProject(
-    'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.32.tar.xz',
-    'http://downloads.sourceforge.net/project/libpng/libpng16/1.6.32/libpng-1.6.32.tar.xz',
-    'c918c3113de74a692f0a1526ce881dc26067763eb3915c57ef3a0f7b6886f59b',
+libpng = AutotoolsProject(
+    'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.37.tar.xz',
+    'http://downloads.sourceforge.net/project/libpng/libpng16/1.6.37/libpng-1.6.37.tar.xz',
+    '505e70834d35383537b6491e7ae8641f1a4bed1876dbfe361201fc80868d88ca',
     'lib/libpng.a',
     [
         '--disable-shared', '--enable-static',
@@ -185,9 +192,9 @@ simple_usbmodeswitch = AutotoolsProject(
 )
 
 libtiff = AutotoolsProject(
-    'http://download.osgeo.org/libtiff/tiff-4.0.8.tar.gz',
-    'http://ftp.lfs-matrix.net/pub/blfs/conglomeration/tiff/tiff-4.0.8.tar.gz',
-    '59d7a5a8ccd92059913f246877db95a2918e6c04fb9d43fd74e5c3390dac2910',
+    'http://download.osgeo.org/libtiff/tiff-4.0.10.tar.gz',
+    'http://ftp.lfs-matrix.net/pub/blfs/conglomeration/tiff/tiff-4.0.10.tar.gz',
+    '2c52d11ccaf767457db0c46795d9c7d1a8d8f76f68b0b800a3dfe45786b996e4',
     'lib/libtiff.a',
     [
         '--disable-shared', '--enable-static',
@@ -205,6 +212,8 @@ libtiff = AutotoolsProject(
         '--disable-old-jpeg',
         '--disable-jbig',
         '--disable-lzma',
+        '--disable-zstd',
+        '--disable-webp',
         '--disable-strip-chopping',
         '--disable-extrasample-as-alpha',
     ],
@@ -230,9 +239,9 @@ libgeotiff = AutotoolsProject(
 )
 
 sdl2 = SDL2Project(
-    'http://www.libsdl.org/release/SDL2-2.0.5.tar.gz',
-    'http://downloads.sourceforge.net/project/libsdl/SDL/2.0.5/SDL2-2.0.5.tar.gz',
-    'd4055424d556b4a908aa76fad63abd3c',
+    'http://www.libsdl.org/release/SDL2-2.0.12.tar.gz',
+    'https://fossies.org/linux/misc/SDL2-2.0.12.tar.gz',
+    '349268f695c02efbc9b9148a70b85e58cefbbf704abd3e91be654db7f1e2c863',
     'lib/libSDL2.a',
     [
         '--disable-shared', '--enable-static',
@@ -241,9 +250,9 @@ sdl2 = SDL2Project(
 )
 
 lua = LuaProject(
-    'http://www.lua.org/ftp/lua-5.3.4.tar.gz',
-    'https://github.com/lua/lua/releases/download/v5-3-4/lua-5.3.4.tar.gz',
-    '79790cfd40e09ba796b01a571d4d63b52b1cd950',
+    'http://www.lua.org/ftp/lua-5.3.5.tar.gz',
+    'https://github.com/lua/lua/releases/download/v5-3-5/lua-5.3.5.tar.gz',
+    '0c2eed3f960446e1a3e4b9a1ca2f3ff893b6ce41942cf54d5dd59ab4b3b058ac',
     'lib/liblua.a',
     patches=abspath('lib/lua/patches'),
 )

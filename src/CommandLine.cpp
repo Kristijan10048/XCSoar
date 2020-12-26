@@ -23,17 +23,17 @@ Copyright_License {
 
 #include "CommandLine.hpp"
 #include "Profile/Profile.hpp"
-#include "OS/Args.hpp"
-#include "OS/ConvertPathName.hpp"
+#include "system/Args.hpp"
+#include "system/ConvertPathName.hpp"
 #include "Hardware/DisplayDPI.hpp"
 #include "Simulator.hpp"
 #include "LocalPath.hpp"
-#include "Util/StringCompare.hxx"
-#include "Util/StringAPI.hxx"
-#include "Util/NumberParser.hpp"
+#include "util/StringCompare.hxx"
+#include "util/StringAPI.hxx"
+#include "util/NumberParser.hpp"
 #include "Asset.hpp"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h> /* for AllocConsole() */
 #endif
 
@@ -114,7 +114,7 @@ CommandLine::Parse(Args &args)
     } else if (StringIsEqual(s, "-fullscreen")) {
       full_screen = true;
 #endif
-#ifdef WIN32
+#ifdef _WIN32
     } else if (StringIsEqual(s, "-console")) {
       AllocConsole();
       freopen("CONOUT$", "wb", stdout);

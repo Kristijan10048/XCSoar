@@ -22,11 +22,11 @@ Copyright_License {
 */
 
 #include "Util.hpp"
-#include "Util/CharUtil.hxx"
+#include "util/CharUtil.hxx"
 
 #include <algorithm>
 
-#include <assert.h>
+#include <cassert>
 #include <string.h>
 
 void

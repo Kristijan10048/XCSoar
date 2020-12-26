@@ -29,11 +29,11 @@ Copyright_License {
 #include "Topography/TopographyStore.hpp"
 #include "Topography/TopographyFile.hpp"
 #include "Topography/XShape.hpp"
-#include "OS/Args.hpp"
-#include "IO/ZipArchive.hpp"
-#include "IO/ZipLineReader.hpp"
+#include "system/Args.hpp"
+#include "io/ZipArchive.hpp"
+#include "io/ZipLineReader.hpp"
 #include "Operation/Operation.hpp"
-#include "Util/PrintException.hxx"
+#include "util/PrintException.hxx"
 
 #include <stdio.h>
 #include <tchar.h>
@@ -43,7 +43,7 @@ Copyright_License {
 static void
 TriangulateAll(const TopographyFile &file)
 {
-  const ScopeLock protect(file.mutex);
+  const std::lock_guard<Mutex> lock(file.mutex);
 
   const unsigned short *count;
   for (const XShape &shape : file)

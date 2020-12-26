@@ -23,13 +23,13 @@ Copyright_License {
 
 #include "Screen/TopWindow.hpp"
 #include "Screen/Custom/TopCanvas.hpp"
-#include "Event/Shared/Event.hpp"
-#include "Event/Poll/Loop.hpp"
-#include "Event/Queue.hpp"
-#include "Event/Globals.hpp"
+#include "event/shared/Event.hpp"
+#include "event/poll/Loop.hpp"
+#include "event/Queue.hpp"
+#include "event/Globals.hpp"
 
 #ifdef DRAW_MOUSE_CURSOR
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 #include "Screen/Layout.hpp"
 #endif
 
@@ -38,7 +38,7 @@ Copyright_License {
 #include "Screen/Memory/Canvas.hpp"
 
 void
-TopWindow::CheckResize()
+TopWindow::CheckResize() noexcept
 {
   assert(screen != nullptr);
 
@@ -49,7 +49,7 @@ TopWindow::CheckResize()
 #endif
 
 void
-TopWindow::Invalidate()
+TopWindow::Invalidate() noexcept
 {
   invalidated = true;
 }
@@ -91,14 +91,22 @@ TopWindow::OnPaint(Canvas &canvas)
   /* draw the mouse cursor */
 
   const auto m = event_queue->GetMousePosition();
+  unsigned shortDistance = Layout::Scale(cursor_size * 4);
+  unsigned longDistance = Layout::Scale(cursor_size * 6);
+
   const BulkPixelPoint p[] = {
     { m.x, m.y },
-    { m.x + Layout::Scale(4), m.y + Layout::Scale(4) },
-    { m.x, m.y + Layout::Scale(6) },
+    { m.x + shortDistance, m.y + shortDistance },
+    { m.x, m.y + longDistance },
   };
 
-  canvas.SelectBlackPen();
-  canvas.SelectWhiteBrush();
+  if (invert_cursor_colors) {
+    canvas.SelectWhitePen(cursor_size);
+    canvas.SelectBlackBrush();
+  } else {
+    canvas.SelectBlackPen(cursor_size);
+    canvas.SelectWhiteBrush();
+  }
   canvas.DrawTriangleFan(p, ARRAY_SIZE(p));
 }
 #endif
@@ -112,7 +120,6 @@ TopWindow::OnEvent(const Event &event)
     Window *w;
 
   case Event::NOP:
-  case Event::USER:
   case Event::CALLBACK:
     break;
 
@@ -174,7 +181,7 @@ TopWindow::OnEvent(const Event &event)
 #endif
 
 int
-TopWindow::RunEventLoop()
+TopWindow::RunEventLoop() noexcept
 {
   Refresh();
 
@@ -187,7 +194,7 @@ TopWindow::RunEventLoop()
 }
 
 void
-TopWindow::PostQuit()
+TopWindow::PostQuit() noexcept
 {
   event_queue->Quit();
 }

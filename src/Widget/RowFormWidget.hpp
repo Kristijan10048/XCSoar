@@ -28,12 +28,12 @@ Copyright_License {
 #include "Form/Edit.hpp"
 #include "Form/DataField/Base.hpp"
 #include "Repository/FileType.hpp"
-#include "Util/StaticArray.hxx"
-#include "Util/EnumCast.hpp"
+#include "util/StaticArray.hxx"
+#include "util/EnumCast.hpp"
 #include "Units/Group.hpp"
 
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 
 struct DialogLook;
 struct StaticEnumChoice;

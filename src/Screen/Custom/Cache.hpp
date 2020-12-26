@@ -24,9 +24,10 @@ Copyright_License {
 #ifndef XCSOAR_SCREEN_OPENGL_CACHE_HPP
 #define XCSOAR_SCREEN_OPENGL_CACHE_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 struct PixelSize;
+struct StringView;
 class Font;
 
 #ifdef ENABLE_OPENGL
@@ -48,13 +49,13 @@ namespace TextCache {
 #endif
 
   gcc_pure
-  PixelSize GetSize(const Font &font, const char *text);
+  PixelSize GetSize(const Font &font, StringView text) noexcept;
 
   gcc_pure
-  PixelSize LookupSize(const Font &font, const char *text);
+  PixelSize LookupSize(const Font &font, StringView text) noexcept;
 
   gcc_pure
-  Result Get(const Font &font, const char *text);
+  Result Get(const Font &font, StringView text) noexcept;
 
   void Flush();
 };

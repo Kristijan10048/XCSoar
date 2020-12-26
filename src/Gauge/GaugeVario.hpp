@@ -46,41 +46,91 @@ class GaugeVario : public AntiFlickerWindow
   static constexpr int gmax = GAUGEVARIOSWEEP + 2;
   static constexpr int gmin = -gmax;
 
+  struct BallastGeometry {
+    PixelRect label_rect, value_rect;
+    PixelPoint label_pos, value_pos;
+
+    BallastGeometry() = default;
+    BallastGeometry(const VarioLook &look, const PixelRect &rc) noexcept;
+  };
+
+  struct BugsGeometry {
+    PixelRect label_rect, value_rect;
+    PixelPoint label_pos, value_pos;
+
+    BugsGeometry() = default;
+    BugsGeometry(const VarioLook &look, const PixelRect &rc) noexcept;
+  };
+
+  struct LabelValueGeometry {
+    int label_right, label_top, label_bottom, label_y;
+    int value_right, value_top, value_bottom, value_y;
+
+    LabelValueGeometry() = default;
+    LabelValueGeometry(const VarioLook &look, PixelPoint position) noexcept;
+
+    static unsigned GetHeight(const VarioLook &look) noexcept;
+  };
+
+  struct Geometry {
+    unsigned nlength0, nlength1, nwidth, nline;
+
+    IntPoint2D offset;
+
+    LabelValueGeometry average, gross, mc;
+
+    BallastGeometry ballast;
+    BugsGeometry bugs;
+
+    Geometry() = default;
+    Geometry(const VarioLook &look, const PixelRect &rc) noexcept;
+  } geometry;
+
   struct DrawInfo {
-    bool initialised;
-    PixelRect rc;
-    PixelPoint text_position;
+    unsigned last_width;
     double last_value;
     TCHAR last_text[32];
     Unit last_unit;
+
+    void Reset() noexcept {
+      last_width = 0;
+      last_value = -9999;
+      last_text[0] = '\0';
+      last_unit = Unit::UNDEFINED;
+    }
+  };
+
+  struct LabelValueDrawInfo {
+    DrawInfo label;
+    DrawInfo value;
+
+    void Reset() noexcept {
+      label.Reset();
+      value.Reset();
+    }
   };
 
   const FullBlackboard &blackboard;
 
   const VarioLook &look;
 
-private:
-  const unsigned nlength0, nlength1, nwidth, nline;
+  bool dirty = true;
 
-  IntPoint2D offset;
+  bool background_dirty = true;
+  bool needle_initialised = false;
 
-  bool dirty;
+  LabelValueDrawInfo average_di, mc_di, gross_di;
 
-  bool layout_initialised;
-  bool needle_initialised;
-  bool ballast_initialised;
-  bool bugs_initialised;
+  int ival_av_last = 0;
+  int vval_last = 0;
+  int sval_last = 0;
+  int ival_last = 0;
 
-  PixelPoint top_position;
-  PixelPoint middle_position;
-  PixelPoint bottom_position;
+  double last_v_diff = 0;
 
-  DrawInfo value_top;
-  DrawInfo value_middle;
-  DrawInfo value_bottom;
-  DrawInfo label_top;
-  DrawInfo label_middle;
-  DrawInfo label_bottom;
+  int last_ballast = -1;
+
+  int last_bugs = -1;
 
   BulkPixelPoint polys[(gmax * 2 + 1) * 3];
   BulkPixelPoint lines[gmax * 2 + 1];
@@ -88,26 +138,26 @@ private:
 public:
   GaugeVario(const FullBlackboard &blackboard,
              ContainerWindow &parent, const VarioLook &look,
-             PixelRect rc, const WindowStyle style=WindowStyle());
+             PixelRect rc, const WindowStyle style=WindowStyle()) noexcept;
 
 protected:
-  const MoreData &Basic() const {
+  const MoreData &Basic() const noexcept {
     return blackboard.Basic();
   }
 
-  const DerivedInfo &Calculated() const {
+  const DerivedInfo &Calculated() const noexcept {
     return blackboard.Calculated();
   }
 
-  const ComputerSettings &GetComputerSettings() const {
+  const ComputerSettings &GetComputerSettings() const noexcept {
     return blackboard.GetComputerSettings();
   }
 
-  const GlidePolar &GetGlidePolar() const {
+  const GlidePolar &GetGlidePolar() const noexcept {
     return GetComputerSettings().polar.glide_polar_task;
   }
 
-  const VarioSettings &Settings() const {
+  const VarioSettings &Settings() const noexcept {
     return blackboard.GetUISettings().vario;
   }
 
@@ -119,21 +169,21 @@ protected:
   virtual void OnPaintBuffer(Canvas &canvas) override;
 
 private:
-  void RenderZero(Canvas &canvas);
-  void RenderValue(Canvas &canvas, int x, int y,
-                   DrawInfo *diValue, DrawInfo *diLabel,
-                   double Value, const TCHAR *Label);
-  void RenderSpeedToFly(Canvas &canvas, int x, int y);
-  void RenderBallast(Canvas &canvas);
-  void RenderBugs(Canvas &canvas);
-  int  ValueToNeedlePos(double Value);
-  void RenderNeedle(Canvas &canvas, int i, bool average, bool clear);
-  void RenderVarioLine(Canvas &canvas, int i, int sink, bool clear);
-  void RenderClimb(Canvas &canvas);
+  void RenderZero(Canvas &canvas) noexcept;
+  void RenderValue(Canvas &canvas, const LabelValueGeometry &g,
+                   LabelValueDrawInfo &di,
+                   double Value, const TCHAR *Label) noexcept;
+  void RenderSpeedToFly(Canvas &canvas, int x, int y) noexcept;
+  void RenderBallast(Canvas &canvas) noexcept;
+  void RenderBugs(Canvas &canvas) noexcept;
+  int  ValueToNeedlePos(double Value) noexcept;
+  void RenderNeedle(Canvas &canvas, int i, bool average, bool clear) noexcept;
+  void RenderVarioLine(Canvas &canvas, int i, int sink, bool clear) noexcept;
+  void RenderClimb(Canvas &canvas) noexcept;
 
-  void MakePolygon(const int i);
-  void MakeAllPolygons();
-  BulkPixelPoint *getPolygon(const int i);
+  void MakePolygon(const int i) noexcept;
+  void MakeAllPolygons() noexcept;
+  BulkPixelPoint *getPolygon(const int i) noexcept;
 };
 
 #endif

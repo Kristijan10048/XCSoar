@@ -24,9 +24,9 @@ Copyright_License {
 #ifndef WAYPOINT_FILE_TYPE_HPP
 #define WAYPOINT_FILE_TYPE_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 class Path;
 

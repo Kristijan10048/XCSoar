@@ -37,9 +37,9 @@ Copyright_License {
 #include "Engine/Task/Points/Type.hpp"
 #include "Engine/Task/Factory/AbstractTaskFactory.hpp"
 #include "LocalPath.hpp"
-#include "OS/Path.hpp"
+#include "system/Path.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 /**
  *

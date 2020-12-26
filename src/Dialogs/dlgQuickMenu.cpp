@@ -32,9 +32,10 @@ Copyright_License {
 #include "Input/InputEvents.hpp"
 #include "Screen/Layout.hpp"
 #include "Screen/Canvas.hpp"
-#include "Event/KeyCode.hpp"
-#include "Util/StaticArray.hxx"
-#include "Util/Macros.hpp"
+#include "event/KeyCode.hpp"
+#include "util/StaticArray.hxx"
+#include "util/StaticString.hxx"
+#include "util/Macros.hpp"
 #include "Menu/ButtonLabel.hpp"
 #include "Menu/MenuData.hpp"
 #include "UIGlobals.hpp"
@@ -121,7 +122,7 @@ protected:
 
 private:
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -256,7 +257,7 @@ QuickMenu::KeyPress(unsigned key_code)
 }
 
 void
-QuickMenu::OnAction(int id)
+QuickMenu::OnAction(int id) noexcept
 {
   clicked_event = id;
   dialog.SetModalResult(mrOK);
@@ -271,10 +272,11 @@ dlgQuickMenuShowModal(SingleWindow &parent)
 
   const auto &dialog_look = UIGlobals::GetDialogLook();
 
-  WidgetDialog dialog(dialog_look);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      dialog_look, nullptr);
   QuickMenu quick_menu(dialog, *menu);
 
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _T(""), &quick_menu);
+  dialog.FinishPreliminary(&quick_menu);
 
   const auto result = dialog.ShowModal();
   dialog.StealWidget();

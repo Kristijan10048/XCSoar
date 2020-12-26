@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_DISPLAY_ORIENTATION_HPP
 #define XCSOAR_DISPLAY_ORIENTATION_HPP
 
-#include <stdint.h>
+#include <cstdint>
 
 enum class DisplayOrientation : uint8_t {
   DEFAULT,
@@ -44,7 +44,7 @@ static constexpr DisplayOrientation DEFAULT_DISPLAY_ORIENTATION =
   DisplayOrientation::LANDSCAPE;
 #endif
 
-static constexpr inline DisplayOrientation
+constexpr DisplayOrientation
 TranslateDefaultDisplayOrientation(DisplayOrientation orientation)
 {
   return orientation == DisplayOrientation::DEFAULT
@@ -52,7 +52,7 @@ TranslateDefaultDisplayOrientation(DisplayOrientation orientation)
     : orientation;
 }
 
-static inline bool
+constexpr bool
 AreAxesSwapped(DisplayOrientation orientation)
 {
   switch (TranslateDefaultDisplayOrientation(orientation)) {

@@ -30,13 +30,17 @@ Copyright_License {
 #include "NMEA/Acceleration.hpp"
 #include "NMEA/Attitude.hpp"
 #include "SwitchState.hpp"
-#include "Time/BrokenDateTime.hpp"
+#include "time/BrokenDateTime.hpp"
 #include "Geo/GeoPoint.hpp"
 #include "Atmosphere/Pressure.hpp"
 #include "Atmosphere/Temperature.hpp"
 #include "DeviceInfo.hpp"
 #include "FLARM/Data.hpp"
 #include "Geo/SpeedVector.hpp"
+
+#ifdef ANDROID
+#include "GliderLink/GliderLinkData.hpp"
+#endif
 
 #include <type_traits>
 
@@ -358,6 +362,10 @@ struct NMEAInfo {
   DeviceInfo secondary_device;
 
   FlarmData flarm;
+
+#ifdef ANDROID
+  GliderLinkData glink_data;
+#endif
 
   void UpdateClock();
 

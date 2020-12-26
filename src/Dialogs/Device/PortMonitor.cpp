@@ -29,12 +29,12 @@ Copyright_License {
 #include "Dialogs/WidgetDialog.hpp"
 #include "Form/ActionListener.hpp"
 #include "Device/Descriptor.hpp"
-#include "Util/Macros.hpp"
-#include "Util/StaticFifoBuffer.hxx"
+#include "util/Macros.hpp"
+#include "util/StaticFifoBuffer.hxx"
 #include "Language/Language.hpp"
 #include "Operation/MessageOperationEnvironment.hpp"
-#include "Event/DelayedNotify.hpp"
-#include "Thread/Mutex.hpp"
+#include "event/DelayedNotify.hpp"
+#include "thread/Mutex.hxx"
 #include "UIGlobals.hpp"
 
 enum Buttons {
@@ -47,38 +47,46 @@ enum Buttons {
  * A bridge between DataHandler and TerminalWindow: copy all data
  * received from the Port to the TerminalWindow.
  */
-class PortTerminalBridge : public DataHandler, private DelayedNotify {
+class PortTerminalBridge final : public DataHandler {
   TerminalWindow &terminal;
   Mutex mutex;
   StaticFifoBuffer<char, 1024> buffer;
 
+  DelayedNotify notify{
+    std::chrono::milliseconds(100),
+    [this]{ OnNotification(); },
+  };
+
 public:
   PortTerminalBridge(TerminalWindow &_terminal)
-    :DelayedNotify(100), terminal(_terminal) {}
+    :terminal(_terminal) {}
   virtual ~PortTerminalBridge() {}
 
-  virtual void DataReceived(const void *data, size_t length) {
-    mutex.Lock();
-    buffer.Shift();
-    auto range = buffer.Write();
-    if (range.size < length)
-      length = range.size;
-    memcpy(range.data, data, length);
-    buffer.Append(length);
-    mutex.Unlock();
-    SendNotification();
+  bool DataReceived(const void *data, size_t length) noexcept {
+    {
+      const std::lock_guard<Mutex> lock(mutex);
+      buffer.Shift();
+      auto range = buffer.Write();
+      if (range.size < length)
+        length = range.size;
+      memcpy(range.data, data, length);
+      buffer.Append(length);
+    }
+
+    notify.SendNotification();
+    return true;
   }
 
 private:
-  virtual void OnNotification() {
+  void OnNotification() noexcept {
     while (true) {
       char data[64];
       size_t length;
 
       {
-        ScopeLock protect(mutex);
+        std::lock_guard<Mutex> lock(mutex);
         auto range = buffer.Read();
-        if (range.IsEmpty())
+        if (range.empty())
           break;
 
         length = std::min(ARRAY_SIZE(data), size_t(range.size));
@@ -127,7 +135,7 @@ public:
   }
 
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override {
+  void OnAction(int id) noexcept override {
     switch (id) {
     case CLEAR:
       Clear();
@@ -192,8 +200,8 @@ ShowPortMonitor(DeviceDescriptor &device)
 
   PortMonitorWidget widget(device, look.terminal);
 
-  WidgetDialog dialog(look.dialog);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), caption, &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look.dialog, caption, &widget);
   dialog.AddButton(_("Close"), mrOK);
   widget.CreateButtons(dialog);
 

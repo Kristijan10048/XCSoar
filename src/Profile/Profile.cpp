@@ -28,15 +28,15 @@ Copyright_License {
 #include "LogFile.hpp"
 #include "Asset.hpp"
 #include "LocalPath.hpp"
-#include "Util/StringUtil.hpp"
-#include "Util/StringCompare.hxx"
-#include "Util/StringAPI.hxx"
-#include "Util/tstring.hpp"
-#include "OS/FileUtil.hpp"
-#include "OS/Path.hpp"
+#include "util/StringUtil.hpp"
+#include "util/StringCompare.hxx"
+#include "util/StringAPI.hxx"
+#include "util/tstring.hpp"
+#include "system/FileUtil.hpp"
+#include "system/Path.hpp"
 
 #include <windef.h> /* for MAX_PATH */
-#include <assert.h>
+#include <cassert>
 
 #define XCSPROFILE "default.prf"
 #define OLDXCSPROFILE "xcsoar-registry.prf"
@@ -65,13 +65,13 @@ Profile::LoadFile(Path path)
   try {
     LoadFile(map, path);
     LogFormat(_T("Loaded profile from %s"), path.c_str());
-  } catch (const std::runtime_error &e) {
-    LogError("Failed to load profile", e);
+  } catch (...) {
+    LogError(std::current_exception(), "Failed to load profile");
   }
 }
 
 void
-Profile::Save()
+Profile::Save() noexcept
 {
   if (!IsModified())
     return;
@@ -81,7 +81,12 @@ Profile::Save()
     SetFiles(nullptr);
 
   assert(!startProfileFile.IsNull());
-  SaveFile(startProfileFile);
+
+  try {
+    SaveFile(startProfileFile);
+  } catch (...) {
+    LogError(std::current_exception(), "Failed to save profile");
+  }
 }
 
 void

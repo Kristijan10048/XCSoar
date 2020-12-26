@@ -24,10 +24,10 @@ Copyright_License {
 #ifndef XCSOAR_FORM_BUTTON_PANEL_HPP
 #define XCSOAR_FORM_BUTTON_PANEL_HPP
 
-#include "Util/StaticArray.hxx"
+#include "util/StaticArray.hxx"
 #include "Form/Button.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 class ButtonPanel {
   ContainerWindow &parent;

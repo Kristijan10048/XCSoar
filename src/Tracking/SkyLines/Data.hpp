@@ -25,15 +25,15 @@ Copyright_License {
 #define XCSOAR_TRACKING_SKYLINES_TRAFFIC_HPP
 
 #include "Geo/GeoPoint.hpp"
-#include "Thread/Mutex.hpp"
-#include "Util/tstring.hpp"
-#include "Compiler.h"
+#include "thread/Mutex.hxx"
+#include "util/tstring.hpp"
+#include "util/Compiler.h"
 
 #include <map>
 #include <list>
 #include <chrono>
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace SkyLinesTracking {
 

@@ -24,13 +24,14 @@ Copyright_License {
 #include "Screen/Font.hpp"
 #include "Screen/Debug.hpp"
 #include "Look/FontDescription.hpp"
-#include "Java/Global.hxx"
-#include "Java/Class.hxx"
-#include "Java/String.hxx"
+#include "java/Global.hxx"
+#include "java/Class.hxx"
+#include "java/String.hxx"
 #include "Android/TextUtil.hpp"
-#include "Util/StringCompare.hxx"
+#include "util/StringCompare.hxx"
+#include "util/TStringView.hxx"
 
-#include <assert.h>
+#include <cassert>
 
 /*
  * create a new instance of org.xcsoar.TextUtil and store it with a global
@@ -64,7 +65,7 @@ Font::Destroy()
 }
 
 PixelSize
-Font::TextSize(const TCHAR *text) const
+Font::TextSize(TStringView text) const noexcept
 {
   if (text_util_object == nullptr) {
     PixelSize empty = { 0, 0 };
@@ -75,13 +76,13 @@ Font::TextSize(const TCHAR *text) const
 }
 
 int
-Font::TextTextureGL(const TCHAR *text, PixelSize &size,
+Font::TextTextureGL(TStringView text, PixelSize &size,
                     PixelSize &allocated_size) const
 {
   if (!text_util_object)
     return 0;
 
-  if (StringIsEmpty(text))
+  if (text.empty())
     return 0;
 
   const TextUtil::Texture texture =

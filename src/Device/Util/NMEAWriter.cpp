@@ -25,7 +25,7 @@ Copyright_License {
 #include "Device/Port/Port.hpp"
 #include "NMEA/Checksum.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
 #include <string.h>
 
@@ -36,13 +36,13 @@ PortWriteNMEA(Port &port, const char *line, OperationEnvironment &env)
 
   /* reasonable hard-coded timeout; do we need to make this a
      parameter? */
-  const unsigned timeout_ms = 1000;
+  static constexpr auto timeout = std::chrono::seconds(1);
 
   if (!port.Write('$') ||
-      !port.FullWrite(line, strlen(line), env, timeout_ms))
+      !port.FullWrite(line, strlen(line), env, timeout))
     return false;
 
   char checksum[16];
   sprintf(checksum, "*%02X\r\n", NMEAChecksum(line));
-  return port.FullWrite(checksum, strlen(checksum), env, timeout_ms);
+  return port.FullWrite(checksum, strlen(checksum), env, timeout);
 }

@@ -21,9 +21,9 @@
 */
 
 #include "Logger/GRecord.hpp"
-#include "OS/Args.hpp"
-#include "Util/Macros.hpp"
-#include "Util/PrintException.hxx"
+#include "system/Args.hpp"
+#include "util/Macros.hpp"
+#include "util/PrintException.hxx"
 
 #include <stdio.h>
 
@@ -41,7 +41,7 @@ try {
   g.ReadGRecordFromFile(path, data, ARRAY_SIZE(data));
   puts(data);
   return 0;
-} catch (const std::runtime_error &e) {
-  PrintException(e);
+} catch (...) {
+  PrintException(std::current_exception());
   return EXIT_FAILURE;
 }

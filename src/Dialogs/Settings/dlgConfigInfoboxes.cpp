@@ -37,10 +37,10 @@ Copyright_License {
 #include "InfoBoxes/Content/Factory.hpp"
 #include "Look/InfoBoxLook.hpp"
 #include "Language/Language.hpp"
-#include "Util/StringAPI.hxx"
-#include "Util/StaticArray.hxx"
+#include "util/StringAPI.hxx"
+#include "util/StaticArray.hxx"
 
-#include <assert.h>
+#include <cassert>
 
 static InfoBoxSettings::Panel clipboard;
 static unsigned clipboard_size;
@@ -214,7 +214,7 @@ private:
   }
 
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override {
+  void OnAction(int id) noexcept override {
     switch (id) {
     case COPY:
       OnCopy();
@@ -437,10 +437,11 @@ dlgConfigInfoboxesShowModal(SingleWindow &parent,
                             InfoBoxSettings::Panel &data_r,
                             bool allow_name_change)
 {
-  WidgetDialog dialog(dialog_look);
+  WidgetDialog dialog(WidgetDialog::Full{}, parent,
+                      dialog_look, nullptr);
   InfoBoxesConfigWidget widget(dialog, dialog_look, _look,
                                data_r, allow_name_change, geometry);
-  dialog.CreateFull(parent, nullptr, &widget);
+  dialog.FinishPreliminary(&widget);
 
   dialog.ShowModal();
   dialog.StealWidget();

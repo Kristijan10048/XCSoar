@@ -24,10 +24,10 @@ Copyright_License {
 #ifndef XCSOAR_TASK_TYPE_STRINGS_HPP
 #define XCSOAR_TASK_TYPE_STRINGS_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <tchar.h>
-#include <stdint.h>
+#include <cstdint>
 
 enum class TaskPointType : uint8_t;
 enum class TaskFactoryType : uint8_t;

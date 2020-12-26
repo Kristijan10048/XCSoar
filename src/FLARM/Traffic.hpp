@@ -27,7 +27,7 @@ Copyright_License {
 #include "FlarmId.hpp"
 #include "Geo/GeoPoint.hpp"
 #include "NMEA/Validity.hpp"
-#include "Util/StaticString.hxx"
+#include "util/StaticString.hxx"
 #include "Rough/RoughAltitude.hpp"
 #include "Rough/RoughDistance.hpp"
 #include "Rough/RoughSpeed.hpp"
@@ -181,7 +181,7 @@ struct FlarmTraffic {
    * @return true if the object is still valid
    */
   bool Refresh(double Time) {
-    valid.Expire(Time, 2);
+    valid.Expire(Time, std::chrono::seconds(2));
     return valid;
   }
 

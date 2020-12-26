@@ -28,15 +28,15 @@ Copyright_License {
 #include "Blackboard/DeviceBlackboard.hpp"
 #include "Components.hpp"
 #include "Math/FastMath.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 #include "Interface.hpp"
 #include "Pan.hpp"
-#include "Util/Clamp.hpp"
+#include "util/Clamp.hpp"
 #include "Topography/Thread.hpp"
 
 #ifdef USE_X11
-#include "Event/Globals.hpp"
-#include "Event/Queue.hpp"
+#include "event/Globals.hpp"
+#include "event/Queue.hpp"
 #endif
 
 #ifdef ENABLE_SDL
@@ -86,7 +86,7 @@ GlueMapWindow::OnMouseMove(PixelPoint p, unsigned keys)
   const unsigned threshold = Layout::Scale(IsEmbedded() ? 50 : 10);
   if (drag_mode != DRAG_NONE && arm_mapitem_list &&
       ((unsigned)ManhattanDistance(drag_start, p) > threshold ||
-       mouse_down_clock.Elapsed() > 200))
+       mouse_down_clock.Elapsed() > std::chrono::milliseconds(200)))
     arm_mapitem_list = false;
 
   switch (drag_mode) {
@@ -160,8 +160,8 @@ GlueMapWindow::OnMouseDown(PixelPoint p)
   }
 
   mouse_down_clock.Update();
-  arm_mapitem_list = HasFocus();
 
+  const bool had_focus = HasFocus();
   SetFocus();
 
   drag_start = p;
@@ -174,6 +174,7 @@ GlueMapWindow::OnMouseDown(PixelPoint p)
   }
 
   drag_start_geopoint = visible_projection.ScreenToGeo(p);
+  arm_mapitem_list = had_focus;
 
   switch (follow_mode) {
   case FOLLOW_SELF:
@@ -219,7 +220,7 @@ GlueMapWindow::OnMouseUp(PixelPoint p)
     return true;
   }
 
-  int click_time = mouse_down_clock.Elapsed();
+  const auto click_time = mouse_down_clock.Elapsed();
   mouse_down_clock.Reset();
 
   DragMode old_drag_mode = drag_mode;
@@ -247,12 +248,12 @@ GlueMapWindow::OnMouseUp(PixelPoint p)
 #ifdef ENABLE_OPENGL
     kinetic_x.MouseUp(p.x);
     kinetic_y.MouseUp(p.y);
-    kinetic_timer.Schedule(30);
+    kinetic_timer.Schedule(std::chrono::milliseconds(30));
 #endif
     break;
 
   case DRAG_SIMULATOR:
-    if (click_time > 50 &&
+    if (click_time > std::chrono::milliseconds(50) &&
         compare_squared(drag_start.x - p.x, drag_start.y - p.y,
                         Layout::Scale(36)) == 1) {
       GeoPoint location = visible_projection.ScreenToGeo(p);
@@ -287,7 +288,7 @@ GlueMapWindow::OnMouseUp(PixelPoint p)
   }
 
   if (arm_mapitem_list) {
-    map_item_timer.Schedule(200);
+    map_item_timer.Schedule(std::chrono::milliseconds(200));
     return true;
   }
 
@@ -418,36 +419,37 @@ GlueMapWindow::OnPaintBuffer(Canvas &canvas)
 #endif
 }
 
-bool
-GlueMapWindow::OnTimer(WindowTimer &timer)
+void
+GlueMapWindow::OnMapItemTimer() noexcept
 {
-  if (timer == map_item_timer) {
-    map_item_timer.Cancel();
-    if (!InputEvents::IsDefault() && !IsPanning()) {
-      InputEvents::HideMenu();
-      return true;
-    }
-    ShowMapItems(drag_start_geopoint, false);
-    return true;
-#ifdef ENABLE_OPENGL
-  } else if (timer == kinetic_timer) {
-    if (kinetic_x.IsSteady() && kinetic_y.IsSteady()) {
-      kinetic_timer.Cancel();
-    } else {
-      auto location = drag_projection.ScreenToGeo(kinetic_x.GetPosition(),
-                                                  kinetic_y.GetPosition());
-      location = drag_projection.GetGeoLocation() +
-          drag_start_geopoint - location;
+  if (!InputEvents::IsDefault() && !IsPanning()) {
+    InputEvents::HideMenu();
+    return;
+  }
 
-      SetLocation(location);
-      QuickRedraw();
-    }
-
-    return true;
-#endif
-  } else
-    return MapWindow::OnTimer(timer);
+  ShowMapItems(drag_start_geopoint, false);
 }
+
+#ifdef ENABLE_OPENGL
+
+void
+GlueMapWindow::OnKineticTimer() noexcept
+{
+  if (kinetic_x.IsSteady() && kinetic_y.IsSteady()) {
+    kinetic_timer.Cancel();
+    return;
+  }
+
+  auto location = drag_projection.ScreenToGeo(kinetic_x.GetPosition(),
+                                              kinetic_y.GetPosition());
+  location = drag_projection.GetGeoLocation() +
+    drag_start_geopoint - location;
+
+  SetLocation(location);
+  QuickRedraw();
+}
+
+#endif
 
 void
 GlueMapWindow::Render(Canvas &canvas, const PixelRect &rc)

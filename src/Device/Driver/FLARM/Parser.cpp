@@ -22,8 +22,8 @@ Copyright_License {
 */
 
 #include "Device.hpp"
-#include "Util/Macros.hpp"
-#include "Util/StringAPI.hxx"
+#include "util/Macros.hpp"
+#include "util/StringAPI.hxx"
 #include "NMEA/InputLine.hpp"
 #include "NMEA/Checksum.hpp"
 
@@ -45,9 +45,8 @@ FlarmDevice::ParsePFLAC(NMEAInputLine &line)
   char value[256];
   line.Read(value, ARRAY_SIZE(value));
 
-  settings.Lock();
+  const std::lock_guard<Mutex> lock(settings);
   settings.Set(name, value);
-  settings.Unlock();
 
   return true;
 }

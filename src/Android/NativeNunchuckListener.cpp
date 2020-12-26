@@ -23,10 +23,10 @@ Copyright_License {
 
 #include "NativeNunchuckListener.hpp"
 #include "NunchuckListener.hpp"
-#include "Java/Class.hxx"
+#include "java/Class.hxx"
 #include "org_xcsoar_NativeNunchuckListener.h"
 
-#include <stddef.h>
+#include <cstddef>
 
 namespace NativeNunchuckListener {
   static Java::TrivialClass cls;

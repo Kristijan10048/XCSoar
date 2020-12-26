@@ -24,14 +24,15 @@ Copyright_License {
 #ifndef OLC_RULES_HPP
 #define OLC_RULES_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <stdint.h>
+#include <cstdint>
 #include <tchar.h>
 
 enum class Contest : uint8_t;
 
 gcc_const
-const TCHAR* ContestToString(Contest contest);
+const TCHAR *
+ContestToString(Contest contest) noexcept;
 
 #endif

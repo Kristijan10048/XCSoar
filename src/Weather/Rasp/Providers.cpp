@@ -34,8 +34,10 @@ const RaspProvider rasp_providers[] = {
     "http://rasp.linta.de/NIEDERSACHSEN_WAVE/xcsoar-rasp.dat" },
   { _T("Scandinavia"),
     "http://rasp.linta.de/SCANDINAVIA/xcsoar-rasp.dat" },
-  { _T("Great Britain "),
-    "http://rasp.inn.leedsmet.ac.uk/XCSoar/xcsoar-rasp.dat" },
+  { _T("United Kingdom"),
+    "http://rasp-uk.uk/XCSoar/xcsoar-rasp.dat" },
+  { _T("Poland"),
+    "https://fcst.pl/xcsoar-rasp.dat" },
 
   { nullptr, nullptr }
 };

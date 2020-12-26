@@ -27,17 +27,17 @@ Copyright_License {
 
 #include "shapelib/mapserver.h"
 #include "Geo/GeoBounds.hpp"
-#include "Util/AllocatedArray.hxx"
-#include "Util/Serial.hpp"
+#include "util/AllocatedArray.hxx"
+#include "util/Serial.hpp"
 #include "Screen/Color.hpp"
 #include "ResourceId.hpp"
-#include "Thread/Mutex.hpp"
+#include "thread/Mutex.hxx"
 
 #ifdef ENABLE_OPENGL
 #include "XShapePoint.hpp"
 #endif
 
-#include <assert.h>
+#include <cassert>
 
 class WindowProjection;
 class XShape;
@@ -179,8 +179,6 @@ public:
   ~TopographyFile();
 
   const Serial &GetSerial() const {
-    assert(mutex.IsLockedByCurrent());
-
     return serial;
   }
 
@@ -243,14 +241,10 @@ public:
   }
 
   const_iterator begin() const {
-    assert(mutex.IsLockedByCurrent());
-
     return const_iterator(first);
   }
 
   const_iterator end() const {
-    assert(mutex.IsLockedByCurrent());
-
     return const_iterator(nullptr);
   }
 

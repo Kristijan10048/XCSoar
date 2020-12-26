@@ -28,7 +28,7 @@ Copyright_License {
 #include "Dialogs/Message.hpp"
 #include "Dialogs/Waypoint/WaypointDialogs.hpp"
 #include "Screen/Layout.hpp"
-#include "Event/KeyCode.hpp"
+#include "event/KeyCode.hpp"
 #include "Renderer/TwoTextRowsRenderer.hpp"
 #include "Interface.hpp"
 #include "Form/Button.hpp"
@@ -46,11 +46,11 @@ Copyright_License {
 #include "Language/Language.hpp"
 #include "Renderer/OZPreviewRenderer.hpp"
 #include "Renderer/SymbolButtonRenderer.hpp"
-#include "Util/Macros.hpp"
-#include "Util/StringCompare.hxx"
+#include "util/Macros.hpp"
+#include "util/StringCompare.hxx"
 #include "UIGlobals.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 enum Buttons {
   EDIT = 100,
@@ -263,13 +263,14 @@ protected:
 
 private:
   /* virtual methods from ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 
   /* virtual methods from List::Handler */
-  void OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned idx) override;
-  void OnCursorMoved(unsigned index) override;
-  bool CanActivateItem(unsigned index) const override;
-  void OnActivateItem(unsigned index) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override;
+  void OnCursorMoved(unsigned index) noexcept override;
+  bool CanActivateItem(unsigned index) const noexcept override;
+  void OnActivateItem(unsigned index) noexcept override;
 };
 
 void
@@ -362,7 +363,7 @@ TaskEditPanel::OnClearAllClicked()
 }
 
 void
-TaskEditPanel::OnAction(int id)
+TaskEditPanel::OnAction(int id) noexcept
 {
   switch (id) {
   case EDIT:
@@ -393,7 +394,7 @@ TaskEditPanel::OnAction(int id)
 
 void
 TaskEditPanel::OnPaintItem(Canvas &canvas, const PixelRect rc,
-                           unsigned DrawListIndex)
+                           unsigned DrawListIndex) noexcept
 {
   assert(DrawListIndex <= ordered_task->TaskSize());
 
@@ -455,7 +456,7 @@ TaskEditPanel::OnEditTurnpointClicked()
 }
 
 bool
-TaskEditPanel::CanActivateItem(gcc_unused unsigned index) const
+TaskEditPanel::CanActivateItem(gcc_unused unsigned index) const noexcept
 {
   return true;
 }
@@ -502,13 +503,13 @@ TaskEditPanel::EditTaskPoint(unsigned ItemIndex)
 }
 
 void
-TaskEditPanel::OnActivateItem(unsigned index)
+TaskEditPanel::OnActivateItem(unsigned index) noexcept
 {
   EditTaskPoint(index);
 }
 
 void
-TaskEditPanel::OnCursorMoved(gcc_unused unsigned index)
+TaskEditPanel::OnCursorMoved(gcc_unused unsigned index) noexcept
 {
   UpdateButtons();
 }

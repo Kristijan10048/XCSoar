@@ -35,7 +35,7 @@ Copyright_License {
 #include "Polar/PolarStore.hpp"
 #include "Polar/PolarFileGlue.hpp"
 #include "Plane/Plane.hpp"
-#include "OS/Path.hpp"
+#include "system/Path.hpp"
 #include "Language/Language.hpp"
 #include "UIGlobals.hpp"
 
@@ -97,7 +97,7 @@ private:
   virtual void OnModified(DataField &df) override;
 
   /* virtual methods from ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -224,7 +224,7 @@ PlanePolarWidget::ImportClicked()
   PolarInfo polar;
   try {
     PolarGlue::LoadFromFile(polar, path);
-  } catch (const std::runtime_error &) {
+  } catch (...) {
   }
 
   plane.reference_mass = polar.reference_mass;
@@ -245,7 +245,7 @@ PlanePolarWidget::ImportClicked()
 }
 
 void
-PlanePolarWidget::OnAction(int id)
+PlanePolarWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case LIST:
@@ -273,9 +273,9 @@ dlgPlanePolarShowModal(Plane &_plane)
   caption.Format(_T("%s: %s"), _("Plane Polar"), _plane.registration.c_str());
 
   const DialogLook &look = UIGlobals::GetDialogLook();
-  WidgetDialog dialog(look);
   PlanePolarWidget widget(_plane, look);
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), caption, &widget);
+  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
+                      look, caption, &widget);
   widget.CreateButtons(dialog);
   dialog.AddButton(_("OK"), mrOK);
   dialog.AddButton(_("Cancel"), mrCancel);

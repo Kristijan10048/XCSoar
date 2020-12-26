@@ -24,7 +24,7 @@ Copyright_License {
 #include "Units/UnitsGlue.hpp"
 #include "Units/UnitsStore.hpp"
 #include "LogFile.hpp"
-#include "Util/StringAPI.hxx"
+#include "util/StringAPI.hxx"
 
 #include <tchar.h>
 
@@ -33,9 +33,9 @@ Copyright_License {
 #endif
 
 #ifdef ANDROID
-#include "Java/Global.hxx"
-#include "Java/Class.hxx"
-#include "Java/Object.hxx"
+#include "java/Global.hxx"
+#include "java/Class.hxx"
+#include "java/Object.hxx"
 #endif
 
 struct language_unit_map {
@@ -123,11 +123,9 @@ AutoDetect()
                                          "()Ljava/util/Locale;");
   assert(cid != nullptr);
 
-  jobject _obj = env->CallStaticObjectMethod(cls, cid);
-  if (_obj == nullptr)
+  Java::LocalObject obj(env, env->CallStaticObjectMethod(cls, cid));
+  if (!obj)
     return 0;
-
-  Java::LocalObject obj(env, _obj);
 
   // Call function Locale.getLanguage() that
   // returns a two-letter language string

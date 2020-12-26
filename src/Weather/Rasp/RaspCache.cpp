@@ -26,13 +26,13 @@ Copyright_License {
 #include "Terrain/RasterMap.hpp"
 #include "Terrain/Loader.hpp"
 #include "Language/Language.hpp"
-#include "OS/Path.hpp"
-#include "IO/ZipArchive.hpp"
+#include "system/Path.hpp"
+#include "io/ZipArchive.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <windef.h> // for MAX_PATH
 
-static inline constexpr unsigned
+static constexpr unsigned
 ToHalfHours(BrokenTime t)
 {
   return t.hour * 2u + t.minute / 30;

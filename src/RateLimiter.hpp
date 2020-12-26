@@ -24,8 +24,8 @@ Copyright_License {
 #ifndef XCSOAR_RATE_LIMITER_HPP
 #define XCSOAR_RATE_LIMITER_HPP
 
-#include "Event/Timer.hpp"
-#include "Time/PeriodClock.hpp"
+#include "event/Timer.hpp"
+#include "time/PeriodClock.hpp"
 
 /**
  * A class that limits the rate at which events are processed.  It
@@ -35,13 +35,15 @@ Copyright_License {
  * Due to its use of timers and the event queue, this class can only
  * be used in the main thread.
  */
-class RateLimiter : private Timer {
+class RateLimiter {
+  Timer timer{[this]{ OnTimer(); }};
+
   /**
    * Remember the last Run() invocation.
    */
   PeriodClock clock;
 
-  unsigned period_ms, delay_ms;
+  std::chrono::steady_clock::duration period, delay;
 
 public:
   /**
@@ -51,25 +53,20 @@ public:
    * @param delay_ms an event is delayed by this duration to combine
    * consecutive invocations
    */
-  RateLimiter(unsigned _period_ms, unsigned _delay_ms=0);
-
-  /**
-   * Destructor.  Discards any pending events.
-   */
-  ~RateLimiter() {
-    Cancel();
-  }
+  RateLimiter(std::chrono::steady_clock::duration _period,
+              std::chrono::steady_clock::duration _delay={}) noexcept;
 
   void Trigger();
 
-  using Timer::Cancel;
+  void Cancel() noexcept {
+    timer.Cancel();
+  }
 
 protected:
   virtual void Run() = 0;
 
 private:
-  /* virtual methods from class Timer */
-  virtual void OnTimer() override;
+  void OnTimer();
 };
 
 #endif

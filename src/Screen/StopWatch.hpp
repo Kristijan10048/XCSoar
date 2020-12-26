@@ -26,12 +26,12 @@ Copyright_License {
 
 #ifdef STOP_WATCH
 
-#include "Util/StaticArray.hxx"
+#include "util/StaticArray.hxx"
 #include "LogFile.hpp"
 
 #ifdef HAVE_POSIX
 #include <time.h>
-#include <stdint.h>
+#include <cstdint>
 #else /* !HAVE_POSIX */
 #include <windows.h>
 #endif /* !HAVE_POSIX */

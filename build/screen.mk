@@ -8,6 +8,7 @@ SCREEN_SOURCES = \
 	$(SCREEN_SRC_DIR)/Debug.cpp \
 	$(SCREEN_SRC_DIR)/ProgressBar.cpp \
 	$(SCREEN_SRC_DIR)/Util.cpp \
+	$(SCREEN_SRC_DIR)/Font.cpp \
 	$(SCREEN_SRC_DIR)/Icon.cpp \
 	$(SCREEN_SRC_DIR)/Canvas.cpp \
 	$(SCREEN_SRC_DIR)/Color.cpp \
@@ -19,9 +20,9 @@ SCREEN_SOURCES = \
 	$(SCREEN_SRC_DIR)/SingleWindow.cpp
 
 SCREEN_CUSTOM_SOURCES = \
+	$(SCREEN_SRC_DIR)/Custom/DoubleClick.cpp \
 	$(SCREEN_SRC_DIR)/Custom/GeoBitmap.cpp \
 	$(SCREEN_SRC_DIR)/Custom/Pen.cpp \
-	$(SCREEN_SRC_DIR)/Custom/Timer.cpp \
 	$(SCREEN_SRC_DIR)/Custom/LargeTextWindow.cpp \
 	$(SCREEN_SRC_DIR)/Custom/Window.cpp \
 	$(SCREEN_SRC_DIR)/Custom/WList.cpp \
@@ -109,12 +110,8 @@ SCREEN_SOURCES += \
 	$(SCREEN_SRC_DIR)/OpenGL/Buffer.cpp \
 	$(SCREEN_SRC_DIR)/OpenGL/Shapes.cpp \
 	$(SCREEN_SRC_DIR)/OpenGL/Surface.cpp \
+	$(SCREEN_SRC_DIR)/OpenGL/Shaders.cpp \
 	$(SCREEN_SRC_DIR)/OpenGL/Triangulate.cpp
-
-ifeq ($(GLSL),y)
-SCREEN_SOURCES += \
-	$(SCREEN_SRC_DIR)/OpenGL/Shaders.cpp
-endif
 endif
 
 ifeq ($(ENABLE_SDL),y)
@@ -191,7 +188,6 @@ SCREEN_SOURCES += \
 	$(SCREEN_SRC_DIR)/GDI/VirtualCanvas.cpp \
 	$(SCREEN_SRC_DIR)/GDI/Init.cpp \
 	$(SCREEN_SRC_DIR)/GDI/Font.cpp \
-	$(SCREEN_SRC_DIR)/GDI/Timer.cpp \
 	$(SCREEN_SRC_DIR)/GDI/Window.cpp \
 	$(SCREEN_SRC_DIR)/GDI/PaintWindow.cpp \
 	$(SCREEN_SRC_DIR)/GDI/ContainerWindow.cpp \

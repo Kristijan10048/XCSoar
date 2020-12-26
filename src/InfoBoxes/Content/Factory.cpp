@@ -41,12 +41,13 @@ Copyright_License {
 #include "InfoBoxes/Content/Trace.hpp"
 #include "InfoBoxes/Content/Weather.hpp"
 #include "InfoBoxes/Content/Airspace.hpp"
+#include "InfoBoxes/Content/Radio.hpp"
 
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 #include "Language/Language.hpp"
 
-#include <stddef.h>
-#include <assert.h>
+#include <cstddef>
+#include <cassert>
 
 /**
  * An #InfoBoxContent implementation that invokes a callback.  This is
@@ -771,7 +772,7 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Flight level"),
     N_("FL"),
-    N_("Pressure Altitude given as Flight Level. Only available if barometric altitude available and correct QNH set."),
+    N_("Pressure Altitude given as Flight Level. If barometric altitude is not available, FL is calculated from GPS altitude, given that the correct QNH is set. In case the FL is calculated from the GPS altitude, the FL label is coloured red."),
     UpdateInfoBoxAltitudeFlightLevel,
     altitude_infobox_panels,
   },
@@ -1067,6 +1068,29 @@ static constexpr MetaData meta_data[] = {
     UpdateInfoBoxNbrSat,
   },
 
+  // Radio
+  {
+    N_("Active Radio Frequency"),
+    N_("Act Freq"),
+    N_("The currently active Radio Frequency"),
+    IBFHelper<InfoBoxContentActiveRadioFrequency>::Create,
+  },
+
+  {
+    N_("Standby Radio Frequency"),
+    N_("Stby Freq"),
+    N_("The currently standby Radio Frequency"),
+    IBFHelper<InfoBoxContentStandbyRadioFrequency>::Create,
+  },
+
+  // e_Thermal_Time
+  {
+    N_("Thermal time"),
+    N_("TC Time"),
+    N_("The time spend in the current thermal."),
+    UpdateInfoBoxThermalTime,
+  },
+
 };
 
 static_assert(ARRAY_SIZE(meta_data) == NUM_TYPES,
@@ -1099,7 +1123,7 @@ InfoBoxFactory::GetDescription(Type type)
   return meta_data[type].description;
 }
 
-InfoBoxContent*
+std::unique_ptr<InfoBoxContent>
 InfoBoxFactory::Create(Type type)
 {
   assert(type < NUM_TYPES);
@@ -1109,7 +1133,7 @@ InfoBoxFactory::Create(Type type)
          m.update != nullptr);
 
   if (m.create != nullptr)
-    return m.create();
+    return std::unique_ptr<InfoBoxContent>(m.create());
   else
-    return new InfoBoxContentCallback(m.update, m.panels);
+    return std::make_unique<InfoBoxContentCallback>(m.update, m.panels);
 }

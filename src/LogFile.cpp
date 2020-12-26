@@ -24,14 +24,13 @@ Copyright_License {
 #include "LogFile.hpp"
 #include "LocalPath.hpp"
 #include "Asset.hpp"
-#include "IO/TextWriter.hpp"
+#include "io/TextWriter.hpp"
 #include "Formatter/TimeFormatter.hpp"
-#include "Time/BrokenDateTime.hpp"
-#include "OS/Path.hpp"
-#include "OS/FileUtil.hpp"
-#include "OS/UniqueFileDescriptor.hxx"
-
-#include <exception>
+#include "time/BrokenDateTime.hpp"
+#include "system/Path.hpp"
+#include "system/FileUtil.hpp"
+#include "io/UniqueFileDescriptor.hxx"
+#include "util/Exception.hxx"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -43,7 +42,7 @@ Copyright_License {
 #endif
 
 static TextWriter
-OpenLog()
+OpenLog() noexcept
 {
   static bool initialised = false;
   static AllocatedPath path = nullptr;
@@ -65,8 +64,8 @@ OpenLog()
        there */
     UniqueFileDescriptor fd;
     if (fd.Open(path.c_str(), O_APPEND|O_CREAT|O_WRONLY, 0666)) {
-      fd.CheckDuplicate(STDOUT_FILENO);
-      fd.CheckDuplicate(STDERR_FILENO);
+      fd.CheckDuplicate(FileDescriptor(STDOUT_FILENO));
+      fd.CheckDuplicate(FileDescriptor(STDERR_FILENO));
     }
 #endif
   }
@@ -75,7 +74,7 @@ OpenLog()
 }
 
 static void
-LogString(const char *p)
+LogString(const char *p) noexcept
 {
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_INFO, "XCSoar", "%s", p);
@@ -93,7 +92,7 @@ LogString(const char *p)
 }
 
 void
-LogFormat(const char *fmt, ...)
+LogFormat(const char *fmt, ...) noexcept
 {
   char buf[MAX_PATH];
   va_list ap;
@@ -108,7 +107,7 @@ LogFormat(const char *fmt, ...)
 #ifdef _UNICODE
 
 static void
-LogString(const TCHAR *p)
+LogString(const TCHAR *p) noexcept
 {
   TextWriter writer(OpenLog());
   if (!writer.IsOpen())
@@ -120,7 +119,7 @@ LogString(const TCHAR *p)
 }
 
 void
-LogFormat(const TCHAR *Str, ...)
+LogFormat(const TCHAR *Str, ...) noexcept
 {
   TCHAR buf[MAX_PATH];
   va_list ap;
@@ -134,28 +133,14 @@ LogFormat(const TCHAR *Str, ...)
 
 #endif
 
-static void
-LogNestedError(const std::exception &exception)
+void
+LogError(std::exception_ptr e) noexcept
 {
-  try {
-    std::rethrow_if_nested(exception);
-  } catch (const std::exception &nested) {
-    LogError(nested);
-  } catch (...) {
-    LogString("Unrecognized nested exception");
-  }
+  LogString(GetFullMessage(e).c_str());
 }
 
 void
-LogError(const std::exception &exception)
+LogError(std::exception_ptr e, const char *msg) noexcept
 {
-  LogString(exception.what());
-  LogNestedError(exception);
-}
-
-void
-LogError(const char *msg, const std::exception &exception)
-{
-  LogFormat("%s: %s", msg, exception.what());
-  LogNestedError(exception);
+  LogFormat("%s: %s", msg, GetFullMessage(e).c_str());
 }

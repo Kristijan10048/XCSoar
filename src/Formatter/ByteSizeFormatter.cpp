@@ -22,10 +22,10 @@ Copyright_License {
 */
 
 #include "ByteSizeFormatter.hpp"
-#include "Util/Macros.hpp"
-#include "Util/StringFormat.hpp"
+#include "util/Macros.hpp"
+#include "util/StringFormat.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 void
 FormatByteSize(TCHAR *buffer, size_t size, unsigned long bytes, bool simple)

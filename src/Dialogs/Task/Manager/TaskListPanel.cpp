@@ -35,15 +35,15 @@ Copyright_License {
 #include "Widget/TwoWidgets.hpp"
 #include "Task/TaskStore.hpp"
 #include "LocalPath.hpp"
-#include "OS/FileUtil.hpp"
+#include "system/FileUtil.hpp"
 #include "Language/Language.hpp"
 #include "Interface.hpp"
 #include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
-#include "Util/StringCompare.hxx"
+#include "util/StringCompare.hxx"
 
-#include <assert.h>
+#include <cassert>
 
 static unsigned task_list_serial;
 
@@ -124,20 +124,21 @@ protected:
 
 private:
   /* virtual methods from ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 
   /* virtual methods from class ListControl::Handler */
-  void OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned idx) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override;
 
-  void OnCursorMoved(unsigned index) override {
+  void OnCursorMoved(unsigned index) noexcept override {
     RefreshView();
   }
 
-  bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
       return true;
   }
 
-  void OnActivateItem(unsigned index) override {
+  void OnActivateItem(unsigned index) noexcept override {
     LoadTask();
   }
 };
@@ -175,7 +176,7 @@ TaskListPanel::get_cursor_name()
 }
 
 void
-TaskListPanel::OnAction(int id)
+TaskListPanel::OnAction(int id) noexcept
 {
   switch (id) {
   case LOAD:
@@ -198,7 +199,7 @@ TaskListPanel::OnAction(int id)
 
 void
 TaskListPanel::OnPaintItem(Canvas &canvas, const PixelRect rc,
-                           unsigned DrawListIndex)
+                           unsigned DrawListIndex) noexcept
 {
   assert(DrawListIndex <= task_store->Size());
 

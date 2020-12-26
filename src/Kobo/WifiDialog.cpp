@@ -34,10 +34,11 @@ Copyright_License {
 #include "Form/ActionListener.hpp"
 #include "Widget/ListWidget.hpp"
 #include "WPASupplicant.hpp"
-#include "Net/IPv4Address.hxx"
+#include "net/IPv4Address.hxx"
+#include "event/PeriodicTimer.hpp"
 
 class WifiListWidget final
-  : public ListWidget, ActionListener, Timer {
+  : public ListWidget, ActionListener {
   enum Buttons {
     SCAN,
     CONNECT,
@@ -63,6 +64,8 @@ class WifiListWidget final
 
   WPASupplicant wpa_supplicant;
 
+  PeriodicTimer update_timer{[this]{ UpdateList(); }};
+
 public:
   void CreateButtons(WidgetDialog &dialog) {
     dialog.AddButton(_("Scan"), *this, SCAN);
@@ -80,26 +83,21 @@ public:
                row_renderer.CalculateLayout(look.text_font,
                                             look.small_font));
     UpdateList();
-    Timer::Schedule(1000);
+    update_timer.Schedule(std::chrono::seconds(1));
   }
 
   virtual void Unprepare() override {
-    Timer::Cancel();
+    update_timer.Cancel();
     DeleteWindow();
   }
 
   /* virtual methods from class ListItemRenderer */
   void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                   unsigned idx) override;
+                   unsigned idx) noexcept override;
 
   /* virtual methods from class ListCursorHandler */
-  void OnCursorMoved(unsigned index) override {
+  void OnCursorMoved(unsigned index) noexcept override {
     UpdateButtons();
-  }
-
-  /* virtual methods from class Timer */
-  void OnTimer() override {
-    UpdateList();
   }
 
 private:
@@ -132,7 +130,7 @@ private:
   void Connect();
 
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -157,7 +155,7 @@ WifiListWidget::UpdateButtons()
 
 void
 WifiListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
-                            unsigned idx)
+                            unsigned idx) noexcept
 {
   const auto &info = networks[idx];
 
@@ -299,7 +297,7 @@ WifiListWidget::Connect()
 }
 
 void
-WifiListWidget::OnAction(int id)
+WifiListWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case SCAN:
@@ -496,8 +494,8 @@ ShowWifiDialog()
 {
   const DialogLook &look = UIGlobals::GetDialogLook();
   WifiListWidget widget;
-  WidgetDialog dialog(look);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Wifi"), &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, _("Wifi"), &widget);
   widget.CreateButtons(dialog);
   dialog.AddButton(_("Close"), mrOK);
   dialog.ShowModal();

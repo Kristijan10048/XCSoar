@@ -30,9 +30,9 @@ Copyright_License {
 #include "Screen/Pen.hpp"
 #include "Screen/Point.hpp"
 #include "Screen/BulkPoint.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <assert.h>
+#include <cassert>
 #include <windows.h>
 #include <tchar.h>
 
@@ -149,8 +149,16 @@ public:
     SelectStockObject(WHITE_PEN);
   }
 
+  void SelectWhitePen(unsigned width) {
+    Select(Pen(width, COLOR_WHITE));
+  }
+
   void SelectBlackPen() {
     SelectStockObject(BLACK_PEN);
+  }
+
+  void SelectBlackPen(unsigned width) {
+    Select(Pen(width, COLOR_BLACK));
   }
 
   void SelectHollowBrush() {
@@ -394,7 +402,7 @@ public:
   }
 
   gcc_pure
-  const PixelSize CalcTextSize(const TCHAR *text, size_t length) const;
+  const PixelSize CalcTextSize(TStringView text) const noexcept;
 
   gcc_pure
   const PixelSize CalcTextSize(const TCHAR *text) const;

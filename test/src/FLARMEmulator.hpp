@@ -30,9 +30,9 @@ Copyright_License {
 #include "Device/Util/NMEAWriter.hpp"
 #include "NMEA/InputLine.hpp"
 #include "NMEA/Checksum.hpp"
-#include "Util/Macros.hpp"
-#include "Util/StaticFifoBuffer.hxx"
-#include "Util/StaticString.hxx"
+#include "util/Macros.hpp"
+#include "util/StaticFifoBuffer.hxx"
+#include "util/StaticString.hxx"
 
 #include <string>
 #include <map>
@@ -133,8 +133,10 @@ private:
       FLARM::PrepareFrameHeader(sequence_number, FLARM::MT_ACK,
                                 &payload, sizeof(payload));
     return port->Write(FLARM::START_FRAME) &&
-      FLARM::SendEscaped(*port, &header, sizeof(header), *env, 2000) &&
-      FLARM::SendEscaped(*port, &payload, sizeof(payload), *env, 2000);
+      FLARM::SendEscaped(*port, &header, sizeof(header), *env,
+                         std::chrono::seconds(2)) &&
+      FLARM::SendEscaped(*port, &payload, sizeof(payload), *env,
+                         std::chrono::seconds(2));
   }
 
   size_t HandleBinary(const void *_data, size_t length) {
@@ -176,7 +178,7 @@ private:
     do {
       /* append new data to buffer, as much as fits there */
       auto range = binary_buffer.Write();
-      if (range.IsEmpty()) {
+      if (range.empty()) {
         /* overflow: reset buffer to recover quickly */
         binary_buffer.Clear();
         continue;
@@ -189,7 +191,7 @@ private:
 
       while (true) {
         range = binary_buffer.Read();
-        if (range.IsEmpty())
+        if (range.empty())
           break;
 
         size_t nbytes = HandleBinary(range.data, range.size);
@@ -205,22 +207,23 @@ private:
   }
 
 protected:
-  virtual void DataReceived(const void *data, size_t length) {
+  bool DataReceived(const void *data, size_t length) noexcept override {
     if (binary) {
       BinaryReceived(data, length);
+      return true;
     } else {
       fwrite(data, 1, length, stdout);
-      PortLineSplitter::DataReceived(data, length);
+      return PortLineSplitter::DataReceived(data, length);
     }
   }
 
-  virtual void LineReceived(const char *_line) {
+  bool LineReceived(const char *_line) noexcept override {
     const char *dollar = strchr(_line, '$');
     if (dollar != NULL)
       _line = dollar;
 
     if (!VerifyNMEAChecksum(_line))
-      return;
+      return true;
 
     NMEAInputLine line(_line);
     char cmd[32];
@@ -230,6 +233,8 @@ protected:
       PFLAC(line);
     else if (strcmp(cmd, "$PFLAX") == 0)
       PFLAX();
+
+    return true;
   }
 };
 

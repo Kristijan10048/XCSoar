@@ -27,21 +27,12 @@ Copyright_License {
 struct GeoPoint;
 class WindowProjection;
 
-#ifdef USE_GLSL
+#include "util/Compiler.h"
 
-#include "Compiler.h"
-
-#include <glm/glm.hpp>
+#include <glm/fwd.hpp>
 
 gcc_pure
 glm::mat4
 ToGLM(const WindowProjection &projection, const GeoPoint &reference);
-
-#else
-
-void
-ApplyProjection(const WindowProjection &projection, const GeoPoint &reference);
-
-#endif
 
 #endif

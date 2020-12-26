@@ -25,7 +25,7 @@ Copyright_License {
 #define XCSOAR_TRACKING_SKYLINES_GLUE_HPP
 
 #include "Client.hpp"
-#include "Time/GPSClock.hpp"
+#include "time/GPSClock.hpp"
 
 struct DerivedInfo;
 
@@ -36,7 +36,7 @@ class Queue;
 
 class Glue {
   Client client;
-  unsigned interval = 0;
+  std::chrono::steady_clock::duration interval{};
   GPSClock clock;
 
   GPSClock traffic_clock;
@@ -57,7 +57,7 @@ class Glue {
   double last_climb_time = -1;
 
 public:
-  Glue(boost::asio::io_service &io_service, Handler *_handler);
+  Glue(boost::asio::io_context &io_context, Handler *_handler);
   ~Glue();
 
   void SetSettings(const Settings &settings);

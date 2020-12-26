@@ -24,12 +24,12 @@ Copyright_License {
 #include "DisplaySize.hpp"
 #include "Screen/Point.hpp"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include "Screen/GDI/RootDC.hpp"
 #include <windows.h>
 #elif defined(USE_X11)
-#include "Event/Globals.hpp"
-#include "Event/Queue.hpp"
+#include "event/Globals.hpp"
+#include "event/Queue.hpp"
 #define Font X11Font
 #define Window X11Window
 #define Display X11Display
@@ -42,7 +42,7 @@ Copyright_License {
 PixelSize
 Display::GetSize(PixelSize fallback)
 {
-#ifdef WIN32
+#ifdef _WIN32
   RootDC dc;
   return PixelSize(GetDeviceCaps(dc, HORZRES),
                    GetDeviceCaps(dc, VERTRES));

@@ -25,18 +25,18 @@ Copyright_License {
 #define TRACE_HPP
 
 #include "Point.hpp"
-#include "Util/NonCopyable.hpp"
-#include "Util/SliceAllocator.hpp"
-#include "Util/Serial.hpp"
+#include "util/NonCopyable.hpp"
+#include "util/SliceAllocator.hxx"
+#include "util/Serial.hpp"
 #include "Geo/Flat/TaskProjection.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/set.hpp>
 
 #include <algorithm>
 
-#include <assert.h>
+#include <cassert>
 #include <stdlib.h>
 
 class TracePointVector;

@@ -27,10 +27,10 @@ Copyright_License {
 #include "Device/Util/NMEAReader.hpp"
 #include "Device/Declaration.hpp"
 #include "IGC/Generator.hpp"
-#include "Time/TimeoutClock.hpp"
-#include "Time/BrokenDateTime.hpp"
+#include "time/TimeoutClock.hpp"
+#include "time/BrokenDateTime.hpp"
 #include "Operation/Operation.hpp"
-#include "Util/ConvertString.hpp"
+#include "util/ConvertString.hpp"
 
 static bool
 NanoWriteDecl(Port &port, OperationEnvironment &env, PortNMEAReader &reader,
@@ -44,7 +44,8 @@ NanoWriteDecl(Port &port, OperationEnvironment &env, PortNMEAReader &reader,
     return false;
 
   buffer.UnsafeFormat("PLXVC,DECL,C,%u", row);
-  char *response = reader.ExpectLine(buffer, TimeoutClock(2000));
+  char *response = reader.ExpectLine(buffer,
+                                     TimeoutClock(std::chrono::seconds(2)));
   return response != nullptr && (*response == 0 || *response == ',');
 }
 
@@ -82,7 +83,8 @@ NanoWriteDeclMeta(Port &port, OperationEnvironment &env,
 {
   return NanoWriteDeclString(port, env, reader, 1, total_size,
                              "HFPLTPILOT:", declaration.pilot_name) &&
-    NanoWriteDecl(port, env, reader, 2, total_size, "HFCM2CREW2:") &&
+    NanoWriteDeclString(port, env, reader, 2, total_size,
+                        "HFCM2CREW2:", declaration.copilot_name) &&
     NanoWriteDeclString(port, env, reader, 3, total_size,
                         "HFGTYGLIDERTYPE:", declaration.aircraft_type) &&
     NanoWriteDeclString(port, env, reader, 4, total_size,

@@ -23,10 +23,10 @@
 #include "Engine/Trace/Trace.hpp"
 #include "Contest/ContestManager.hpp"
 #include "Printing.hpp"
-#include "OS/Args.hpp"
+#include "system/Args.hpp"
 #include "DebugReplay.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
 
 // Uncomment the following line to use the same trace size as LK8000.

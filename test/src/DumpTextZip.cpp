@@ -21,10 +21,10 @@ Copyright_License {
 }
 */
 
-#include "IO/ZipArchive.hpp"
-#include "IO/ZipLineReader.hpp"
-#include "OS/Args.hpp"
-#include "Util/PrintException.hxx"
+#include "io/ZipArchive.hpp"
+#include "io/ZipLineReader.hpp"
+#include "system/Args.hpp"
+#include "util/PrintException.hxx"
 
 #include <zzip/zzip.h>
 
@@ -46,7 +46,7 @@ try {
     _putts(line);
 
   return EXIT_SUCCESS;
-} catch (const std::runtime_error &e) {
-  PrintException(e);
+} catch (...) {
+  PrintException(std::current_exception());
   return EXIT_FAILURE;
 }

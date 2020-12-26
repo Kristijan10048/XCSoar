@@ -28,7 +28,6 @@ Copyright_License {
 
 #include "Main.hpp"
 #include "Screen/SingleWindow.hpp"
-#include "Screen/Timer.hpp"
 #include "Screen/Canvas.hpp"
 #include "Form/Button.hpp"
 #include "Form/ActionListener.hpp"
@@ -36,7 +35,7 @@ Copyright_License {
 #include "Renderer/FlightListRenderer.hpp"
 #include "FlightInfo.hpp"
 #include "Logger/FlightParser.hpp"
-#include "IO/FileLineReader.hpp"
+#include "io/FileLineReader.hpp"
 
 #include <vector>
 
@@ -111,7 +110,7 @@ protected:
   }
 
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override {
+  void OnAction(int id) noexcept override {
     switch (id) {
     case CLOSE:
       Close();

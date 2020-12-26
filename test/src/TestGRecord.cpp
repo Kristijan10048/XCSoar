@@ -22,8 +22,8 @@
 
 #include "Logger/GRecord.hpp"
 #include "TestUtil.hpp"
-#include "OS/Path.hpp"
-#include "Util/PrintException.hxx"
+#include "system/Path.hpp"
+#include "util/PrintException.hxx"
 
 #include <tchar.h>
 #include <stdlib.h>
@@ -47,7 +47,7 @@ try {
   CheckGRecord(_T("test/data/grecord65b.igc"));
 
   return exit_status();
-} catch (const std::runtime_error &e) {
-  PrintException(e);
+} catch (...) {
+  PrintException(std::current_exception());
   return EXIT_FAILURE;
 }

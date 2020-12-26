@@ -55,7 +55,7 @@ public:
 
 private:
   /* virtual methods from ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -94,7 +94,7 @@ ManageV7Widget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 }
 
 void
-ManageV7Widget::OnAction(int id)
+ManageV7Widget::OnAction(int id) noexcept
 {
   MessageOperationEnvironment env;
 
@@ -121,11 +121,12 @@ void
 ManageV7Dialog(Device &device, const DeviceInfo &info,
                const DeviceInfo &secondary_info)
 {
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), _T("LXNAV V7"),
-                    new ManageV7Widget(UIGlobals::GetDialogLook(),
-                                       (LXDevice &)device, info,
-                                       secondary_info));
+  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _T("LXNAV V7"),
+                      new ManageV7Widget(UIGlobals::GetDialogLook(),
+                                         (LXDevice &)device, info,
+                                         secondary_info));
   dialog.AddButton(_("Close"), mrCancel);
   dialog.ShowModal();
 }

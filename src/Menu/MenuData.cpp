@@ -23,20 +23,18 @@ Copyright_License {
 
 #include "MenuData.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 void
 Menu::Clear()
 {
-  for (auto i = items, end = items + MAX_ITEMS; i != end; ++i)
-    i->Clear();
+  for (auto &i : items)
+    i.Clear();
 }
 
 void
-Menu::Add(const TCHAR *label, int location, unsigned event_id)
+Menu::Add(const TCHAR *label, unsigned location, unsigned event_id)
 {
-  assert(location >= 0);
-
   if (location >= MAX_ITEMS)
     return;
 

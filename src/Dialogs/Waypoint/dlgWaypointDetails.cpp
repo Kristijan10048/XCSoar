@@ -39,26 +39,26 @@ Copyright_License {
 #include "Screen/Canvas.hpp"
 #include "Screen/Bitmap.hpp"
 #include "Screen/Layout.hpp"
-#include "Event/KeyCode.hpp"
+#include "event/KeyCode.hpp"
 #include "Screen/LargeTextWindow.hpp"
 #include "MainWindow.hpp"
 #include "Interface.hpp"
 #include "Components.hpp"
 #include "Task/ProtectedTaskManager.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 #include "Language/Language.hpp"
 #include "Waypoint/LastUsed.hpp"
 #include "Profile/Current.hpp"
 #include "Profile/Map.hpp"
 #include "Profile/ProfileKeys.hpp"
-#include "OS/RunFile.hpp"
-#include "OS/Path.hpp"
-#include "OS/ConvertPathName.hpp"
+#include "system/RunFile.hpp"
+#include "system/Path.hpp"
+#include "system/ConvertPathName.hpp"
 #include "LogFile.hpp"
-#include "Util/StringPointer.hxx"
-#include "Util/AllocatedString.hxx"
+#include "util/StringPointer.hxx"
+#include "util/AllocatedString.hxx"
 
-#include <assert.h>
+#include <cassert>
 
 #ifdef HAVE_RUN_FILE
 
@@ -72,17 +72,17 @@ public:
 
   /* virtual methods from class ListItemRenderer */
   void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                   unsigned idx) override;
+                   unsigned idx) noexcept override;
 
-  bool CanActivateItem(gcc_unused unsigned index) const override {
+  bool CanActivateItem(gcc_unused unsigned index) const noexcept override {
     return true;
   }
 
-  void OnActivateItem(unsigned index) override;
+  void OnActivateItem(unsigned index) noexcept override;
 };
 
 void
-WaypointExternalFileListHandler::OnActivateItem(unsigned i)
+WaypointExternalFileListHandler::OnActivateItem(unsigned i) noexcept
 {
   auto file = waypoint->files_external.begin();
   std::advance(file, i);
@@ -93,7 +93,7 @@ WaypointExternalFileListHandler::OnActivateItem(unsigned i)
 void
 WaypointExternalFileListHandler::OnPaintItem(Canvas &canvas,
                                              const PixelRect paint_rc,
-                                             unsigned i)
+                                             unsigned i) noexcept
 {
   auto file = waypoint->files_external.begin();
   std::advance(file, i);
@@ -293,7 +293,7 @@ public:
 
 private:
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override {
+  void OnAction(int id) noexcept override {
     switch (id) {
     case GOTO:
       OnGotoClicked();
@@ -688,12 +688,13 @@ dlgWaypointDetailsShowModal(WaypointPtr _waypoint,
   LastUsedWaypoints::Add(*_waypoint);
 
   const DialogLook &look = UIGlobals::GetDialogLook();
-  WidgetDialog dialog(look);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, nullptr);
   WaypointDetailsWidget widget(dialog, _waypoint,
                                allow_navigation ? protected_task_manager : nullptr,
                                allow_edit);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _T(""), &widget);
 
+  dialog.FinishPreliminary(&widget);
   UpdateCaption(&dialog, *_waypoint);
 
   dialog.ShowModal();

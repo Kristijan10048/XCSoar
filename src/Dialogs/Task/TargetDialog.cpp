@@ -33,7 +33,7 @@ Copyright_License {
 #include "UIGlobals.hpp"
 #include "Look/Look.hpp"
 #include "Screen/Layout.hpp"
-#include "Event/KeyCode.hpp"
+#include "event/KeyCode.hpp"
 #include "Formatter/TimeFormatter.hpp"
 #include "Formatter/UserUnits.hpp"
 #include "Language/Language.hpp"
@@ -46,7 +46,7 @@ Copyright_License {
 #include "Units/Units.hpp"
 #include "Blackboard/RateLimitedBlackboardListener.hpp"
 #include "Interface.hpp"
-#include "Util/Clamp.hpp"
+#include "util/Clamp.hpp"
 
 class TargetWidget;
 
@@ -120,7 +120,8 @@ public:
   TargetWidget(ActionListener &_dialog,
                const DialogLook &dialog_look, const MapLook &map_look)
     :dialog(_dialog),
-     rate_limited_bl(*this, 1800, 300),
+     rate_limited_bl(*this, std::chrono::milliseconds(1800),
+                     std::chrono::milliseconds(300)),
      map(*this,
          map_look.waypoint, map_look.airspace,
          map_look.trail, map_look.task, map_look.aircraft,
@@ -255,7 +256,7 @@ public:
 
 private:
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override {
+  void OnAction(int id) noexcept override {
     switch (id) {
     case PREVIOUS:
       OnPrevClicked();
@@ -787,9 +788,10 @@ dlgTargetShowModal(int _target_point)
     return;
 
   const Look &look = UIGlobals::GetLook();
-  WidgetDialog dialog(look.dialog);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look.dialog, _("Target"));
   TargetWidget widget(dialog, look.dialog, look.map);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Target"), &widget);
+  dialog.FinishPreliminary(&widget);
 
   if (widget.InitTargetPoints(_target_point))
     dialog.ShowModal();

@@ -24,9 +24,9 @@ Copyright_License {
 #include "AndroidBluetoothPort.hpp"
 #include "AndroidPort.hpp"
 #include "Android/BluetoothHelper.hpp"
-#include "Java/Global.hxx"
+#include "java/Global.hxx"
 
-#include <assert.h>
+#include <cassert>
 
 Port *
 OpenAndroidBluetoothPort(const TCHAR *address, PortListener *listener,

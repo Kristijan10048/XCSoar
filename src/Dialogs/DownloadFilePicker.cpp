@@ -33,29 +33,34 @@ Copyright_License {
 #include "Screen/Layout.hpp"
 #include "Language/Language.hpp"
 #include "LocalPath.hpp"
-#include "OS/Path.hpp"
-#include "IO/FileLineReader.hpp"
+#include "system/Path.hpp"
+#include "io/FileLineReader.hpp"
 #include "Repository/Glue.hpp"
 #include "Repository/FileRepository.hpp"
 #include "Repository/Parser.hpp"
-#include "Net/HTTP/Features.hpp"
-#include "Net/HTTP/DownloadManager.hpp"
-#include "Event/Notify.hpp"
-#include "Thread/Mutex.hpp"
+#include "net/http/Features.hpp"
+#include "net/http/DownloadManager.hpp"
+#include "event/Notify.hpp"
+#include "event/PeriodicTimer.hpp"
+#include "thread/Mutex.hxx"
 #include "Operation/ThreadedOperationEnvironment.hpp"
-#include "Util/ConvertString.hpp"
+#include "util/ConvertString.hpp"
 
 #include <vector>
 
-#include <assert.h>
+#include <cassert>
 
 /**
  * This class tracks a download and updates a #ProgressDialog.
  */
-class DownloadProgress final : Timer, Net::DownloadListener, Notify {
+class DownloadProgress final : Net::DownloadListener {
   ProgressDialog &dialog;
   ThreadedOperationEnvironment env;
   const Path path_relative;
+
+  PeriodicTimer update_timer{[this]{ Net::DownloadManager::Enumerate(*this); }};
+
+  Notify download_complete_notify{[this]{ OnDownloadCompleteNotification(); }};
 
   bool got_size = false, complete = false, success;
 
@@ -63,21 +68,15 @@ public:
   DownloadProgress(ProgressDialog &_dialog,
                    const Path _path_relative)
     :dialog(_dialog), env(_dialog), path_relative(_path_relative) {
-    Timer::Schedule(1000);
+    update_timer.Schedule(std::chrono::seconds(1));
     Net::DownloadManager::AddListener(*this);
   }
 
   ~DownloadProgress() {
     Net::DownloadManager::RemoveListener(*this);
-    Timer::Cancel();
   }
 
 private:
-  /* virtual methods from class Timer */
-  void OnTimer() override {
-    Net::DownloadManager::Enumerate(*this);
-  }
-
   /* virtual methods from class Net::DownloadListener */
   void OnDownloadAdded(Path _path_relative,
                        int64_t size, int64_t position) override {
@@ -97,12 +96,11 @@ private:
     if (!complete && path_relative == _path_relative) {
       complete = true;
       success = _success;
-      Notify::SendNotification();
+      download_complete_notify.SendNotification();
     }
   }
 
-  /* virtual methods from class Notify */
-  void OnNotification() override {
+  void OnDownloadCompleteNotification() noexcept {
     assert(complete);
     dialog.SetModalResult(success ? mrOK : mrCancel);
   }
@@ -138,13 +136,15 @@ DownloadFile(const char *uri, const char *_base)
 
 class DownloadFilePickerWidget final
   : public ListWidget,
-    Net::DownloadListener, Notify,
+    Net::DownloadListener,
     ActionListener {
   enum Buttons {
     DOWNLOAD,
   };
 
   WidgetDialog &dialog;
+
+  Notify download_complete_notify{[this]{ OnDownloadCompleteNotification(); }};
 
   const FileType file_type;
 
@@ -198,27 +198,27 @@ public:
   void Unprepare() override;
 
   /* virtual methods from class ListItemRenderer */
-  void OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned idx) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override;
 
   /* virtual methods from class ListCursorHandler */
-  bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return true;
   }
 
-  void OnActivateItem(unsigned index) override {
+  void OnActivateItem(unsigned index) noexcept override {
     Download();
   }
 
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 
   /* virtual methods from class Net::DownloadListener */
   void OnDownloadAdded(Path path_relative,
                        int64_t size, int64_t position) override;
   void OnDownloadComplete(Path path_relative, bool success) override;
 
-  /* virtual methods from class Notify */
-  void OnNotification() override;
+  void OnDownloadCompleteNotification() noexcept;
 };
 
 void
@@ -244,7 +244,7 @@ DownloadFilePickerWidget::Unprepare()
 {
   Net::DownloadManager::RemoveListener(*this);
 
-  ClearNotification();
+  download_complete_notify.ClearNotification();
 
   DeleteWindow();
 }
@@ -252,10 +252,11 @@ DownloadFilePickerWidget::Unprepare()
 void
 DownloadFilePickerWidget::RefreshList()
 try {
-  mutex.Lock();
-  repository_modified = false;
-  repository_failed = false;
-  mutex.Unlock();
+  {
+    const std::lock_guard<Mutex> lock(mutex);
+    repository_modified = false;
+    repository_failed = false;
+  }
 
   FileRepository repository;
 
@@ -264,6 +265,7 @@ try {
 
   ParseFileRepository(repository, reader);
 
+  items.clear();
   for (auto &i : repository)
     if (i.type == file_type)
       items.emplace_back(std::move(i));
@@ -284,7 +286,7 @@ DownloadFilePickerWidget::CreateButtons()
 
 void
 DownloadFilePickerWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
-                                      unsigned i)
+                                      unsigned i) noexcept
 {
   const auto &file = items[i];
 
@@ -310,7 +312,7 @@ DownloadFilePickerWidget::Download()
 }
 
 void
-DownloadFilePickerWidget::OnAction(int id)
+DownloadFilePickerWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case DOWNLOAD:
@@ -333,28 +335,29 @@ DownloadFilePickerWidget::OnDownloadComplete(Path path_relative,
   if (name == nullptr)
     return;
 
-  mutex.Lock();
+  {
+    const std::lock_guard<Mutex> lock(mutex);
 
-  if (name == Path(_T("repository"))) {
-    repository_failed = !success;
-    if (success)
-      repository_modified = true;
+    if (name == Path(_T("repository"))) {
+      repository_failed = !success;
+      if (success)
+        repository_modified = true;
+    }
   }
 
-  mutex.Unlock();
-
-  SendNotification();
+  download_complete_notify.SendNotification();
 }
 
 void
-DownloadFilePickerWidget::OnNotification()
+DownloadFilePickerWidget::OnDownloadCompleteNotification() noexcept
 {
-  mutex.Lock();
-  bool repository_modified2 = repository_modified;
-  repository_modified = false;
-  const bool repository_failed2 = repository_failed;
-  repository_failed = false;
-  mutex.Unlock();
+  bool repository_modified2, repository_failed2;
+
+  {
+    const std::lock_guard<Mutex> lock(mutex);
+    repository_modified2 = std::exchange(repository_modified, false);
+    repository_failed2 = std::exchange(repository_failed, false);
+  }
 
   if (repository_modified2) {
     if (repository_failed2)
@@ -375,12 +378,12 @@ DownloadFilePicker(FileType file_type)
     return nullptr;
   }
 
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(), _("Download"));
   DownloadFilePickerWidget widget(dialog, file_type);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Download"), &widget);
   widget.CreateButtons();
   dialog.AddButton(_("Cancel"), mrCancel);
-
+  dialog.FinishPreliminary(&widget);
   dialog.ShowModal();
   dialog.StealWidget();
 

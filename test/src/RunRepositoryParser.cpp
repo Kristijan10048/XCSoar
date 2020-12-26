@@ -23,9 +23,9 @@ Copyright_License {
 
 #include "Repository/Parser.hpp"
 #include "Repository/FileRepository.hpp"
-#include "IO/FileLineReader.hpp"
-#include "OS/Args.hpp"
-#include "Util/PrintException.hxx"
+#include "io/FileLineReader.hpp"
+#include "system/Args.hpp"
+#include "util/PrintException.hxx"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,7 +54,7 @@ try {
   }
 
   return EXIT_SUCCESS;
-} catch (const std::runtime_error &e) {
-  PrintException(e);
+} catch (...) {
+  PrintException(std::current_exception());
   return EXIT_FAILURE;
 }

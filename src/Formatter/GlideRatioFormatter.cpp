@@ -22,9 +22,9 @@ Copyright_License {
 */
 
 #include "GlideRatioFormatter.hpp"
-#include "Util/StringFormat.hpp"
+#include "util/StringFormat.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <math.h>
 
 void

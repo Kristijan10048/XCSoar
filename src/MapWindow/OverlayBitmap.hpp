@@ -28,9 +28,7 @@ Copyright_License {
 #include "Screen/Bitmap.hpp"
 #include "Geo/Quadrilateral.hpp"
 #include "Geo/GeoBounds.hpp"
-#include "Util/tstring.hpp"
-
-#include <stdexcept>
+#include "util/tstring.hpp"
 
 class Canvas;
 class WindowProjection;
@@ -63,8 +61,10 @@ class MapOverlayBitmap final : public MapOverlay {
 public:
   /**
    * Load a GeoTIFF file.
+   *
+   * Throws on error.
    */
-  MapOverlayBitmap(Path path) throw(std::runtime_error);
+  MapOverlayBitmap(Path path);
 
   /**
    * Move an existing #Bitmap with a geo reference.

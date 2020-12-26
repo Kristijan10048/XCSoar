@@ -24,9 +24,9 @@ Copyright_License {
 #ifndef XCSOAR_DISPLAY_MODE_HPP
 #define XCSOAR_DISPLAY_MODE_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 struct InfoBoxSettings;
 struct UIState;

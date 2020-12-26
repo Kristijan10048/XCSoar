@@ -24,9 +24,9 @@ Copyright_License {
 #ifndef XCSOAR_LOGGER_SETTINGS_HPP
 #define XCSOAR_LOGGER_SETTINGS_HPP
 
-#include "Util/StaticString.hxx"
+#include "util/StaticString.hxx"
 
-#include <stdint.h>
+#include <cstdint>
 
 /**
  * Logger settings
@@ -57,6 +57,8 @@ struct LoggerSettings {
   StaticString<32> logger_id;
 
   StaticString<64> pilot_name;
+
+  StaticString<64> copilot_name;
 
   void SetDefaults();
 };

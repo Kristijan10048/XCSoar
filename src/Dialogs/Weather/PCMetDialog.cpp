@@ -45,8 +45,9 @@ static void
 BitmapDialog(const Bitmap &bitmap)
 {
   ViewImageWidget widget(bitmap);
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _T("pc_met"), &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _T("pc_met"), &widget);
   dialog.AddButton(_("Close"), mrOK);
   dialog.ShowModal();
   dialog.StealWidget();
@@ -71,8 +72,8 @@ BitmapDialog(const PCMet::ImageType &type, const PCMet::ImageArea &area)
     }
 
     BitmapDialog(bitmap);
-  } catch (const std::exception &exception) {
-    ShowError(exception, _T("pc_met"));
+  } catch (...) {
+    ShowError(std::current_exception(), _T("pc_met"));
   }
 }
 
@@ -100,16 +101,16 @@ public:
 
 protected:
   /* virtual methods from TextListWidget */
-  const TCHAR *GetRowText(unsigned i) const override {
+  const TCHAR *GetRowText(unsigned i) const noexcept override {
     return areas[i].display_name;
   }
 
   /* virtual methods from ListCursorHandler */
-  virtual bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return true;
   }
 
-  virtual void OnActivateItem(unsigned index) override {
+  void OnActivateItem(unsigned index) noexcept override {
     BitmapDialog(*type, areas[index]);
   }
 };
@@ -138,20 +139,20 @@ public:
 
 protected:
   /* virtual methods from TextListWidget */
-  const TCHAR *GetRowText(unsigned i) const override {
+  const TCHAR *GetRowText(unsigned i) const noexcept override {
     return PCMet::image_types[i].display_name;
   }
 
   /* virtual methods from ListCursorHandler */
-  void OnCursorMoved(unsigned index) override {
+  void OnCursorMoved(unsigned index) noexcept override {
     area_list.SetType(&PCMet::image_types[index]);
   }
 
-  virtual bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return true;
   }
 
-  virtual void OnActivateItem(unsigned index) override {
+  void OnActivateItem(unsigned index) noexcept override {
     area_list.SetFocus();
   }
 };

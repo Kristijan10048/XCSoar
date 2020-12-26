@@ -23,10 +23,10 @@ Copyright_License {
 
 #include "HexColor.hpp"
 #include "Screen/PortableColor.hpp"
-#include "Util/NumberParser.hpp"
+#include "util/NumberParser.hpp"
 
 #include <stdio.h>
-#include <assert.h>
+#include <cassert>
 
 void
 FormatHexColor(char *buffer, size_t size, const RGB8Color color)

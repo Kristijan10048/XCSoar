@@ -21,11 +21,12 @@ Copyright_License {
 }
 */
 
-#include "Util/StringCompare.hxx"
-#include "OS/Path.hpp"
+#include "util/StringCompare.hxx"
+#include "system/Path.hpp"
 #include "Screen/Custom/LibTiff.hpp"
 #include "Screen/Custom/UncompressedImage.hpp"
 #include "NativeView.hpp"
+#include "Hardware/DisplayDPI.hpp"
 
 #include <tchar.h>
 
@@ -33,7 +34,6 @@ Java::TrivialClass NativeView::cls;
 jfieldID NativeView::textureNonPowerOfTwo_field;
 jmethodID NativeView::init_surface_method, NativeView::deinit_surface_method;
 jmethodID NativeView::setRequestedOrientationID;
-jmethodID NativeView::swap_method;
 jmethodID NativeView::loadResourceBitmap_method;
 jmethodID NativeView::loadFileBitmap_method;
 jmethodID NativeView::bitmapToTexture_method;
@@ -57,7 +57,6 @@ NativeView::Initialise(JNIEnv *env)
   deinit_surface_method = env->GetMethodID(cls, "deinitSurface", "()V");
   setRequestedOrientationID =
     env->GetMethodID(cls, "setRequestedOrientation", "(I)Z");
-  swap_method = env->GetMethodID(cls, "swap", "()V");
 
   loadResourceBitmap_method = env->GetMethodID(cls, "loadResourceBitmap",
                                                "(Ljava/lang/String;)Landroid/graphics/Bitmap;");
@@ -85,6 +84,18 @@ void
 NativeView::Deinitialise(JNIEnv *env)
 {
   cls.Clear(env);
+}
+
+NativeView::NativeView(JNIEnv *_env, jobject _obj,
+                       unsigned _width, unsigned _height,
+                       unsigned _xdpi, unsigned _ydpi,
+                       jstring _product) noexcept
+  :env(_env), obj(env, _obj),
+   width(_width), height(_height)
+{
+  Java::String::CopyTo(env, _product, product, sizeof(product));
+
+  Display::ProvideDPI(_xdpi, _ydpi);
 }
 
 static void

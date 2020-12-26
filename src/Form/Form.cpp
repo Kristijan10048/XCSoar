@@ -22,15 +22,15 @@ Copyright_License {
 */
 
 #include "Form/Form.hpp"
-#include "Time/PeriodClock.hpp"
+#include "time/PeriodClock.hpp"
 #include "Asset.hpp"
 #include "Screen/Canvas.hpp"
 #include "Screen/SingleWindow.hpp"
 #include "Screen/Layout.hpp"
-#include "Event/KeyCode.hpp"
-#include "Util/Macros.hpp"
+#include "event/KeyCode.hpp"
+#include "util/Macros.hpp"
 #include "Look/DialogLook.hpp"
-#include "Event/Globals.hpp"
+#include "event/Globals.hpp"
 
 #ifndef USE_WINUSER
 #include "Screen/Custom/Reference.hpp"
@@ -42,25 +42,18 @@ Copyright_License {
 #endif
 
 #ifdef ANDROID
-#include "Event/Shared/Event.hpp"
-#include "Event/Android/Loop.hpp"
+#include "event/shared/Event.hpp"
+#include "event/android/Loop.hpp"
 #elif defined(ENABLE_SDL)
-#include "Event/SDL/Event.hpp"
-#include "Event/SDL/Loop.hpp"
+#include "event/sdl/Event.hpp"
+#include "event/sdl/Loop.hpp"
 #elif defined(USE_POLL_EVENT)
-#include "Event/Shared/Event.hpp"
-#include "Event/Poll/Loop.hpp"
-#elif defined(WIN32)
-#include "Event/Windows/Event.hpp"
-#include "Event/Windows/Loop.hpp"
+#include "event/shared/Event.hpp"
+#include "event/poll/Loop.hpp"
+#elif defined(_WIN32)
+#include "event/windows/Event.hpp"
+#include "event/windows/Loop.hpp"
 #endif
-
-static WindowStyle
-AddBorder(WindowStyle style)
-{
-  style.Border();
-  return style;
-}
 
 WndForm::WndForm(const DialogLook &_look)
   :look(_look)
@@ -76,6 +69,13 @@ WndForm::WndForm(SingleWindow &main_window, const DialogLook &_look,
   Create(main_window, rc, Caption, style);
 }
 
+WndForm::WndForm(SingleWindow &main_window, const DialogLook &_look,
+                 const TCHAR *caption,
+                 const WindowStyle style) noexcept
+  :WndForm(main_window, _look, main_window.GetClientRect(), caption, style)
+{
+}
+
 void
 WndForm::Create(SingleWindow &main_window, const PixelRect &rc,
                 const TCHAR *_caption, const WindowStyle style)
@@ -85,7 +85,7 @@ WndForm::Create(SingleWindow &main_window, const PixelRect &rc,
   else
     caption.clear();
 
-  ContainerWindow::Create(main_window, rc, AddBorder(style));
+  ContainerWindow::Create(main_window, rc, style);
 
 #if defined(USE_WINUSER) && !defined(NDEBUG)
   ::SetWindowText(hWnd, caption.c_str());
@@ -97,14 +97,6 @@ WndForm::Create(SingleWindow &main_window,
                 const TCHAR *_caption, const WindowStyle style)
 {
   Create(main_window, main_window.GetClientRect(), _caption, style);
-}
-
-WndForm::~WndForm()
-{
-  /* we must override the ~Window() reset call, because in ~Window(),
-     our own OnDestroy() method won't be called (during object
-     destruction, this object loses its identity) */
-  Destroy();
 }
 
 SingleWindow &
@@ -119,11 +111,24 @@ WndForm::UpdateLayout()
   PixelRect rc = GetClientRect();
 
   title_rect = rc;
+
+  if (!IsMaximised()) {
+    ++title_rect.left;
+    ++title_rect.top;
+    --title_rect.right;
+  }
+
   title_rect.bottom = rc.top +
     (caption.empty() ? 0 : look.caption.font->GetHeight());
 
   client_rect = rc;
   client_rect.top = title_rect.bottom;
+
+  if (!IsMaximised()) {
+    ++client_rect.left;
+    --client_rect.right;
+    --client_rect.bottom;
+  }
 }
 
 void
@@ -252,7 +257,7 @@ WndForm::OnCancelMode()
   }
 }
 
-#ifdef WIN32
+#ifdef _WIN32
 
 bool
 WndForm::OnCommand(unsigned id, unsigned code)
@@ -344,7 +349,7 @@ WndForm::ShowModal()
     // hack to stop exiting immediately
     if (IsEmbedded() && !hastimed &&
         event.IsUserInput()) {
-      if (!enter_clock.Check(200))
+      if (!enter_clock.Check(std::chrono::milliseconds(200)))
         /* ignore user input in the first 200ms */
         continue;
       else
@@ -490,7 +495,7 @@ WndForm::OnPaint(Canvas &canvas)
 #ifndef USE_GDI
     if (IsDithered())
       canvas.DrawOutlineRectangle(rcClient.left, rcClient.top,
-                                  rcClient.right - 1, rcClient.bottom - 1,
+                                  rcClient.right, rcClient.bottom,
                                   COLOR_BLACK);
     else
 #endif
@@ -548,7 +553,7 @@ WndForm::SetCaption(const TCHAR *_caption)
   if (_caption == nullptr)
     _caption = _T("");
 
-  if (!caption.equals(_caption)) {
+  if (caption != _caption) {
     caption = _caption;
     UpdateLayout();
     client_area.Move(client_rect);

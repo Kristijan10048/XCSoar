@@ -28,7 +28,7 @@ Copyright_License {
 #include "Scope.hpp"
 #include "VertexArray.hpp"
 #include "Shapes.hpp"
-#include "FallbackBuffer.hpp"
+#include "Buffer.hpp"
 #include "Features.hpp"
 #include "VertexPointer.hpp"
 #include "ExactPixelPoint.hpp"
@@ -36,28 +36,26 @@ Copyright_License {
 #include "Screen/Bitmap.hpp"
 #include "Screen/Util.hpp"
 #include "Math/Angle.hpp"
-#include "Util/AllocatedArray.hxx"
-#include "Util/Macros.hpp"
+#include "util/AllocatedArray.hxx"
+#include "util/Macros.hpp"
+#include "util/TStringView.hxx"
+#include "util/UTF8.hpp"
 
-#ifdef USE_GLSL
 #include "Shaders.hpp"
 #include "Program.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#else
-#include "Compatibility.hpp"
-#endif
 
 #ifdef UNICODE
-#include "Util/ConvertString.hpp"
+#include "util/ConvertString.hpp"
 #endif
 
 #ifndef NDEBUG
-#include "Util/UTF8.hpp"
+#include "util/UTF8.hpp"
 #endif
 
-#include <assert.h>
+#include <cassert>
 
 AllocatedArray<BulkPixelPoint> Canvas::vertex_buffer;
 
@@ -84,17 +82,32 @@ Canvas::InvertRectangle(PixelRect r)
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
+static TStringView
+ClipText(TStringView text, int x, unsigned canvas_width) noexcept
+{
+  if (text.empty() || x >= int(canvas_width))
+    return nullptr;
+
+  unsigned max_width = canvas_width - x;
+  unsigned max_chars = max_width / 8u; // TODO: use real font width?
+
+  text.size = TruncateStringUTF8(text.data, max_chars, text.size);
+  return text;
+}
+
 void
 Canvas::DrawFilledRectangle(int left, int top, int right, int bottom,
                             const Color color)
 {
-#ifdef USE_GLSL
+  assert(offset == OpenGL::translate);
+
   OpenGL::solid_shader->Use();
-#endif
 
   color.Bind();
 
-#ifdef HAVE_GLES
+  /* can't use glRecti() with GLSL because it bypasses the vertex
+     shader */
+
   const BulkPixelPoint vertices[] = {
     { left, top },
     { right, top },
@@ -104,9 +117,6 @@ Canvas::DrawFilledRectangle(int left, int top, int right, int bottom,
 
   const ScopeVertexPointer vp(vertices);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-#else
-  glRecti(left, top, right, bottom);
-#endif
 }
 
 void
@@ -114,9 +124,9 @@ Canvas::OutlineRectangleGL(int left, int top, int right, int bottom)
 {
   const ExactPixelPoint vertices[] = {
     PixelPoint{left, top},
-    PixelPoint{right, top},
-    PixelPoint{right, bottom},
-    PixelPoint{left, bottom},
+    PixelPoint{right - 1, top},
+    PixelPoint{right - 1, bottom - 1},
+    PixelPoint{left, bottom - 1},
   };
 
   const ScopeVertexPointer vp(vertices);
@@ -145,11 +155,11 @@ Canvas::DrawRaisedEdge(PixelRect &rc)
   Pen bright(1, Color(240, 240, 240));
   Select(bright);
   DrawTwoLinesExact(rc.left, rc.bottom - 2, rc.left, rc.top,
-                    rc.right - 2, rc.top);
+                    rc.right - 1, rc.top);
 
   Pen dark(1, Color(128, 128, 128));
   Select(dark);
-  DrawTwoLinesExact(rc.left + 1, rc.bottom - 1, rc.right - 1, rc.bottom - 1,
+  DrawTwoLinesExact(rc.left, rc.bottom - 1, rc.right - 1, rc.bottom - 1,
                     rc.right - 1, rc.top + 1);
 
   ++rc.left;
@@ -161,9 +171,7 @@ Canvas::DrawRaisedEdge(PixelRect &rc)
 void
 Canvas::DrawPolyline(const BulkPixelPoint *points, unsigned num_points)
 {
-#ifdef USE_GLSL
   OpenGL::solid_shader->Use();
-#endif
 
   pen.Bind();
 
@@ -179,9 +187,7 @@ Canvas::DrawPolygon(const BulkPixelPoint *points, unsigned num_points)
   if (brush.IsHollow() && !pen.IsDefined())
     return;
 
-#ifdef USE_GLSL
   OpenGL::solid_shader->Use();
-#endif
 
   ScopeVertexPointer vp(points);
 
@@ -220,9 +226,7 @@ Canvas::DrawTriangleFan(const BulkPixelPoint *points, unsigned num_points)
   if (brush.IsHollow() && !pen.IsDefined())
     return;
 
-#ifdef USE_GLSL
   OpenGL::solid_shader->Use();
-#endif
 
   ScopeVertexPointer vp(points);
 
@@ -266,9 +270,7 @@ Canvas::DrawHLine(int x1, int x2, int y, Color color)
 void
 Canvas::DrawLine(int ax, int ay, int bx, int by)
 {
-#ifdef USE_GLSL
   OpenGL::solid_shader->Use();
-#endif
 
   pen.Bind();
 
@@ -286,9 +288,7 @@ Canvas::DrawLine(int ax, int ay, int bx, int by)
 void
 Canvas::DrawExactLine(int ax, int ay, int bx, int by)
 {
-#ifdef USE_GLSL
   OpenGL::solid_shader->Use();
-#endif
 
   pen.Bind();
 
@@ -310,9 +310,7 @@ Canvas::DrawExactLine(int ax, int ay, int bx, int by)
 void
 Canvas::DrawLinePiece(const PixelPoint a, const PixelPoint b)
 {
-#ifdef USE_GLSL
   OpenGL::solid_shader->Use();
-#endif
 
   pen.Bind();
 
@@ -335,9 +333,7 @@ Canvas::DrawLinePiece(const PixelPoint a, const PixelPoint b)
 void
 Canvas::DrawTwoLines(int ax, int ay, int bx, int by, int cx, int cy)
 {
-#ifdef USE_GLSL
   OpenGL::solid_shader->Use();
-#endif
 
   pen.Bind();
 
@@ -356,9 +352,7 @@ Canvas::DrawTwoLines(int ax, int ay, int bx, int by, int cx, int cy)
 void
 Canvas::DrawTwoLinesExact(int ax, int ay, int bx, int by, int cx, int cy)
 {
-#ifdef USE_GLSL
   OpenGL::solid_shader->Use();
-#endif
 
   pen.Bind();
 
@@ -377,9 +371,7 @@ Canvas::DrawTwoLinesExact(int ax, int ay, int bx, int by, int cx, int cy)
 void
 Canvas::DrawCircle(int x, int y, unsigned radius)
 {
-#ifdef USE_GLSL
   OpenGL::solid_shader->Use();
-#endif
 
   if (IsPenOverBrush() && pen.GetWidth() > 2) {
     ScopeVertexPointer vp;
@@ -396,34 +388,23 @@ Canvas::DrawCircle(int x, int y, unsigned radius)
     glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.SIZE);
     pen.Unbind();
   } else {
-    GLFallbackArrayBuffer &buffer = radius < 16
+    auto &buffer = radius < 16
       ? *OpenGL::small_circle_buffer
       : *OpenGL::circle_buffer;
     const unsigned n = radius < 16
       ? OpenGL::SMALL_CIRCLE_SIZE
       : OpenGL::CIRCLE_SIZE;
 
-    const auto points = (const FloatPoint2D *)buffer.BeginRead();
+    buffer.Bind();
+    const auto points = (const FloatPoint2D *)nullptr;
     const ScopeVertexPointer vp(points);
 
-#ifdef USE_GLSL
-    glm::mat4 matrix2 = glm::scale(glm::translate(glm::mat4(),
+    glm::mat4 matrix2 = glm::scale(glm::translate(glm::mat4(1),
                                                   glm::vec3(x, y, 0)),
                                    glm::vec3(GLfloat(radius), GLfloat(radius),
                                              1.));
     glUniformMatrix4fv(OpenGL::solid_modelview, 1, GL_FALSE,
                        glm::value_ptr(matrix2));
-#else
-    glPushMatrix();
-
-#ifdef HAVE_GLES
-    glTranslatex((GLfixed)x << 16, (GLfixed)y << 16, 0);
-    glScalex((GLfixed)radius << 16, (GLfixed)radius << 16, (GLfixed)1 << 16);
-#else
-    glTranslatef(x, y, 0.);
-    glScalef(radius, radius, 1.);
-#endif
-#endif
 
     if (!brush.IsHollow()) {
       brush.Bind();
@@ -436,14 +417,10 @@ Canvas::DrawCircle(int x, int y, unsigned radius)
       pen.Unbind();
     }
 
-#ifdef USE_GLSL
     glUniformMatrix4fv(OpenGL::solid_modelview, 1, GL_FALSE,
-                       glm::value_ptr(glm::mat4()));
-#else
-    glPopMatrix();
-#endif
+                       glm::value_ptr(glm::mat4(1)));
 
-    buffer.EndRead();
+    buffer.Unbind();
   }
 }
 
@@ -583,13 +560,13 @@ Canvas::DrawFocusRectangle(PixelRect rc)
 }
 
 const PixelSize
-Canvas::CalcTextSize(const TCHAR *text) const
+Canvas::CalcTextSize(TStringView text) const noexcept
 {
   assert(text != nullptr);
 #ifdef UNICODE
   const WideToUTF8Converter text2(text);
 #else
-  const char* text2 = text;
+  const StringView text2 = text;
   assert(ValidateUTF8(text));
 #endif
 
@@ -612,32 +589,8 @@ Canvas::CalcTextSize(const TCHAR *text) const
 static void
 PrepareColoredAlphaTexture(Color color)
 {
-#ifdef USE_GLSL
   OpenGL::alpha_shader->Use();
   color.Bind();
-#else
-  color.Bind();
-
-  if (color == COLOR_BLACK) {
-    /* GL_ALPHA textures have black RGB - this is easy */
-
-    OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  } else {
-    /* use GL_COMBINE to replace the texture color (black) with the
-       specified one */
-    OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-
-    /* replace the texture color with the selected text color */
-    OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-    OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
-    OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-
-    /* use the texture alpha */
-    OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-    OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
-    OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-  }
-#endif
 }
 
 void
@@ -658,7 +611,11 @@ Canvas::DrawText(int x, int y, const TCHAR *text)
   if (font == nullptr)
     return;
 
-  GLTexture *texture = TextCache::Get(*font, text2);
+  const StringView text3 = ClipText(text2, x, size.cx);
+  if (text3.empty())
+    return;
+
+  GLTexture *texture = TextCache::Get(*font, text3);
   if (texture == nullptr)
     return;
 
@@ -668,10 +625,6 @@ Canvas::DrawText(int x, int y, const TCHAR *text)
                         background_color);
 
   PrepareColoredAlphaTexture(text_color);
-
-#ifndef USE_GLSL
-  const GLEnable<GL_TEXTURE_2D> scope;
-#endif
 
   const ScopeAlphaBlend alpha_blend;
 
@@ -697,15 +650,15 @@ Canvas::DrawTransparentText(int x, int y, const TCHAR *text)
   if (font == nullptr)
     return;
 
-  GLTexture *texture = TextCache::Get(*font, text2);
+  const StringView text3 = ClipText(text2, x, size.cx);
+  if (text3.empty())
+    return;
+
+  GLTexture *texture = TextCache::Get(*font, text3);
   if (texture == nullptr)
     return;
 
   PrepareColoredAlphaTexture(text_color);
-
-#ifndef USE_GLSL
-  const GLEnable<GL_TEXTURE_2D> scope;
-#endif
 
   const ScopeAlphaBlend alpha_blend;
 
@@ -733,7 +686,11 @@ Canvas::DrawClippedText(int x, int y,
   if (font == nullptr)
     return;
 
-  GLTexture *texture = TextCache::Get(*font, text2);
+  const StringView text3 = ClipText(text2, 0, width);
+  if (text3.empty())
+    return;
+
+  GLTexture *texture = TextCache::Get(*font, text3);
   if (texture == nullptr)
     return;
 
@@ -743,10 +700,6 @@ Canvas::DrawClippedText(int x, int y,
     width = texture->GetWidth();
 
   PrepareColoredAlphaTexture(text_color);
-
-#ifndef USE_GLSL
-  const GLEnable<GL_TEXTURE_2D> scope;
-#endif
 
   const ScopeAlphaBlend alpha_blend;
 
@@ -766,9 +719,7 @@ Canvas::Stretch(int dest_x, int dest_y,
   assert(offset == OpenGL::translate);
 #endif
 
-#ifdef USE_GLSL
   OpenGL::texture_shader->Use();
-#endif
 
   texture.Draw(PixelRect(PixelPoint(dest_x, dest_y),
                          PixelSize(dest_width, dest_height)),
@@ -805,23 +756,7 @@ Canvas::StretchNot(const Bitmap &src)
 {
   assert(src.IsDefined());
 
-#ifdef USE_GLSL
   OpenGL::invert_shader->Use();
-#else
-  const GLEnable<GL_TEXTURE_2D> scope;
-
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-
-  /* invert the texture color */
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_ONE_MINUS_SRC_COLOR);
-
-  /* copy the texture alpha */
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-#endif
 
   GLTexture &texture = *src.GetNative();
   texture.Bind();
@@ -839,12 +774,7 @@ Canvas::Stretch(int dest_x, int dest_y,
 #endif
   assert(src.IsDefined());
 
-#ifdef USE_GLSL
   OpenGL::texture_shader->Use();
-#else
-  const GLEnable<GL_TEXTURE_2D> scope;
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-#endif
 
   GLTexture &texture = *src.GetNative();
   texture.Bind();
@@ -864,12 +794,7 @@ Canvas::Stretch(int dest_x, int dest_y,
 #endif
   assert(src.IsDefined());
 
-#ifdef USE_GLSL
   OpenGL::texture_shader->Use();
-#else
-  const GLEnable<GL_TEXTURE_2D> scope;
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-#endif
 
   GLTexture &texture = *src.GetNative();
   texture.Bind();
@@ -893,25 +818,8 @@ Canvas::StretchMono(int dest_x, int dest_y,
      implementation will be faster when erasing the background
      again */
 
-#ifdef USE_GLSL
   OpenGL::alpha_shader->Use();
   fg_color.Bind();
-#else
-  const GLEnable<GL_TEXTURE_2D> scope;
-
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-
-  /* replace the texture color with the selected text color */
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-
-  /* invert texture alpha (our bitmaps have black text on white
-     background) */
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#endif
 
   const ScopeAlphaBlend alpha_blend;
 

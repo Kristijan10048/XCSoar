@@ -22,10 +22,12 @@ Copyright_License {
 */
 
 #include "DebugPort.hpp"
-#include "OS/Args.hpp"
+#include "system/Args.hpp"
 #include "Device/Config.hpp"
 #include "Device/Port/Port.hpp"
 #include "Device/Port/ConfiguredPort.hpp"
+
+#include <stdexcept>
 
 DeviceConfig
 ParsePortArgs(Args &args)
@@ -87,10 +89,10 @@ ParsePortArgs(Args &args)
 }
 
 std::unique_ptr<Port>
-DebugPort::Open(boost::asio::io_service &io_service,
+DebugPort::Open(boost::asio::io_context &io_context,
                 DataHandler &handler)
 {
-  Port *port = OpenPort(io_service, config, this, handler);
+  Port *port = OpenPort(io_context, config, this, handler);
   if (port == nullptr)
     throw std::runtime_error("Failed to open port");
 
@@ -98,14 +100,14 @@ DebugPort::Open(boost::asio::io_service &io_service,
 }
 
 void
-DebugPort::PortStateChanged()
+DebugPort::PortStateChanged() noexcept
 {
   if (listener != nullptr)
     listener->PortStateChanged();
 }
 
 void
-DebugPort::PortError(const char *msg)
+DebugPort::PortError(const char *msg) noexcept
 {
   fprintf(stderr, "Port error: %s\n", msg);
 

@@ -24,7 +24,7 @@ Copyright_License {
 #include "Float.hpp"
 #include "ComboList.hpp"
 #include "Math/Util.hpp"
-#include "Util/NumberParser.hpp"
+#include "util/NumberParser.hpp"
 
 #include <stdio.h>
 
@@ -107,10 +107,10 @@ DataFieldFloat::SpeedUp(bool keyup)
     return 1;
   }
 
-  if (!last_step.Check(200)) {
+  if (!last_step.Check(std::chrono::milliseconds(200))) {
     mSpeedup++;
     if (mSpeedup > 5) {
-      last_step.UpdateWithOffset(350);
+      last_step.UpdateWithOffset(std::chrono::milliseconds(350));
       return 10;
     }
   } else

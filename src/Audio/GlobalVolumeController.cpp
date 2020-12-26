@@ -44,8 +44,9 @@ Copyright_License {
 */
 
 #include "GlobalVolumeController.hpp"
-
 #include "VolumeController.hpp"
+
+#include <cassert>
 
 VolumeController *volume_controller = nullptr;
 

@@ -31,13 +31,13 @@ Copyright_License {
 #include "NMEA/InputLine.hpp"
 #include "Units/System.hpp"
 #include "Waypoint/Waypoint.hpp"
-#include "Util/TruncateString.hpp"
-#include "Util/Macros.hpp"
-#include "Time/TimeoutClock.hpp"
+#include "util/TruncateString.hpp"
+#include "util/Macros.hpp"
+#include "time/TimeoutClock.hpp"
 
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
+#include <cassert>
 #include <tchar.h>
 #ifdef _UNICODE
 #include <windows.h>
@@ -227,7 +227,7 @@ AltairProDevice::PropertySetGet(char *Buffer, size_t size,
 
   port.Flush();
 
-  TimeoutClock timeout(5000);
+  TimeoutClock timeout(std::chrono::seconds(5));
 
   // eg $PDVSC,S,FOO,BAR*<cr>\r\n
   if (!PortWriteNMEA(port, Buffer, env))

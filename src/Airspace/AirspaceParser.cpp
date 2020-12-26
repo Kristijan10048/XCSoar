@@ -27,18 +27,18 @@ Copyright_License {
 #include "Operation/Operation.hpp"
 #include "Units/System.hpp"
 #include "Language/Language.hpp"
-#include "Util/CharUtil.hxx"
-#include "Util/StringAPI.hxx"
-#include "Util/StringParser.hxx"
-#include "Util/Macros.hpp"
+#include "util/CharUtil.hxx"
+#include "util/StringAPI.hxx"
+#include "util/StringParser.hxx"
+#include "util/Macros.hpp"
 #include "Geo/Math.hpp"
-#include "IO/LineReader.hpp"
+#include "io/LineReader.hpp"
 #include "Airspace/AirspacePolygon.hpp"
 #include "Airspace/AirspaceCircle.hpp"
 #include "Geo/GeoVector.hpp"
 #include "Engine/Airspace/AirspaceClass.hpp"
-#include "Util/StaticString.hxx"
-#include "Util/StringCompare.hxx"
+#include "util/StaticString.hxx"
+#include "util/StringCompare.hxx"
 
 #include <tchar.h>
 
@@ -631,7 +631,7 @@ static AirspaceClass
 ParseTypeTNP(const TCHAR *buffer)
 {
   // Handle e.g. "TYPE=CLASS C" properly
-  const TCHAR *type = StringAfterPrefixCI(buffer, _T("CLASS "));
+  const TCHAR *type = StringAfterPrefixIgnoreCase(buffer, _T("CLASS "));
   if (type) {
     AirspaceClass _class = ParseClassTNP(type);
     if (_class != OTHER)
@@ -834,7 +834,7 @@ DetectFileType(const TCHAR *line)
       StringStartsWithIgnoreCase(line, _T("TITLE=")))
     return AirspaceFileType::TNP;
 
-  const TCHAR *p = StringAfterPrefixCI(line, _T("AC"));
+  const TCHAR *p = StringAfterPrefixIgnoreCase(line, _T("AC"));
   if (p != nullptr && (StringIsEmpty(p) || *p == _T(' ')))
     return AirspaceFileType::OPENAIR;
 

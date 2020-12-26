@@ -27,12 +27,12 @@
 #include "Math/Quadratic.hpp"
 #include "Math/Util.hpp"
 #include "Util/Tolerances.hpp"
-#include "Util/Clamp.hpp"
+#include "util/Clamp.hpp"
 #include "Navigation/Aircraft.hpp"
 
 #include <algorithm>
 
-#include <assert.h>
+#include <cassert>
 
 GlidePolar::GlidePolar(const double _mc, const double _bugs, const double _ballast)
   :mc(_mc),

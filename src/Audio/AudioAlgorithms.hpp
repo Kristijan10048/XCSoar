@@ -24,15 +24,15 @@ Copyright_License {
 #ifndef XCSOAR_AUDIO_ALGORITHMS_HPP
 #define XCSOAR_AUDIO_ALGORITHMS_HPP
 
-#include "Compiler.h"
-#include "OS/ByteOrder.hpp"
+#include "util/Compiler.h"
+#include "system/ByteOrder.hpp"
 
 #include <algorithm>
 #include <type_traits>
 
-#include <assert.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
 
 /* Algorithms for processing audio data */
 

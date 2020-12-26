@@ -29,9 +29,9 @@ Copyright_License {
 #include "Screen/Features.hpp"
 #include "Form/List.hpp"
 #include "Look/AirspaceLook.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 /* brush patterns are only available on GDI */
 #ifdef HAVE_HATCHED_BRUSH
@@ -44,7 +44,7 @@ public:
     :look(_look) {}
 
   virtual void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                           unsigned i) override {
+                           unsigned i) noexcept override {
     assert(i < ARRAY_SIZE(AirspaceLook::brushes));
 
     const unsigned padding = Layout::GetTextPadding();

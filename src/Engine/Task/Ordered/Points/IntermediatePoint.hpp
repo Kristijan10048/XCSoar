@@ -24,7 +24,7 @@
 #define INTERMEDIATEPOINT_H
 
 #include "OrderedTaskPoint.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 /**
  * An IntermediatePoint is an abstract OrderedTaskPoint,

@@ -29,7 +29,7 @@ Copyright_License {
 #include "Look/DialogLook.hpp"
 #include "Screen/Init.hpp"
 #include "Screen/Layout.hpp"
-#include "Event/KeyCode.hpp"
+#include "event/KeyCode.hpp"
 #include "../test/src/Fonts.hpp"
 #include "Language/Language.hpp"
 #include "Form/ActionListener.hpp"
@@ -94,7 +94,7 @@ public:
   virtual bool KeyPress(unsigned key_code) override;
 
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -136,7 +136,7 @@ KoboMenuWidget::KeyPress(unsigned key_code)
 }
 
 void
-KoboMenuWidget::OnAction(int id)
+KoboMenuWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case TOOLS:
@@ -156,11 +156,12 @@ KoboMenuWidget::OnAction(int id)
 static int
 Main(SingleWindow &main_window, const DialogLook &dialog_look)
 {
-  WidgetDialog dialog(dialog_look);
+  WidgetDialog dialog(WidgetDialog::Full{}, main_window,
+                      dialog_look, nullptr);
   KoboMenuWidget widget(dialog_look, dialog);
-  dialog.CreateFull(main_window, _T(""), &widget);
   widget.CreateButtons(dialog);
 
+  dialog.FinishPreliminary(&widget);
   const int result = dialog.ShowModal();
   dialog.StealWidget();
   return result;

@@ -29,22 +29,22 @@ Copyright_License {
 #include "Formatter/UserUnits.hpp"
 #include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
-#include "Event/Timer.hpp"
+#include "event/PeriodicTimer.hpp"
 #include "Airspace/AirspaceWarning.hpp"
 #include "Airspace/ProtectedAirspaceWarningManager.hpp"
 #include "Airspace/AirspaceWarningManager.hpp"
 #include "Formatter/AirspaceFormatter.hpp"
 #include "Engine/Airspace/AbstractAirspace.hpp"
-#include "Util/TrivialArray.hxx"
-#include "Util/Macros.hpp"
+#include "util/TrivialArray.hxx"
+#include "util/Macros.hpp"
 #include "Interface.hpp"
 #include "Language/Language.hpp"
 #include "Widget/ListWidget.hpp"
 #include "UIGlobals.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 #include "Audio/Sound.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
 
 struct WarningItem
@@ -68,7 +68,7 @@ struct WarningItem
 };
 
 class AirspaceWarningListWidget final
-  : public ListWidget, private ActionListener, private Timer {
+  : public ListWidget, private ActionListener {
 
   enum Buttons {
     ACK,
@@ -77,6 +77,8 @@ class AirspaceWarningListWidget final
   };
 
   ProtectedAirspaceWarningManager &airspace_warnings;
+
+  PeriodicTimer update_list_timer{[this]{ UpdateList(); }};
 
   Button *ack_button;
   Button *ack_day_button;
@@ -130,24 +132,21 @@ public:
   virtual void Hide() override;
 
   /* virtual methods from ListItemRenderer */
-  virtual void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                           unsigned idx) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override;
 
   /* virtual methods from ListCursorHandler */
-  virtual void OnCursorMoved(unsigned index) override;
+  void OnCursorMoved(unsigned index) noexcept override;
 
-  virtual bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return true;
   }
 
-  virtual void OnActivateItem(unsigned index) override;
+  void OnActivateItem(unsigned index) noexcept override;
 
 private:
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
-
-  /* virtual methods from Timer */
-  virtual void OnTimer() override;
+  void OnAction(int id) noexcept override;
 };
 
 static WndForm *dialog = NULL;
@@ -206,7 +205,7 @@ AirspaceWarningListWidget::Prepare(ContainerWindow &parent,
 }
 
 void
-AirspaceWarningListWidget::OnCursorMoved(unsigned i)
+AirspaceWarningListWidget::OnCursorMoved(unsigned i) noexcept
 {
   selected_airspace = i < warning_list.size()
     ? warning_list[i].airspace
@@ -221,18 +220,18 @@ AirspaceWarningListWidget::Show(const PixelRect &rc)
   sound_interval_counter = 0;
   ListWidget::Show(rc);
   UpdateList();
-  Timer::Schedule(500);
+  update_list_timer.Schedule(std::chrono::milliseconds(500));
 }
 
 void
 AirspaceWarningListWidget::Hide()
 {
-  Timer::Cancel();
+  update_list_timer.Cancel();
   ListWidget::Hide();
 }
 
 void
-AirspaceWarningListWidget::OnActivateItem(gcc_unused unsigned i)
+AirspaceWarningListWidget::OnActivateItem(gcc_unused unsigned i) noexcept
 {
   if (selected_airspace != nullptr)
     dlgAirspaceDetails(*selected_airspace, &airspace_warnings);
@@ -309,7 +308,8 @@ AirspaceWarningListWidget::Enable()
 
 void
 AirspaceWarningListWidget::OnPaintItem(Canvas &canvas,
-                                       const PixelRect paint_rc, unsigned i)
+                                       const PixelRect paint_rc,
+                                       unsigned i) noexcept
 {
   TCHAR buffer[128];
 
@@ -448,7 +448,7 @@ AirspaceWarningListWidget::CopyList()
 }
 
 void
-AirspaceWarningListWidget::OnAction(int id)
+AirspaceWarningListWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case ACK:
@@ -522,12 +522,6 @@ AirspaceWarningListWidget::UpdateList()
   AutoHide();
 }
 
-void
-AirspaceWarningListWidget::OnTimer()
-{
-  UpdateList();
-}
-
 bool
 dlgAirspaceWarningVisible()
 {
@@ -545,8 +539,9 @@ dlgAirspaceWarningsShowModal(ProtectedAirspaceWarningManager &_warnings,
 
   list = new AirspaceWarningListWidget(_warnings);
 
-  WidgetDialog dialog2(UIGlobals::GetDialogLook());
-  dialog2.CreateFull(UIGlobals::GetMainWindow(), _("Airspace Warnings"), list);
+  WidgetDialog dialog2(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                       UIGlobals::GetDialogLook(),
+                       _("Airspace Warnings"), list);
   list->CreateButtons(dialog2);
   dialog2.AddButton(_("Close"), mrOK);
   dialog2.EnableCursorSelection();

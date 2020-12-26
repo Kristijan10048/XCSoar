@@ -27,13 +27,15 @@ Copyright_License {
 #include "ZzipStream.hpp"
 #include "WorldFile.hpp"
 #include "Operation/Operation.hpp"
-#include "OS/ConvertPathName.hpp"
+#include "system/ConvertPathName.hpp"
 
 extern "C" {
 #include "jasper/jp2/jp2_cod.h"
 #include "jasper/jpc/jpc_dec.h"
 #include "jasper/jpc/jpc_t1cod.h"
 }
+
+#include <string.h>
 
 long
 TerrainLoader::SkipMarkerSegment(long file_offset) const
@@ -177,7 +179,7 @@ TerrainLoader::PutTileData(unsigned index,
                                       end_x, end_y, m);
 
   if (scan_tiles) {
-    const ScopeExclusiveLock lock(mutex);
+    const std::lock_guard<SharedMutex> lock(mutex);
     raster_tile_cache.PutTileData(index, m);
   }
 }

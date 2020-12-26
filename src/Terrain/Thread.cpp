@@ -24,7 +24,7 @@ Copyright_License {
 #include "Thread.hpp"
 #include "RasterTerrain.hpp"
 #include "Projection/WindowProjection.hpp"
-#include "Thread/Util.hpp"
+#include "thread/Util.hpp"
 
 TerrainThread::TerrainThread(RasterTerrain &_terrain,
                              std::function<void()> &&_callback)
@@ -36,7 +36,7 @@ TerrainThread::Trigger(const WindowProjection &projection)
 {
   assert(projection.IsValid());
 
-  const ScopeLock protect(mutex);
+  const std::lock_guard<Mutex> lock(mutex);
 
   GeoPoint center = projection.GetGeoScreenCenter();
   auto radius = projection.GetScreenWidthMeters() / 2;
@@ -50,7 +50,7 @@ TerrainThread::Trigger(const WindowProjection &projection)
 }
 
 void
-TerrainThread::Tick()
+TerrainThread::Tick() noexcept
 {
   SetIdlePriority(); // TODO: call only once
 

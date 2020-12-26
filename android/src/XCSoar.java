@@ -22,6 +22,7 @@
 
 package org.xcsoar;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.os.Bundle;
@@ -42,6 +43,7 @@ import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
 import android.content.ServiceConnection;
 import android.content.ComponentName;
+import android.content.pm.PackageManager;
 import android.util.Log;
 import android.provider.Settings;
 import android.view.View;
@@ -90,16 +92,13 @@ public class XCSoar extends Activity {
     NetUtil.initialise(this);
     InternalGPS.Initialize();
     NonGPSSensors.Initialize();
+    GliderLinkReceiver.Initialize();
 
     IOIOHelper.onCreateContext(this);
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR)
-      // Bluetooth suppoert was added in Android 2.0 "Eclair"
-      BluetoothHelper.Initialize(this);
+    BluetoothHelper.Initialize(this);
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD)
-      // the DownloadManager was added in Android 2.3 "Gingerbread"
-      DownloadUtil.Initialise(this);
+    DownloadUtil.Initialise(this);
 
     // fullscreen mode
     requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -109,12 +108,10 @@ public class XCSoar extends Activity {
     /* Workaround for layout problems in Android KitKat with immersive full
        screen mode: Sometimes the content view was not initialized with the
        correct size, which caused graphics artifacts. */
-    if (android.os.Build.VERSION.SDK_INT >= 19) {
-      getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN|
-                           WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS|
-                           WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR|
-                           WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
-    }
+    getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN|
+                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS|
+                         WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR|
+                         WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
 
     enableImmersiveModeIfSupported();
 
@@ -125,6 +122,12 @@ public class XCSoar extends Activity {
     batteryReceiver = new BatteryReceiver();
     registerReceiver(batteryReceiver,
                      new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
+    /* TODO: this sure is the wrong place to request permissions -
+       we should request permissions when we need them, but
+       implementing that is complicated, so for now, we do it
+       here to give users a quick solution for the problem */
+    requestAllPermissions();
   }
 
   private void quit() {
@@ -216,14 +219,55 @@ public class XCSoar extends Activity {
 
   private void enableImmersiveModeIfSupported() {
     // Set / Reset the System UI visibility flags for Immersive Full Screen Mode, if supported
-    if (android.os.Build.VERSION.SDK_INT >= 19)
-      ImmersiveFullScreenMode.enable(getWindow().getDecorView());
+    ImmersiveFullScreenMode.enable(getWindow().getDecorView());
+  }
+
+  private static final String[] NEEDED_PERMISSIONS = new String[] {
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.WRITE_EXTERNAL_STORAGE
+  };
+
+  private boolean hasAllPermissions() {
+    for (String p : NEEDED_PERMISSIONS) {
+      if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private void requestAllPermissions() {
+    if (android.os.Build.VERSION.SDK_INT < 23)
+      /* we don't need to request permissions on this old Android
+         version */
+      return;
+
+    /* starting with Android 6.0, we need to explicitly request all
+       permissions before using them; mentioning them in the manifest
+       is not enough */
+
+    if (!hasAllPermissions()) {
+      try {
+        this.requestPermissions(NEEDED_PERMISSIONS, 0);
+      } catch (IllegalArgumentException e) {
+        Log.e(TAG, "could not request permissions: " + String.join(", ", NEEDED_PERMISSIONS), e);
+      }
+    }
   }
 
   @Override protected void onResume() {
     super.onResume();
 
-    startService(new Intent(this, serviceClass));
+    try {
+      startService(new Intent(this, serviceClass));
+    } catch (IllegalStateException e) {
+      /* we get crash reports on this all the time, but I don't know
+         why - Android docs say "the application is in a state where
+         the service can not be started (such as not in the foreground
+         in a state when services are allowed)", but we're about to be
+         resumed, which means we're in foreground... */
+    }
 
     if (nativeView != null)
       nativeView.onResume();
@@ -241,8 +285,7 @@ public class XCSoar extends Activity {
       batteryReceiver = null;
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD)
-      DownloadUtil.Deinitialise(this);
+    DownloadUtil.Deinitialise(this);
 
     if (nativeView != null) {
       nativeView.exitApp();

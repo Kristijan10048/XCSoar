@@ -22,16 +22,16 @@ Copyright_License {
 */
 
 #include "TCPPort.hpp"
-#include "Net/Option.hpp"
-#include "IO/Async/AsioUtil.hpp"
+#include "net/Option.hpp"
+#include "io/async/AsioUtil.hpp"
 
-TCPPort::TCPPort(boost::asio::io_service &io_service,
+TCPPort::TCPPort(boost::asio::io_context &io_context,
                  unsigned port,
                  PortListener *_listener, DataHandler &_handler)
   :BufferedPort(_listener, _handler),
-   acceptor(io_service,
+   acceptor(io_context,
             boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-   connection(io_service)
+   connection(io_context)
 {
   acceptor.listen(1);
 

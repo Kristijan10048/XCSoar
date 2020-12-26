@@ -29,15 +29,15 @@ Copyright_License {
 #include "Device/Parser.hpp"
 #include "Device/Config.hpp"
 #include "Device/Driver/LX/LX1600.hpp"
-#include "OS/Args.hpp"
-#include "Util/StringUtil.hpp"
-#include "Util/PrintException.hxx"
+#include "system/Args.hpp"
+#include "util/StringUtil.hpp"
+#include "util/PrintException.hxx"
 #include "Operation/ConsoleOperationEnvironment.hpp"
-#include "IO/Async/GlobalAsioThread.hpp"
-#include "IO/Async/AsioThread.hpp"
+#include "io/async/GlobalAsioThread.hpp"
+#include "io/async/AsioThread.hpp"
 #include "Units/System.hpp"
 #include "Atmosphere/Pressure.hpp"
-#include "IO/DataHandler.hpp"
+#include "io/NullDataHandler.hpp"
 
 #include <stdio.h>
 
@@ -326,16 +326,6 @@ RunUI(Port &port, OperationEnvironment &env)
   }
 }
 
-class NullDataHandler : public DataHandler {
-public:
-  virtual void DataReceived(const void *data, size_t length) {}
-};
-
-#ifdef __clang__
-/* true, the nullptr cast below is a bad kludge */
-#pragma GCC diagnostic ignored "-Wnull-dereference"
-#endif
-
 int
 main(int argc, char **argv)
 try {
@@ -346,7 +336,7 @@ try {
   ScopeGlobalAsioThread global_asio_thread;
 
   NullDataHandler handler;
-  auto port = debug_port.Open(*asio_thread, *(DataHandler *)nullptr);
+  auto port = debug_port.Open(*asio_thread, handler);
 
   ConsoleOperationEnvironment env;
 

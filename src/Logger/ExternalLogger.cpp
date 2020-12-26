@@ -36,13 +36,13 @@
 #include "Operation/MessageOperationEnvironment.hpp"
 #include "Dialogs/JobDialog.hpp"
 #include "Job/TriStateJob.hpp"
-#include "OS/Path.hpp"
-#include "IO/FileLineReader.hpp"
-#include "IO/FileTransaction.hpp"
+#include "system/Path.hpp"
+#include "io/FileLineReader.hpp"
+#include "io/FileTransaction.hpp"
 #include "IGC/IGCParser.hpp"
 #include "IGC/IGCHeader.hpp"
 #include "Formatter/IGCFilenameFormatter.hpp"
-#include "Time/BrokenDate.hpp"
+#include "time/BrokenDate.hpp"
 
 class DeclareJob {
   DeviceDescriptor &device;
@@ -69,8 +69,8 @@ try {
   JobDialog(UIGlobals::GetMainWindow(), UIGlobals::GetDialogLook(),
             _T(""), job, true);
   return job.GetResult();
-} catch (const std::runtime_error &e) {
-  LogError(e);
+} catch (...) {
+  LogError(std::current_exception());
   return TriStateJobResult::ERROR;
 }
 
@@ -153,8 +153,8 @@ try {
   JobDialog(UIGlobals::GetMainWindow(), UIGlobals::GetDialogLook(),
             _T(""), job, true);
   return job.GetResult();
-} catch (const std::runtime_error &e) {
-  LogError(e);
+} catch (...) {
+  LogError(std::current_exception());
   return TriStateJobResult::ERROR;
 }
 
@@ -181,8 +181,8 @@ try {
   JobDialog(UIGlobals::GetMainWindow(), UIGlobals::GetDialogLook(),
             _T(""), job, true);
   return job.GetResult();
-} catch (const std::runtime_error &e) {
-  LogError(e);
+} catch (...) {
+  LogError(std::current_exception());
   return TriStateJobResult::ERROR;
 }
 
@@ -202,7 +202,7 @@ try {
   line = reader.ReadLine();
   if (line == nullptr || !IGCParseDateRecord(line, date))
     date = BrokenDate::TodayUTC();
-} catch (const std::runtime_error &e) {
+} catch (...) {
   date = BrokenDate::TodayUTC();
 }
 

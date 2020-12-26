@@ -26,15 +26,14 @@ Copyright_License {
 #include "Assemble.hpp"
 #include "Protocol.hpp"
 #include "Import.hpp"
-#include "OS/ByteOrder.hpp"
-#include "Net/StaticSocketAddress.hxx"
+#include "system/ByteOrder.hpp"
 #include "Math/Angle.hpp"
 #include "Geo/GeoPoint.hpp"
-#include "Util/CRC.hpp"
-#include "Util/ConstBuffer.hxx"
-#include "IO/Async/AsioUtil.hpp"
-#include "Util/UTF8.hpp"
-#include "Util/ConvertString.hpp"
+#include "util/CRC.hpp"
+#include "util/ConstBuffer.hxx"
+#include "io/async/AsioUtil.hpp"
+#include "util/UTF8.hpp"
+#include "util/ConvertString.hpp"
 
 #include <string>
 
@@ -43,7 +42,7 @@ SkyLinesTracking::Client::Open(boost::asio::ip::udp::resolver::query query)
 {
   Close();
 
-  const ScopeLock protect(mutex);
+  const std::lock_guard<Mutex> lock(mutex);
   resolving = true;
   resolver.async_resolve(query,
                          std::bind(&Client::OnResolved, this,
@@ -74,15 +73,15 @@ SkyLinesTracking::Client::Open(boost::asio::ip::udp::endpoint _endpoint)
 void
 SkyLinesTracking::Client::Close()
 {
-  const ScopeLock protect(mutex);
+  const std::lock_guard<Mutex> lock(mutex);
 
   if (socket.is_open()) {
-    CancelWait(socket.get_io_service(), socket);
+    CancelWait(socket);
     socket.close();
   }
 
   if (resolving) {
-    CancelWait(socket.get_io_service(), resolver);
+    CancelWait(resolver);
     resolving = false;
   }
 }
@@ -284,12 +283,12 @@ SkyLinesTracking::Client::OnReceive(const boost::system::error_code &ec,
       return;
 
     {
-      const ScopeLock protect(mutex);
+      const std::lock_guard<Mutex> lock(mutex);
       socket.close();
     }
 
     if (handler != nullptr)
-      handler->OnSkyLinesError(boost::system::system_error(ec));
+      handler->OnSkyLinesError(std::make_exception_ptr(boost::system::system_error(ec)));
     return;
   }
 
@@ -302,7 +301,7 @@ SkyLinesTracking::Client::OnReceive(const boost::system::error_code &ec,
 void
 SkyLinesTracking::Client::AsyncReceive()
 {
-  const ScopeLock protect(mutex);
+  const std::lock_guard<Mutex> lock(mutex);
   socket.async_receive_from(boost::asio::buffer(buffer, sizeof(buffer)),
                             sender_endpoint,
                             std::bind(&Client::OnReceive, this,
@@ -318,13 +317,13 @@ SkyLinesTracking::Client::OnResolved(const boost::system::error_code &ec,
     return;
 
   {
-    const ScopeLock protect(mutex);
+    const std::lock_guard<Mutex> lock(mutex);
     resolving = false;
   }
 
   if (ec) {
     if (handler != nullptr)
-      handler->OnSkyLinesError(boost::system::system_error(ec));
+      handler->OnSkyLinesError(std::make_exception_ptr(boost::system::system_error(ec)));
     return;
   }
 

@@ -25,12 +25,12 @@ Copyright_License {
 #define XCSOAR_DEVICE_BUFFERED_PORT_HPP
 
 #include "Port.hpp"
-#include "IO/DataHandler.hpp"
-#include "Thread/Mutex.hpp"
-#include "Thread/Cond.hxx"
-#include "Util/StaticFifoBuffer.hxx"
+#include "io/DataHandler.hpp"
+#include "thread/Mutex.hxx"
+#include "thread/Cond.hxx"
+#include "util/StaticFifoBuffer.hxx"
 
-#include <stdint.h>
+#include <cstdint>
 
 /**
  * An abstract #Port implementation which manages incoming data in a
@@ -67,13 +67,13 @@ public:
   /* virtual methods from class Port */
   virtual void Flush() override;
   virtual int Read(void *Buffer, size_t Size) override;
-  virtual WaitResult WaitRead(unsigned timeout_ms) override;
+  virtual WaitResult WaitRead(std::chrono::steady_clock::duration timeout) override;
   virtual bool StopRxThread() override;
   virtual bool StartRxThread() override;
 
 protected:
   /* virtual methods from class DataHandler */
-  virtual void DataReceived(const void *data, size_t length) override;
+  bool DataReceived(const void *data, size_t length) noexcept override;
 };
 
 #endif

@@ -27,8 +27,10 @@
 #include "Device/Util/NMEAWriter.hpp"
 #include "Device/Util/NMEAReader.hpp"
 #include "Operation/Operation.hpp"
-#include "OS/Path.hpp"
-#include "Time/TimeoutClock.hpp"
+#include "system/Path.hpp"
+#include "io/BufferedOutputStream.hxx"
+#include "io/FileOutputStream.hxx"
+#include "time/TimeoutClock.hpp"
 #include "NMEA/InputLine.hpp"
 
 #include <algorithm>
@@ -214,7 +216,7 @@ Nano::ReadFlightList(Port &port, RecordedFlightList &flight_list,
   port.StopRxThread();
   PortNMEAReader reader(port, env);
 
-  TimeoutClock timeout(2000);
+  TimeoutClock timeout(std::chrono::seconds(2));
   int nflights = GetNumberOfFlights(port, reader, env, timeout);
   if (nflights <= 0)
     return nflights == 0;
@@ -232,7 +234,7 @@ Nano::ReadFlightList(Port &port, RecordedFlightList &flight_list,
     /* read 8 records at a time */
     const unsigned nrequest = std::min(nmax, 8u);
 
-    timeout = TimeoutClock(2000);
+    timeout = TimeoutClock(std::chrono::seconds(2));
     if (!GetLogbookContents(port, reader, flight_list,
                             requested_tail, nrequest, env, timeout))
       return false;
@@ -256,7 +258,7 @@ RequestFlight(Port &port, const char *filename,
 }
 
 static bool
-HandleFlightLine(const char *_line, FILE *file,
+HandleFlightLine(const char *_line, BufferedOutputStream &os,
                  unsigned &i, unsigned &row_count_r)
 {
   NMEAInputLine line(_line);
@@ -282,16 +284,15 @@ HandleFlightLine(const char *_line, FILE *file,
 
   auto content = line.Rest();
   size_t length = content.end() - content.begin();
-  if (fwrite(content.begin(), 1, length, file) != length)
-    return false;
+  os.Write(content.begin(), length);
 
-  fputs("\r\n", file);
+  os.Write("\r\n");
   ++i;
   return true;
 }
 
 static bool
-DownloadFlightInner(Port &port, const char *filename, FILE *file,
+DownloadFlightInner(Port &port, const char *filename, BufferedOutputStream &os,
                     OperationEnvironment &env)
 {
   PortNMEAReader reader(port, env);
@@ -322,15 +323,16 @@ DownloadFlightInner(Port &port, const char *filename, FILE *file,
         request_retry_count++;
       }
 
-      TimeoutClock timeout(2000);
+      TimeoutClock timeout(std::chrono::seconds(2));
       const char *line = reader.ExpectLine("PLXVC,FLIGHT,A,", timeout);
-      if (line == nullptr || !HandleFlightLine(line, file, i, row_count)) {
+      if (line == nullptr || !HandleFlightLine(line, os, i, row_count)) {
         if (request_retry_count > 5)
           return false;
 
         /* Discard data which might still be in-transit, e.g. buffered
            inside a bluetooth dongle */
-        port.FullFlush(env, 200, 2000);
+        port.FullFlush(env, std::chrono::milliseconds(200),
+                       std::chrono::seconds(2));
 
         /* If we already received parts of the request range correctly break
            out of the loop to calculate new request range */
@@ -360,14 +362,16 @@ Nano::DownloadFlight(Port &port, const RecordedFlightInfo &flight,
 {
   port.StopRxThread();
 
-  FILE *file = _tfopen(path.c_str(), _T("wb"));
-  if (file == nullptr)
-    return false;
+  FileOutputStream fos(path);
+  BufferedOutputStream bos(fos);
 
   bool success = DownloadFlightInner(port, flight.internal.lx.nano_filename,
-                                     file, env);
-  if (fclose(file) != 0)
-    success = false;
+                                     bos, env);
+
+  if (success) {
+    bos.Flush();
+    fos.Commit();
+  }
 
   return success;
 }

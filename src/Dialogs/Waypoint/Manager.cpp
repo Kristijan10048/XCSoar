@@ -85,28 +85,32 @@ public:
 
   void Show(const PixelRect &rc) override {
     ListWidget::Show(rc);
-    UpdateList();
-    UpdateButtons();
+    Update();
   }
 
 private:
   /* virtual methods from ListItemRenderer */
   void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                   unsigned idx) override;
+                   unsigned idx) noexcept override;
 
   /* virtual methods from ListCursorHandler */
-  bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return true;
   }
 
-  void OnActivateItem(unsigned index) override;
+  void OnActivateItem(unsigned index) noexcept override;
 
   /* virtual methods from ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 
 private:
   void UpdateList();
   void UpdateButtons();
+
+  void Update() noexcept {
+    UpdateList();
+    UpdateButtons();
+  }
 
   void OnWaypointNewClicked();
   void OnWaypointImportClicked();
@@ -164,7 +168,7 @@ WaypointManagerWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 
 void
 WaypointManagerWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
-                                   unsigned i)
+                                   unsigned i) noexcept
 {
   assert(i < items.size());
 
@@ -177,7 +181,7 @@ WaypointManagerWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
 }
 
 void
-WaypointManagerWidget::OnActivateItem(unsigned i)
+WaypointManagerWidget::OnActivateItem(unsigned i) noexcept
 {
   OnWaypointEditClicked(i);
 }
@@ -200,7 +204,7 @@ WaypointManagerWidget::OnWaypointNewClicked()
       way_points.Optimise();
     }
 
-    UpdateList();
+    Update();
   }
 }
 
@@ -224,7 +228,7 @@ WaypointManagerWidget::OnWaypointImportClicked()
         way_points.Optimise();
       }
 
-      UpdateList();
+      Update();
     }
   }
 }
@@ -249,8 +253,8 @@ WaypointManagerWidget::SaveWaypoints()
   try {
     WaypointGlue::SaveWaypoints(way_points);
     WaypointFileChanged = true;
-  } catch (const std::runtime_error &e) {
-    ShowError(e, _("Failed to save waypoints"));
+  } catch (...) {
+    ShowError(std::current_exception(), _("Failed to save waypoints"));
   }
 
   modified = false;
@@ -277,12 +281,12 @@ WaypointManagerWidget::OnWaypointDeleteClicked(unsigned i)
       way_points.Optimise();
     }
 
-    UpdateList();
+    Update();
   }
 }
 
 void
-WaypointManagerWidget::OnAction(int id)
+WaypointManagerWidget::OnAction(int id) noexcept
 {
   switch (Buttons(id)) {
   case NEW:
@@ -312,9 +316,8 @@ dlgConfigWaypointsShowModal()
 {
   const DialogLook &look = UIGlobals::GetDialogLook();
   WaypointManagerWidget widget;
-  WidgetDialog dialog(look);
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), _("Waypoints Editor"),
-                    &widget);
+  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
+                      look, _("Waypoints Editor"), &widget);
   widget.CreateButtons(dialog);
   dialog.AddButton(_("Close"), mrCancel);
   dialog.EnableCursorSelection();

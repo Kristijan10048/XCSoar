@@ -80,14 +80,18 @@ doc/html/advanced/input/ALL		http://xcsoar.sourceforge.net/advanced/input/
 #include "Task/ProtectedTaskManager.hpp"
 #include "UtilsSettings.hpp"
 #include "PageActions.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 #include "MapWindow/GlueMapWindow.hpp"
 #include "Simulator.hpp"
 #include "Formatter/TimeFormatter.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <tchar.h>
 #include <algorithm>
+
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
 
 /**
  * Determine the reference location of the current map display.
@@ -139,8 +143,8 @@ SuspendAppendSaveWaypoint(Waypoint &&wp)
 
   try {
     WaypointGlue::SaveWaypoint(*ptr);
-  } catch (const std::runtime_error &e) {
-    ShowError(e, _("Failed to save waypoints"));
+  } catch (...) {
+    ShowError(std::current_exception(), _("Failed to save waypoints"));
   }
 
   return ptr;
@@ -495,7 +499,7 @@ InputEvents::eventNull(gcc_unused const TCHAR *misc)
 void
 InputEvents::eventBeep(gcc_unused const TCHAR *misc)
 {
-#ifdef WIN32
+#ifdef _WIN32
   MessageBeep(MB_ICONEXCLAMATION);
 #else
   PlayResource(_T("IDR_WAV_CLEAR"));
@@ -555,7 +559,7 @@ InputEvents::eventCredits(gcc_unused const TCHAR *misc)
 void
 InputEvents::eventRun(const TCHAR *misc)
 {
-  #ifdef WIN32
+#ifdef _WIN32
   PROCESS_INFORMATION pi;
   if (!::CreateProcess(misc, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, &pi))
     return;
@@ -565,9 +569,9 @@ InputEvents::eventRun(const TCHAR *misc)
   ::CloseHandle(pi.hProcess);
   ::CloseHandle(pi.hThread);
 
-  #else /* !WIN32 */
+  #elif !defined(__APPLE__) || !TARGET_OS_IPHONE
   system(misc);
-  #endif /* !WIN32 */
+  #endif
 }
 
 void

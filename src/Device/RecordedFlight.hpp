@@ -24,10 +24,10 @@ Copyright_License {
 #ifndef XCSOAR_DEVICE_RECORDED_FLIGHT_HPP
 #define XCSOAR_DEVICE_RECORDED_FLIGHT_HPP
 
-#include "Util/StaticArray.hxx"
+#include "util/StaticArray.hxx"
 #include "FlightInfo.hpp"
 
-#include <stdint.h>
+#include <cstdint>
 
 struct RecordedFlightInfo : FlightInfo {
   /**

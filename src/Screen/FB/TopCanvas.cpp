@@ -28,6 +28,10 @@ Copyright_License {
 #include "Screen/Memory/Export.hpp"
 #endif
 
+#ifdef USE_FB
+#include "Hardware/DisplayDPI.hpp"
+#endif
+
 #if defined(KOBO) && defined(USE_FB)
 #include "Kobo/Model.hpp"
 #include "mxcfb.h"
@@ -39,7 +43,7 @@ Copyright_License {
 #include <linux/fb.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -223,6 +227,11 @@ TopCanvas::Create(PixelSize new_size,
 #endif
 
   new_size = ::GetSize(vinfo);
+
+  if (vinfo.width > 0 && vinfo.height > 0)
+    Display::ProvideSizeMM(new_size.cx, new_size.cy,
+                           vinfo.width, vinfo.height);
+
 #elif defined(USE_VFB)
   /* allocate buffer as requested by caller */
 #else

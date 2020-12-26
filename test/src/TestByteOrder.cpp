@@ -22,9 +22,9 @@
 
 #include "TestUtil.hpp"
 
-#include <stdint.h>
+#include <cstdint>
 
 #define FORCE_ALIGNED_READ_WRITE
-#include "OS/ByteOrder.hpp"
+#include "system/ByteOrder.hpp"
 
 #include "TestByteOrder.inc.cpp"

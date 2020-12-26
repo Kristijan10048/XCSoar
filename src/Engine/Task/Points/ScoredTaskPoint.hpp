@@ -25,7 +25,7 @@
 
 #include "SampledTaskPoint.hpp"
 #include "Navigation/Aircraft.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 /**
  * Abstract specialisation of SampledTaskPoint to manage scoring

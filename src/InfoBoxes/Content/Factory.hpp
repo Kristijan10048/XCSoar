@@ -25,7 +25,9 @@ Copyright_License {
 #define XCSOAR_INFOBOX_FACTORY_HPP
 
 #include "Type.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
+
+#include <memory>
 
 #include <tchar.h>
 
@@ -56,7 +58,7 @@ namespace InfoBoxFactory
   const TCHAR *
   GetDescription(Type type);
 
-  InfoBoxContent* Create(Type infobox_type);
+  std::unique_ptr<InfoBoxContent> Create(Type infobox_type);
 };
 
 #endif

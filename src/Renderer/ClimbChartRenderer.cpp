@@ -28,7 +28,7 @@ Copyright_License {
 #include "FlightStatistics.hpp"
 #include "Language/Language.hpp"
 #include "Engine/GlideSolvers/GlidePolar.hpp"
-#include "Util/StringFormat.hpp"
+#include "util/StringFormat.hpp"
 #include "NMEA/Info.hpp"
 #include "NMEA/Derived.hpp"
 #include "Engine/Task/TaskManager.hpp"
@@ -39,7 +39,7 @@ void
 ClimbChartCaption(TCHAR *sTmp,
                   const FlightStatistics &fs)
 {
-  ScopeLock lock(fs.mutex);
+  std::lock_guard<Mutex> lock(fs.mutex);
   if (fs.thermal_average.IsEmpty()) {
     sTmp[0] = _T('\0');
   } else if (fs.thermal_average.GetCount() == 1) {

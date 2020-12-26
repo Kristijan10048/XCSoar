@@ -54,17 +54,20 @@ doc/html/advanced/input/ALL		http://xcsoar.sourceforge.net/advanced/input/
 #include "Menu/ButtonLabel.hpp"
 #include "Profile/ProfileKeys.hpp"
 #include "Menu/MenuData.hpp"
-#include "IO/ConfiguredFile.hpp"
-#include "IO/LineReader.hpp"
+#include "io/ConfiguredFile.hpp"
+#include "io/LineReader.hpp"
 #include "Pan.hpp"
+#include "Dialogs/LockScreen.hpp"
+#include "Menu/MenuBar.hpp"
+#include "MapWindow/GlueMapWindow.hpp"
 
 #ifdef KOBO
-#include "Event/KeyCode.hpp"
+#include "event/KeyCode.hpp"
 #endif
 
-#include "Lua/InputEvent.hpp"
+#include "lua/InputEvent.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <tchar.h>
 #include <stdio.h>
 #include <memory>
@@ -197,6 +200,16 @@ InputEvents::drawButtons(Mode mode, bool full)
     : NULL;
 
   ButtonLabel::Set(menu, overlay_menu, full);
+
+  GlueMapWindow *map = CommonInterface::main_window->GetMapIfActive();
+  if (map != nullptr){
+      if (mode != MODE_DEFAULT){
+          // Set margin so that GlueMapWindow doesn't draw HUD underneath buttons
+          map->SetBottomMarginFactor(menubar_height_scale_factor);
+      } else {
+          map->SetBottomMarginFactor(0);
+      }
+  }
 }
 
 InputEvents::Mode
@@ -478,4 +491,10 @@ InputEvents::ProcessTimer()
 {
   DoQueuedEvents();
   ProcessMenuTimer();
+}
+
+void
+InputEvents::eventLockScreen(const TCHAR *mode)
+{
+  ShowLockBox();
 }

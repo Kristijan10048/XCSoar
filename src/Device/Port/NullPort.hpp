@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_DEVICE_NULL_PORT_HPP
 #define XCSOAR_DEVICE_NULL_PORT_HPP
 
-#include "IO/DataHandler.hpp"
+#include "io/DataHandler.hpp"
 #include "Port.hpp"
 
 /**
@@ -45,11 +45,11 @@ public:
   bool StopRxThread() override;
   bool StartRxThread() override;
   int Read(void *Buffer, size_t Size) override;
-  WaitResult WaitRead(unsigned timeout_ms) override;
+  WaitResult WaitRead(std::chrono::steady_clock::duration timeout) override;
 
 private:
   /* virtual methods from class DataHandler */
-  void DataReceived(const void *data, size_t length) override;
+  bool DataReceived(const void *data, size_t length) noexcept override;
 };
 
 #endif

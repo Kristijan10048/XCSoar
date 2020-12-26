@@ -24,9 +24,9 @@
 #ifndef OBSERVATIONZONE_HPP
 #define OBSERVATIONZONE_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 struct GeoPoint;
 class OZBoundary;

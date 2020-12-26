@@ -25,14 +25,14 @@ Copyright_License {
 #include "Assemble.hpp"
 #include "Protocol.hpp"
 #include "Import.hpp"
-#include "OS/ByteOrder.hpp"
-#include "Util/CRC.hpp"
+#include "system/ByteOrder.hpp"
+#include "util/CRC.hpp"
 
 namespace SkyLinesTracking {
 
-Server::Server(boost::asio::io_service &io_service,
+Server::Server(boost::asio::io_context &io_context,
                boost::asio::ip::udp::endpoint endpoint)
-  :socket(io_service, endpoint)
+  :socket(io_context, endpoint)
 {
   AsyncReceive();
 }
@@ -53,8 +53,8 @@ Server::SendBuffer(const boost::asio::ip::udp::endpoint &endpoint,
 
   try {
     socket.send_to(boost::asio::const_buffers_1(data), endpoint, 0);
-  } catch (std::runtime_error e) {
-    OnSendError(endpoint, std::move(e));
+  } catch (...) {
+    OnSendError(endpoint, std::current_exception());
   }
 }
 
@@ -180,7 +180,7 @@ Server::OnReceive(const boost::system::error_code &ec, size_t size)
 
     socket.close();
 
-    OnError(boost::system::system_error(ec));
+    OnError(std::make_exception_ptr(boost::system::system_error(ec)));
     return;
   }
 

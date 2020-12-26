@@ -23,9 +23,15 @@ Copyright_License {
 
 #include "Parser.hpp"
 #include "FileRepository.hpp"
-#include "IO/LineReader.hpp"
-#include "Util/StringUtil.hpp"
+#include "io/LineReader.hpp"
+#include "util/StringStrip.hxx"
+#include "util/HexString.hpp"
 
+/**
+ * Parses a line of the repository file.
+ * Each line is of the form `name = value`
+ * @returns A pointer to the value field.
+ */
 static const char *
 ParseLine(char *line)
 {
@@ -90,12 +96,24 @@ ParseFileRepository(FileRepository &repository, NLineReader &reader)
     } else if (StringIsEqual(name, "type")) {
       if (StringIsEqual(value, "airspace"))
         file.type = FileType::AIRSPACE;
+      else if (StringIsEqual(value, "waypoint-details"))
+        file.type = FileType::WAYPOINTDETAILS;
       else if (StringIsEqual(value, "waypoint"))
         file.type = FileType::WAYPOINT;
       else if (StringIsEqual(value, "map"))
         file.type = FileType::MAP;
       else if (StringIsEqual(value, "flarmnet"))
         file.type = FileType::FLARMNET;
+    } else if (StringIsEqual(name, "update")) {
+      int year, month, day;
+      sscanf(value, "%04u-%02u-%02u", &year, &month, &day);
+      file.update_date = BrokenDate(year, month, day);
+    } else if (StringIsEqual(name, "sha256")) {
+      try {
+        file.sha256_hash = ParseHexString<32>(std::string_view(value));
+      } catch (std::exception &e) {
+        // Parsing failed, sha256_hash stays zeroed
+      }
     }
   }
 

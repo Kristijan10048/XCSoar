@@ -28,7 +28,7 @@ Copyright_License {
 #include "Form/Button.hpp"
 #include "Form/ActionListener.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 struct ButtonLook;
 
@@ -91,7 +91,7 @@ public:
 
 private:
   /* virtual methods from ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 #endif

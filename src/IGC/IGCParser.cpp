@@ -26,10 +26,10 @@ Copyright_License {
 #include "IGCFix.hpp"
 #include "IGCExtensions.hpp"
 #include "IGCDeclaration.hpp"
-#include "Time/BrokenDate.hpp"
-#include "Time/BrokenTime.hpp"
-#include "Util/CharUtil.hxx"
-#include "Util/StringAPI.hxx"
+#include "time/BrokenDate.hpp"
+#include "time/BrokenTime.hpp"
+#include "util/CharUtil.hxx"
+#include "util/StringAPI.hxx"
 
 #include <stdlib.h>
 
@@ -95,6 +95,13 @@ IGCParseDateRecord(const char *line, BrokenDate &date)
     return false;
 
   line += 5;
+
+  if (strncmp(line, "DATE", 4) == 0) {
+    line += 4;
+  }
+  if (line[0] == ':') {
+    line += 1;
+  }
 
   char *endptr;
   unsigned long value = strtoul(line, &endptr, 10);

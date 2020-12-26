@@ -27,9 +27,9 @@ Copyright_License {
 #include "Geo/SpeedVector.hpp"
 #include "Geo/GeoPoint.hpp"
 #include "Atmosphere/Pressure.hpp"
-#include "Util/StaticString.hxx"
+#include "util/StaticString.hxx"
 
-#include <stdint.h>
+#include <cstdint>
 
 struct ParsedMETAR
 {

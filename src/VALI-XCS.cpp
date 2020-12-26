@@ -25,17 +25,17 @@
  * to validate the GRecord of an XCSoar-generated IGC file
  */
 
-#include "OS/ConvertPathName.hpp"
+#include "system/ConvertPathName.hpp"
 #include "Logger/GRecord.hpp"
 #include "Version.hpp"
-#include "Util/PrintException.hxx"
+#include "util/PrintException.hxx"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tchar.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -101,7 +101,7 @@ try {
     return RunValidate(path);
   } else
     return 0;
-} catch (const std::runtime_error &e) {
-  PrintException(e);
+} catch (...) {
+  PrintException(std::current_exception());
   return EXIT_FAILURE;
 }

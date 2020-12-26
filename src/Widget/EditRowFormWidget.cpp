@@ -33,13 +33,13 @@ Copyright_License {
 #include "Form/DataField/Password.hpp"
 #include "Form/DataField/Time.hpp"
 #include "Form/DataField/RoughTime.hpp"
-#include "Time/RoughTime.hpp"
+#include "time/RoughTime.hpp"
 #include "Language/Language.hpp"
 #include "Math/Angle.hpp"
-#include "Util/StringAPI.hxx"
-#include "Util/TruncateString.hpp"
+#include "util/StringAPI.hxx"
+#include "util/TruncateString.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 WndProperty *
 RowFormWidget::CreateEdit(const TCHAR *label, const TCHAR *help,

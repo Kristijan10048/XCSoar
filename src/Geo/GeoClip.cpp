@@ -22,9 +22,9 @@ Copyright_License {
 */
 
 #include "Geo/GeoClip.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <assert.h>
+#include <cassert>
 
 gcc_const
 static GeoPoint

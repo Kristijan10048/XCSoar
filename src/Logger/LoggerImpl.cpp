@@ -28,12 +28,12 @@
 #include "Device/Declaration.hpp"
 #include "NMEA/Info.hpp"
 #include "Simulator.hpp"
-#include "OS/FileUtil.hpp"
+#include "system/FileUtil.hpp"
 #include "Formatter/IGCFilenameFormatter.hpp"
 #include "Interface.hpp"
 #include "IGCFileCleanup.hpp"
 #include "IGC/IGCWriter.hpp"
-#include "Util/CharUtil.hxx"
+#include "util/CharUtil.hxx"
 
 #include <tchar.h>
 #include <algorithm>
@@ -187,7 +187,7 @@ LoggerImpl::LogPoint(const NMEAInfo &gps_info)
       tmp_info.gps.satellites_used = src.satellites_used;
     }
 
-    tmp_info.gps.hdop = src.hdop;
+    tmp_info.gps.hdop = src.location.IsValid() ? src.hdop : -1;
     tmp_info.gps.real = src.real;
 
     if (src.satellite_ids_available) {
@@ -254,8 +254,8 @@ LoggerImpl::StartLogger(const NMEAInfo &gps_info,
 
   try {
     writer = new IGCWriter(filename);
-  } catch (const std::runtime_error &e) {
-    LogError(e);
+  } catch (...) {
+    LogError(std::current_exception());
     return false;
   }
 
@@ -307,7 +307,7 @@ LoggerImpl::StartLogger(const NMEAInfo &gps_info,
     return;
 
   simulator = gps_info.location_available && !gps_info.gps.real;
-  writer->WriteHeader(gps_info.date_time_utc, decl.pilot_name,
+  writer->WriteHeader(gps_info.date_time_utc, decl.pilot_name, decl.copilot_name,
                       decl.aircraft_type, decl.aircraft_registration,
                       decl.competition_id,
                       logger_id, GetGPSDeviceName(), simulator);

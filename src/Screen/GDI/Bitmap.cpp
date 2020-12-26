@@ -23,9 +23,9 @@ Copyright_License {
 
 #include "Screen/Bitmap.hpp"
 #include "Screen/Debug.hpp"
-#include "OS/Path.hpp"
+#include "system/Path.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 Bitmap::Bitmap(Bitmap &&src)
   :bitmap(src.bitmap)

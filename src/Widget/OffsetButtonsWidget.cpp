@@ -23,7 +23,7 @@ Copyright_License {
 
 #include "OffsetButtonsWidget.hpp"
 #include "Form/Button.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 #include "Screen/Layout.hpp"
 
 #include <stdio.h>
@@ -116,7 +116,7 @@ OffsetButtonsWidget::SetFocus()
 }
 
 void
-OffsetButtonsWidget::OnAction(int id)
+OffsetButtonsWidget::OnAction(int id) noexcept
 {
   assert(unsigned(id) < ARRAY_SIZE(offsets));
 

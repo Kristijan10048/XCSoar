@@ -24,9 +24,9 @@ Copyright_License {
 #include "Polar/PolarStore.hpp"
 #include "Polar/Polar.hpp"
 #include "Units/System.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 PolarShape
 PolarStore::Item::ToPolarShape() const
@@ -277,15 +277,29 @@ static constexpr PolarStore::Item internal_polars[] =
   { _T("G 102 Club Astir IIIb"), 380, 0, 75.0, -0.6, 100.0, -0.70, 180.00, -3.1, 12.40, 0.0, 91 },
   { _T("G 102 Standard Astir III"), 380, 70, 75.0, -0.6, 100.0, -0.70, 180.00, -2.8, 12.40, 0.0, 100 },
 
-  //Derived from Pilatus B4 PH-448, fixed gear serial production, measured at Idaflieg-vergleichsfliegen at Aalen in the year 1973.
-  {_T("Pilatus B4"), 306, 0, 90.0, -0.847, 126.0, -1.644, 198.0, -5.098},
+  // Derived from Pilatus B4 PH-448, fixed gear serial production, measured at Idaflieg-vergleichsfliegen at Aalen in the year 1973.
+  { _T("Pilatus B4"), 306, 0, 90.0, -0.847, 126.0, -1.644, 198.0, -5.098},
 
   { _T("SGS 2-33 (PAS)"), 470, 0, 82.32, -0.96, 130.0, -1.74, 170.0, -3.44, 20.35, 33, 0 },
   // 170
   { _T("SGS 2-33 (PIL)"), 360, 0, 69.75, -0.84, 130.0, -2.13, 170.0, -4.39, 20.35, 33, 0 },
   { _T("R-26S Gobe (PIL)"), 320, 0, 45.7, -0.78, 60.93, -0.73, 106.63, -2.45, 18.00, 0.0, 0 },
   { _T("R-26S Gobe (PAS)"), 420, 0, 60.0, -1.02, 80.0, -0.96, 120.0, -2.11, 18.00, 0.0, 0 },
+  // From Perkoz handbook
+  { _T("SZD-54-2 Perkoz (FT 17m)") /* flat tip */,     442, 0, 98, -0.92, 174, -4.35, 250, -13.22, 16.36, 160, 0 },
+  { _T("SZD-54-2 Perkoz (WL 17m)") /* winglet */,      442, 0, 99, -0.86, 175, -4.22, 250, -13.01, 16.36, 160, 0 },
+  { _T("SZD-54-2 Perkoz (WL 20m)") /* long winglet */, 442, 0, 91, -0.69, 170, -3.98, 250, -12.66, 17.30, 160, 0 },
+  // from Cumulus project
+  { _T("Arcus M (PIL)"), 680, 185, 105, -0.595, 153, -1.1, 197, -2, 15.6, 0, 116 },
+  { _T("Arcus M (PAS)"), 750, 185, 118, -0.669, 159, -1.062, 210, -2, 15.6, 0, 116 },
+  { _T("ASK-18"), 310, 0, 75, -0.613, 138, -1.773, 200, -4.234, 12.99, 0, 88 },
+  { _T("ASW-20BL"), 400, 126, 95, -0.628, 148, -1.338, 200, -2.774, 10.49, 0, 112 },
+  // 180
+  { _T("Skylark 4"), 395, 0, 78, -0.637, 139, -2, 200, -5.092, 16.1, 0, 0 },
+  { _T("PW-6 (PAS)"), 546, 0, 104, -0.847, 152, -1.994, 200, -4.648, 15.3, 0, 86 },
 
+  // Idaflieg measurement, 28.08.2015 at Aalen Elchingen
+  { _T("D-43 18m"), 668, 0, 100, -0.62, 130, -0.863, 170, -1.672, 15.93, 250, 99 },
 };
 
 const PolarStore::Item &

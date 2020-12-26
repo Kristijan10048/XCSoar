@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_TERRAIN_THREAD_HPP
 #define XCSOAR_TERRAIN_THREAD_HPP
 
-#include "Thread/StandbyThread.hpp"
+#include "thread/StandbyThread.hpp"
 #include "Geo/GeoPoint.hpp"
 
 #include <functional>
@@ -55,7 +55,7 @@ public:
 
 private:
   /* virtual methods from class StandbyThread*/
-  void Tick() override;
+  void Tick() noexcept override;
 };
 
 #endif

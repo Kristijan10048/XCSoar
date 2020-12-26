@@ -39,17 +39,17 @@ Copyright_License {
 #include "Look/DialogLook.hpp"
 #include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
-#include "Compiler.h"
-#include "Util/Macros.hpp"
+#include "util/Compiler.h"
+#include "util/Macros.hpp"
 #include "Units/Units.hpp"
 #include "Formatter/AngleFormatter.hpp"
 #include "UIGlobals.hpp"
 #include "Interface.hpp"
 #include "Blackboard/BlackboardListener.hpp"
 #include "Language/Language.hpp"
-#include "Util/StringCompare.hxx"
+#include "util/StringCompare.hxx"
 
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
 
 enum Controls {
@@ -103,18 +103,18 @@ public:
   }
 
   /* virtual methods from ListItemRenderer */
-  virtual void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                           unsigned idx) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override;
 
   /* virtual methods from ListCursorHandler */
-  virtual bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return true;
   }
 
-  virtual void OnActivateItem(unsigned index) override;
+  void OnActivateItem(unsigned index) noexcept override;
 
   /* virtual methods from ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 
   /* virtual methods from DataFieldListener */
   virtual void OnModified(DataField &df) override;
@@ -219,13 +219,13 @@ AirspaceListWidget::OnAirspaceListEnter(unsigned i)
 }
 
 void
-AirspaceListWidget::OnActivateItem(unsigned index)
+AirspaceListWidget::OnActivateItem(unsigned index) noexcept
 {
   OnAirspaceListEnter(index);
 }
 
 void
-AirspaceListWidget::OnAction(int id)
+AirspaceListWidget::OnAction(int id) noexcept
 {
   switch (Buttons(id)) {
   case DETAILS:
@@ -312,7 +312,7 @@ AirspaceListWidget::OnModified(DataField &df)
 
 void
 AirspaceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
-                                unsigned i)
+                                unsigned i) noexcept
 {
   if (items.empty()) {
     assert(i == 0);
@@ -451,7 +451,8 @@ ShowAirspaceListDialog(const Airspaces &_airspaces,
   airspaces = &_airspaces;
   location = CommonInterface::Basic().location;
 
-  WidgetDialog dialog(look);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, _("Select Airspace"));
 
   AirspaceFilterWidget *filter_widget = new AirspaceFilterWidget(look);
 
@@ -466,9 +467,7 @@ ShowAirspaceListDialog(const Airspaces &_airspaces,
   filter_widget->SetListener(list_widget);
   buttons_widget->SetList(list_widget);
 
-  TwoWidgets *widget = new TwoWidgets(left_widget, list_widget, false);
-
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Select Airspace"), widget);
+  dialog.FinishPreliminary(new TwoWidgets(left_widget, list_widget, false));
   dialog.ShowModal();
 }
 

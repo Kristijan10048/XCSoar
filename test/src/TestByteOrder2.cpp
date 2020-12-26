@@ -22,8 +22,8 @@
 
 #include "TestUtil.hpp"
 
-#include <stdint.h>
+#include <cstdint>
 
-#include "OS/ByteOrder.hpp"
+#include "system/ByteOrder.hpp"
 
 #include "TestByteOrder.inc.cpp"

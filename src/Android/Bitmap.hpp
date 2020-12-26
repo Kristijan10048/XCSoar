@@ -24,11 +24,11 @@ Copyright_License {
 #ifndef XCSOAR_ANDROID_BITMAP_HPP
 #define XCSOAR_ANDROID_BITMAP_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <jni.h>
 
-#include <assert.h>
+#include <cassert>
 
 class AndroidBitmap {
   static jmethodID recycle_method;

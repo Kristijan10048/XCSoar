@@ -26,10 +26,10 @@ Copyright_License {
 
 #include "RasterTraits.hpp"
 #include "Height.hpp"
-#include "Util/AllocatedGrid.hxx"
-#include "Compiler.h"
+#include "util/AllocatedGrid.hxx"
+#include "util/Compiler.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 class RasterBuffer {
   AllocatedGrid<TerrainHeight> data;

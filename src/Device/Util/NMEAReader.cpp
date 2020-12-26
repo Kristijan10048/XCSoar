@@ -24,8 +24,8 @@
 #include "NMEAReader.hpp"
 #include "Device/Port/Port.hpp"
 #include "NMEA/Checksum.hpp"
-#include "Time/TimeoutClock.hpp"
-#include "Util/StringCompare.hxx"
+#include "time/TimeoutClock.hpp"
+#include "util/StringCompare.hxx"
 
 #include <algorithm>
 
@@ -36,7 +36,7 @@ inline bool
 PortNMEAReader::Fill(TimeoutClock timeout)
 {
   const auto dest = buffer.Write();
-  if (dest.IsEmpty())
+  if (dest.empty())
     /* already full */
     return false;
 

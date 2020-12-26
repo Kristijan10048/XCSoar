@@ -27,7 +27,7 @@ Copyright_License {
 #include "Screen/Layout.hpp"
 #include "Language/Language.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 ProgressDialog::ProgressDialog(SingleWindow &parent,
                                const DialogLook &dialog_look,
@@ -60,7 +60,7 @@ ProgressDialog::AddCancelButton(std::function<void()> &&callback)
 }
 
 void
-ProgressDialog::OnAction(int id)
+ProgressDialog::OnAction(int id) noexcept
 {
   if (id == mrCancel && cancel_callback)
     cancel_callback();

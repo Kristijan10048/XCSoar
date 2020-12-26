@@ -24,14 +24,14 @@ Copyright_License {
 #ifndef ABSTRACT_TASK_FACTORY_HPP
 #define ABSTRACT_TASK_FACTORY_HPP
 
-#include "Util/NonCopyable.hpp"
-#include "Compiler.h"
+#include "util/NonCopyable.hpp"
+#include "util/Compiler.h"
 #include "TaskPointFactoryType.hpp"
 #include "ValidationError.hpp"
 #include "LegalPointSet.hpp"
 #include "Engine/Waypoint/Ptr.hpp"
 
-#include <stdint.h>
+#include <cstdint>
 
 struct TaskFactoryConstraints;
 class AATPoint;

@@ -23,7 +23,7 @@ Copyright_License {
 
 #include "VoltageDevice.hpp"
 #include "NativeVoltageListener.hpp"
-#include "Java/Class.hxx"
+#include "java/Class.hxx"
 #include "Blackboard/DeviceBlackboard.hpp"
 #include "Components.hpp"
 #include "Atmosphere/Temperature.hpp"
@@ -85,7 +85,7 @@ VoltageDevice::~VoltageDevice()
 void
 VoltageDevice::onVoltageValues(int temp_adc, int voltage_index, int volt_adc)
 {
-  ScopeLock protect(device_blackboard->mutex);
+  std::lock_guard<Mutex> lock(device_blackboard->mutex);
   NMEAInfo &basic = device_blackboard->SetRealState(index);
   basic.UpdateClock();
   basic.alive.Update(basic.clock);
@@ -123,7 +123,7 @@ VoltageDevice::onVoltageValues(int temp_adc, int voltage_index, int volt_adc)
 void
 VoltageDevice::onVoltageError()
 {
-  ScopeLock protect(device_blackboard->mutex);
+  std::lock_guard<Mutex> lock(device_blackboard->mutex);
   NMEAInfo &basic = device_blackboard->SetRealState(index);
 
   basic.temperature_available = false;

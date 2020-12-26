@@ -32,19 +32,15 @@ Copyright_License {
 #include "Device/device.hpp"
 #include "Device/Config.hpp"
 #include "Engine/Waypoint/Waypoints.hpp"
-#include "OS/Args.hpp"
+#include "system/Args.hpp"
 #include "Operation/ConsoleOperationEnvironment.hpp"
-#include "IO/Async/GlobalAsioThread.hpp"
-#include "IO/Async/AsioThread.hpp"
-#include "Util/ConvertString.hpp"
-#include "Util/PrintException.hxx"
+#include "io/async/GlobalAsioThread.hpp"
+#include "io/async/AsioThread.hpp"
+#include "io/NullDataHandler.hpp"
+#include "util/ConvertString.hpp"
+#include "util/PrintException.hxx"
 
 #include <stdio.h>
-
-#ifdef __clang__
-/* true, the nullptr cast below is a bad kludge */
-#pragma GCC diagnostic ignored "-Wnull-dereference"
-#endif
 
 bool
 NMEAParser::ReadGeoPoint(NMEAInputLine &line, GeoPoint &value_r)
@@ -114,7 +110,8 @@ try {
 
   ScopeGlobalAsioThread global_asio_thread;
 
-  auto port = debug_port.Open(*asio_thread, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  auto port = debug_port.Open(*asio_thread, handler);
 
   if (!port->WaitConnected(env)) {
     fprintf(stderr, "Failed to connect the port\n");

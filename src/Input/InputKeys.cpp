@@ -22,9 +22,9 @@ Copyright_License {
 */
 
 #include "InputKeys.hpp"
-#include "Event/KeyCode.hpp"
-#include "Util/CharUtil.hxx"
-#include "Util/StringAPI.hxx"
+#include "event/KeyCode.hpp"
+#include "util/CharUtil.hxx"
+#include "util/StringAPI.hxx"
 
 struct string_to_key {
   const TCHAR *name;
@@ -50,6 +50,24 @@ static constexpr struct string_to_key string_to_key[] = {
   { _T("F10"), KEY_F10 },
   { _T("F11"), KEY_F11 },
   { _T("F12"), KEY_F12 },
+
+#ifdef ANDROID
+  /* These keys are used by BlueTooth keypads and available in Android*/
+  { _T("BUTTON_R1"), KEYCODE_BUTTON_R1},
+  { _T("BUTTON_R2"), KEYCODE_BUTTON_R2},
+  { _T("BUTTON_L1"), KEYCODE_BUTTON_L1},
+  { _T("BUTTON_L2"), KEYCODE_BUTTON_L2},
+  { _T("BUTTON_A"), KEYCODE_BUTTON_A},
+  { _T("BUTTON_B"), KEYCODE_BUTTON_B},
+  { _T("BUTTON_C"), KEYCODE_BUTTON_C},
+  { _T("BUTTON_X"), KEYCODE_BUTTON_X},
+  { _T("BUTTON_Y"), KEYCODE_BUTTON_Y},
+  { _T("BUTTON_Z"), KEYCODE_BUTTON_Z},
+  { _T("MEDIA_NEXT"), KEYCODE_MEDIA_NEXT},
+  { _T("MEDIA_PREVIOUS"), KEYCODE_MEDIA_PREVIOUS},
+  { _T("MEDIA_PLAY_PAUSE"), KEYCODE_MEDIA_PLAY_PAUSE},
+#endif
+
 #ifdef USE_WINUSER
   /* These Keys are used for the Triadis-RemoteStick, as well as for
      expanded Keyboard-Events */
@@ -69,6 +87,7 @@ static constexpr struct string_to_key string_to_key[] = {
   { _T("RETURN"), KEY_RETURN },
   { _T("ESCAPE"), KEY_ESCAPE },
   { _T("MENU"), KEY_MENU },
+  { _T("TAB"), KEY_TAB },
   { NULL }
 };
 

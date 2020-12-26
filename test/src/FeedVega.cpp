@@ -25,21 +25,21 @@ Copyright_License {
 #include "Device/Port/Port.hpp"
 #include "Device/Port/ConfiguredPort.hpp"
 #include "Device/Config.hpp"
-#include "OS/Args.hpp"
-#include "OS/Sleep.h"
+#include "system/Args.hpp"
+#include "system/Sleep.h"
 #include "Operation/ConsoleOperationEnvironment.hpp"
-#include "IO/Async/GlobalAsioThread.hpp"
-#include "IO/Async/AsioThread.hpp"
-#include "IO/DataHandler.hpp"
-#include "Util/PrintException.hxx"
+#include "io/async/GlobalAsioThread.hpp"
+#include "io/async/AsioThread.hpp"
+#include "io/DataHandler.hpp"
+#include "util/PrintException.hxx"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 class MyHandler : public DataHandler {
 public:
-  virtual void DataReceived(const void *data, size_t length) {
-    fwrite(data, 1, length, stdout);
+  bool DataReceived(const void *data, size_t length) noexcept override {
+    return fwrite(data, 1, length, stdout) == length;
   }
 };
 
@@ -94,7 +94,7 @@ try {
 
     last_stamp = current_stamp;
 
-    if (!port->FullWrite(start, end - start, env, 1000)) {
+    if (!port->FullWrite(start, end - start, env, std::chrono::seconds(1))) {
       fprintf(stderr, "Failed to write to port\n");
       return EXIT_FAILURE;
 

@@ -34,12 +34,10 @@ Copyright_License {
 #include "Screen/OpenGL/Features.hpp"
 #include "System.hpp"
 
-#ifdef USE_GLSL
-#include <glm/glm.hpp>
-#endif
+#include <glm/fwd.hpp>
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
-#include <stdint.h>
+#include <cstdint>
 enum class DisplayOrientation : uint8_t;
 #endif
 
@@ -58,21 +56,6 @@ namespace OpenGL {
    * Shall we use the OES_draw_texture extension?
    */
   extern bool oes_draw_texture;
-#endif
-
-  /**
-   * Is it safe to use VBO?
-   *
-   * This check is important, because Android 1.6 will happily crash
-   * upon attempting to delete a VBO, a bug that will probably never
-   * get fixed (report is nearly 2 years old at the time of this
-   * writing):
-   * http://code.google.com/p/android/issues/detail?id=4273
-   */
-#ifdef ANDROID
-  extern bool vertex_buffer_object;
-#else
-  static constexpr bool vertex_buffer_object = true;
 #endif
 
   /**
@@ -122,9 +105,7 @@ namespace OpenGL {
    */
   extern PixelPoint translate;
 
-#ifdef USE_GLSL
   extern glm::mat4 projection_matrix;
-#endif
 };
 
 #endif

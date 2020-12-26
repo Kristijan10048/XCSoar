@@ -34,14 +34,14 @@ Copyright_License {
 #include "Dialogs/WidgetDialog.hpp"
 #include "Dialogs/Message.hpp"
 #include "UIGlobals.hpp"
-#include "Util/StaticString.hxx"
-#include "Util/Macros.hpp"
+#include "util/StaticString.hxx"
+#include "util/Macros.hpp"
 #include "Device/MultipleDevices.hpp"
 #include "Device/Descriptor.hpp"
 #include "Device/Register.hpp"
 #include "Device/Port/Listener.hpp"
 #include "Device/Driver/LX/Internal.hpp"
-#include "Event/Notify.hpp"
+#include "event/Notify.hpp"
 #include "Blackboard/DeviceBlackboard.hpp"
 #include "Blackboard/BlackboardListener.hpp"
 #include "Components.hpp"
@@ -60,13 +60,13 @@ Copyright_License {
 #include "Interface.hpp"
 
 #ifdef ANDROID
-#include "Java/Global.hxx"
+#include "java/Global.hxx"
 #include "Android/BluetoothHelper.hpp"
 #endif
 
 class DeviceListWidget final
   : public ListWidget, private ActionListener,
-    NullBlackboardListener, PortListener, Notify {
+    NullBlackboardListener, PortListener {
   enum Buttons {
     DISABLE,
     RECONNECT, FLIGHT, EDIT, MANAGE, MONITOR,
@@ -81,6 +81,8 @@ class DeviceListWidget final
     bool duplicate:1;
     bool open:1, error:1;
     bool alive:1, location:1, gps:1, baro:1, airspeed:1, vario:1, traffic:1;
+    bool temperature:1;
+    bool humidity:1;
     bool debug:1;
 
     void Set(const DeviceConfig &config, const DeviceDescriptor &device,
@@ -116,6 +118,8 @@ class DeviceListWidget final
       airspeed = basic.airspeed_available;
       vario = basic.total_energy_vario_available;
       traffic = basic.flarm.IsDetected();
+      temperature = basic.temperature_available;
+      humidity = basic.humidity_available;
       debug = device.IsDumpEnabled();
     }
   };
@@ -166,6 +170,11 @@ class DeviceListWidget final
   Button *manage_button, *monitor_button;
   Button *debug_button;
 
+  Notify port_state_notify{[this]{
+    if (RefreshList())
+      UpdateButtons();
+  }};
+
 public:
   DeviceListWidget(const DialogLook &_look)
     :look(_look) {}
@@ -210,26 +219,20 @@ public:
   }
 
   /* virtual methods from class List::Handler */
-  virtual void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                           unsigned idx) override;
-  virtual void OnCursorMoved(unsigned index) override;
+   void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                    unsigned idx) noexcept override;
+  void OnCursorMoved(unsigned index) noexcept override;
 
 private:
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 
   /* virtual methods from class BlackboardListener */
   virtual void OnGPSUpdate(const MoreData &basic) override;
 
   /* virtual methods from class PortListener */
-  void PortStateChanged() override {
-    Notify::SendNotification();
-  }
-
-  /* virtual methods from class Notify */
-  void OnNotification() override {
-    if (RefreshList())
-      UpdateButtons();
+  void PortStateChanged() noexcept override {
+    port_state_notify.SendNotification();
   }
 };
 
@@ -325,7 +328,8 @@ DeviceListWidget::UpdateButtons()
 }
 
 void
-DeviceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned idx)
+DeviceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
+                              unsigned idx) noexcept
 {
   assert(idx < NUMDEV);
 
@@ -385,6 +389,11 @@ DeviceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned idx)
     if (flags.traffic)
       buffer.append(_T("; FLARM"));
 
+    if (flags.temperature || flags.humidity) {
+      buffer.append(_T("; "));
+      buffer.append(_T("Environment"));
+    }
+
     if (flags.debug) {
       buffer.append(_T("; "));
       buffer.append(_("Debug"));
@@ -427,7 +436,7 @@ DeviceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned idx)
 }
 
 void
-DeviceListWidget::OnCursorMoved(unsigned index)
+DeviceListWidget::OnCursorMoved(unsigned index) noexcept
 {
   UpdateButtons();
 }
@@ -588,18 +597,24 @@ DeviceListWidget::ManageCurrent()
   if (descriptor.IsDriver(_T("CAI 302")))
     ManageCAI302Dialog(UIGlobals::GetMainWindow(), look, *device);
   else if (descriptor.IsDriver(_T("FLARM"))) {
-    device_blackboard->mutex.Lock();
-    const NMEAInfo &basic = device_blackboard->RealState(current);
-    const FlarmVersion version = basic.flarm.version;
-    device_blackboard->mutex.Unlock();
+    FlarmVersion version;
+
+    {
+      const std::lock_guard<Mutex> lock(device_blackboard->mutex);
+      const NMEAInfo &basic = device_blackboard->RealState(current);
+      version = basic.flarm.version;
+    }
 
     ManageFlarmDialog(*device, version);
   } else if (descriptor.IsDriver(_T("LX"))) {
-    device_blackboard->mutex.Lock();
-    const NMEAInfo &basic = device_blackboard->RealState(current);
-    const DeviceInfo info = basic.device;
-    const DeviceInfo secondary_info = basic.secondary_device;
-    device_blackboard->mutex.Unlock();
+    DeviceInfo info, secondary_info;
+
+    {
+      const std::lock_guard<Mutex> lock(device_blackboard->mutex);
+      const NMEAInfo &basic = device_blackboard->RealState(current);
+      info = basic.device;
+      secondary_info = basic.secondary_device;
+    }
 
     LXDevice &lx_device = *(LXDevice *)device;
     if (lx_device.IsV7())
@@ -642,7 +657,7 @@ DeviceListWidget::DebugCurrent()
 
   static constexpr unsigned MINUTES = 10;
 
-  device.EnableDumpTemporarily(MINUTES * 60000);
+  device.EnableDumpTemporarily(std::chrono::minutes(MINUTES));
   RefreshList();
 
   StaticString<256> msg;
@@ -652,7 +667,7 @@ DeviceListWidget::DebugCurrent()
 }
 
 void
-DeviceListWidget::OnAction(int id)
+DeviceListWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case DISABLE:
@@ -697,8 +712,9 @@ ShowDeviceList()
 {
   DeviceListWidget widget(UIGlobals::GetDialogLook());
 
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Devices"), &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _("Devices"), &widget);
   widget.CreateButtons(dialog);
   dialog.AddButton(_("Close"), mrOK);
   dialog.EnableCursorSelection();

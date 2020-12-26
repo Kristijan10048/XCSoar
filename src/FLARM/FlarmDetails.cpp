@@ -25,9 +25,9 @@ Copyright_License {
 #include "Global.hpp"
 #include "TrafficDatabases.hpp"
 #include "FLARM/FlarmId.hpp"
-#include "Util/StringCompare.hxx"
+#include "util/StringCompare.hxx"
 
-#include <assert.h>
+#include <cassert>
 
 const FlarmNetRecord *
 FlarmDetails::LookupRecord(FlarmId id)

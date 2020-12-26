@@ -25,13 +25,13 @@ Copyright_License {
 #include "Descriptor.hpp"
 #include "Dispatcher.hpp"
 
-MultipleDevices::MultipleDevices(boost::asio::io_service &io_service)
+MultipleDevices::MultipleDevices(boost::asio::io_context &io_context)
 {
   for (unsigned i = 0; i < NUMDEV; ++i) {
     DeviceDispatcher *dispatcher = dispatchers[i] =
       new DeviceDispatcher(*this, i);
 
-    devices[i] = new DeviceDescriptor(io_service, i, this);
+    devices[i] = new DeviceDescriptor(io_context, i, this);
     devices[i]->SetDispatcher(dispatcher);
   }
 }
@@ -132,7 +132,7 @@ MultipleDevices::NotifyCalculatedUpdate(const MoreData &basic,
 void
 MultipleDevices::AddPortListener(PortListener &listener)
 {
-  const ScopeLock protect(listeners_mutex);
+  const std::lock_guard<Mutex> lock(listeners_mutex);
   assert(std::find(listeners.begin(), listeners.end(),
                    &listener) == listeners.end());
   listeners.push_back(&listener);
@@ -141,25 +141,25 @@ MultipleDevices::AddPortListener(PortListener &listener)
 void
 MultipleDevices::RemovePortListener(PortListener &listener)
 {
-  const ScopeLock protect(listeners_mutex);
+  const std::lock_guard<Mutex> lock(listeners_mutex);
   assert(std::find(listeners.begin(), listeners.end(),
                    &listener) != listeners.end());
   listeners.remove(&listener);
 }
 
 void
-MultipleDevices::PortStateChanged()
+MultipleDevices::PortStateChanged() noexcept
 {
-  const ScopeLock protect(listeners_mutex);
+  const std::lock_guard<Mutex> lock(listeners_mutex);
 
   for (auto *listener : listeners)
     listener->PortStateChanged();
 }
 
 void
-MultipleDevices::PortError(const char *msg)
+MultipleDevices::PortError(const char *msg) noexcept
 {
-  const ScopeLock protect(listeners_mutex);
+  const std::lock_guard<Mutex> lock(listeners_mutex);
 
   for (auto *listener : listeners)
     listener->PortError(msg);

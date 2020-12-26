@@ -26,7 +26,7 @@ Copyright_License {
 #include "LocalPath.hpp"
 #include "LogFile.hpp"
 #include "Screen/Point.hpp"
-#include "OS/Path.hpp"
+#include "system/Path.hpp"
 
 #ifdef ANDROID
 #include "Android/NativeView.hpp"
@@ -42,7 +42,7 @@ Copyright_License {
 #include <sys/stat.h>
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -93,7 +93,7 @@ StartupLogFreeRamAndStorage()
 PixelSize
 SystemWindowSize()
 {
-#if defined(WIN32)
+#if defined(_WIN32)
   unsigned width = CommandLine::width + 2 * GetSystemMetrics(SM_CXFIXEDFRAME);
   unsigned height = CommandLine::height + 2 * GetSystemMetrics(SM_CYFIXEDFRAME)
     + GetSystemMetrics(SM_CYCAPTION);

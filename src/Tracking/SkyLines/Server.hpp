@@ -27,8 +27,9 @@ Copyright_License {
 #include <boost/asio/ip/udp.hpp>
 
 #include <chrono>
+#include <exception>
 
-#include <stdint.h>
+#include <cstdint>
 
 struct GeoPoint;
 
@@ -55,7 +56,7 @@ private:
   Client client_buffer;
 
 public:
-  Server(boost::asio::io_service &io_service,
+  Server(boost::asio::io_context &io_context,
          boost::asio::ip::udp::endpoint endpoint);
 
   ~Server();
@@ -68,10 +69,6 @@ public:
   constexpr
   static const char *GetDefaultPortString() {
     return "5597";
-  }
-
-  boost::asio::io_service &get_io_service() {
-    return socket.get_io_service();
   }
 
   void SendBuffer(const boost::asio::ip::udp::endpoint &endpoint,
@@ -123,13 +120,13 @@ protected:
    * error is non-fatal.
    */
   virtual void OnSendError(const boost::asio::ip::udp::endpoint &endpoint,
-                           std::exception &&e) {}
+                           std::exception_ptr e) {}
 
   /**
    * An error has occurred, and the SkyLines tracking server is
    * defunct.
    */
-  virtual void OnError(std::exception &&e) = 0;
+  virtual void OnError(std::exception_ptr e) = 0;
 };
 
 } /* namespace SkyLinesTracking */

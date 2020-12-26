@@ -25,9 +25,9 @@ Copyright_License {
 #include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
 #include "Math/LeastSquares.hpp"
-#include "Util/StaticString.hxx"
+#include "util/StaticString.hxx"
 
-#include <assert.h>
+#include <cassert>
 #include <windef.h> /* for MAX_PATH */
 
 #ifdef ENABLE_OPENGL

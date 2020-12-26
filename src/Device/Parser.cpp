@@ -30,7 +30,7 @@ Copyright_License {
 #include "NMEA/InputLine.hpp"
 #include "Units/System.hpp"
 #include "Driver/FLARM/StaticParser.hpp"
-#include "Util/CharUtil.hxx"
+#include "util/CharUtil.hxx"
 
 NMEAParser::NMEAParser()
 {
@@ -316,6 +316,10 @@ NMEAParser::GSA(NMEAInputLine &line, NMEAInfo &info)
     info.gps.satellite_ids[i] = line.Read(0);
 
   info.gps.satellite_ids_available.Update(info.clock);
+
+  info.gps.pdop = line.Read(-1.);
+  info.gps.hdop = line.Read(-1.);
+  info.gps.vdop = line.Read(-1.);
 
   return true;
 }
@@ -621,7 +625,7 @@ NMEAParser::GGA(NMEAInputLine &line, NMEAInfo &info)
   info.gps.nonexpiring_internal_gps = false;
 #endif
 
-  gps.hdop = line.Read(0.);
+  gps.hdop = line.Read(-1.);
 
   bool altitude_available = ReadAltitude(line, info.gps_altitude);
   if (altitude_available)
@@ -650,7 +654,7 @@ NMEAParser::GGA(NMEAInputLine &line, NMEAInfo &info)
     // If the separation doesn't appear in the sentence,
     // we can assume the GPS unit is giving ellipsoid height
     //
-    if (use_geoid) {
+    if (use_geoid && info.location_available) {
       // JMW TODO really need to know the actual device..
       geoid_separation = EGM96::LookupSeparation(info.location);
       info.gps_altitude -= geoid_separation;

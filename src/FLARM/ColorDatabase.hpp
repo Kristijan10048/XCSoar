@@ -26,11 +26,11 @@ Copyright_License {
 
 #include "FlarmId.hpp"
 #include "Color.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <map>
 
-#include <assert.h>
+#include <cassert>
 
 class FlarmColorDatabase {
   typedef std::map<FlarmId, FlarmColor> Map;

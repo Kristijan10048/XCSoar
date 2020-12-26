@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_MENU_DATA_HPP
 #define XCSOAR_MENU_DATA_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <tchar.h>
 #include <string.h>
@@ -77,7 +77,7 @@ public:
     return items[i];
   }
 
-  void Add(const TCHAR *label, int location, unsigned event_id);
+  void Add(const TCHAR *label, unsigned location, unsigned event_id);
 
   gcc_pure
   int FindByEvent(unsigned event) const;

@@ -32,9 +32,9 @@ Copyright_License {
 #include "UIGlobals.hpp"
 #include "Interface.hpp"
 #include "Language/Language.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <assert.h>
+#include <cassert>
 
 class AirspaceDetailsWidget final
   : public RowFormWidget, public ActionListener {
@@ -57,7 +57,7 @@ public:
                        const PixelRect &rc) override;
 
   /* methods from ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -90,7 +90,7 @@ AirspaceDetailsWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 }
 
 void
-AirspaceDetailsWidget::OnAction(int id)
+AirspaceDetailsWidget::OnAction(int id) noexcept
 {
   assert(warnings != nullptr);
 
@@ -106,8 +106,9 @@ dlgAirspaceDetails(const AbstractAirspace &airspace,
 {
   AirspaceDetailsWidget *widget =
     new AirspaceDetailsWidget(airspace, warnings);
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), _("Airspace Details"), widget);
+  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _("Airspace Details"), widget);
   dialog.AddButton(_("Close"), mrOK);
 
   if (warnings != nullptr) {

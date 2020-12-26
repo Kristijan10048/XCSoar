@@ -24,7 +24,9 @@ Copyright_License {
 #ifndef XCSOAR_OPERATION_HPP
 #define XCSOAR_OPERATION_HPP
 
-#include "Util/NonCopyable.hpp"
+#include "util/NonCopyable.hpp"
+
+#include <chrono>
 
 #include <tchar.h>
 
@@ -44,7 +46,7 @@ public:
    * Sleep for a fixed amount of time.  May return earlier if an event
    * occurs.
    */
-  virtual void Sleep(unsigned ms) = 0;
+  virtual void Sleep(std::chrono::steady_clock::duration duration) noexcept = 0;
 
   /**
    * Show a human-readable (localized) short text describing the
@@ -76,7 +78,7 @@ class NullOperationEnvironment : public OperationEnvironment {
 public:
   /* virtual methods from class OperationEnvironment */
   bool IsCancelled() const override;
-  void Sleep(unsigned ms) override;
+  void Sleep(std::chrono::steady_clock::duration duration) noexcept override;
   void SetErrorMessage(const TCHAR *text) override;
   void SetText(const TCHAR *text) override;
   void SetProgressRange(unsigned range) override;
@@ -86,7 +88,7 @@ public:
 class QuietOperationEnvironment : public NullOperationEnvironment {
 public:
   /* virtual methods from class OperationEnvironment */
-  void Sleep(unsigned ms) override;
+  void Sleep(std::chrono::steady_clock::duration duration) noexcept override;
 };
 
 #endif

@@ -25,7 +25,7 @@ Copyright_License {
 #include "Protocol.hpp"
 #include "Device/RecordedFlight.hpp"
 #include "Device/Port/Port.hpp"
-#include "OS/Path.hpp"
+#include "system/Path.hpp"
 #include "Operation/Operation.hpp"
 #include "vlconv.h"
 #include "grecord.h"
@@ -70,7 +70,7 @@ ReadFlightListInner(Port &port,
                     OperationEnvironment &env)
 {
   env.SetProgressRange(10);
-  if (!Volkslogger::ConnectAndFlush(port, env, 20000))
+  if (!Volkslogger::ConnectAndFlush(port, env, std::chrono::seconds(20)))
     return false;
   env.SetProgressPosition(3);
 
@@ -101,7 +101,7 @@ DownloadFlightInner(Port &port, unsigned bulkrate,
                     Path path,
                     OperationEnvironment &env)
 {
-  if (!Volkslogger::ConnectAndFlush(port, env, 20000))
+  if (!Volkslogger::ConnectAndFlush(port, env, std::chrono::seconds(20)))
     return false;
 
   uint8_t logbuffer[VLAPI_LOG_MEMSIZE];

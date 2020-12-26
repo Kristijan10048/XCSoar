@@ -24,12 +24,12 @@ Copyright_License {
 #include "PlaneFileGlue.hpp"
 #include "Plane.hpp"
 #include "Polar/Parser.hpp"
-#include "IO/KeyValueFileReader.hpp"
-#include "IO/KeyValueFileWriter.hpp"
-#include "IO/FileOutputStream.hxx"
-#include "IO/BufferedOutputStream.hxx"
-#include "IO/FileLineReader.hpp"
-#include "Util/NumberParser.hpp"
+#include "io/KeyValueFileReader.hpp"
+#include "io/KeyValueFileWriter.hpp"
+#include "io/FileOutputStream.hxx"
+#include "io/BufferedOutputStream.hxx"
+#include "io/FileLineReader.hpp"
+#include "util/NumberParser.hpp"
 #include "LogFile.hpp"
 
 static bool
@@ -144,8 +144,8 @@ try {
   FileLineReaderA reader(path);
   KeyValueFileReader kvreader(reader);
   return Read(plane, kvreader);
-} catch (const std::runtime_error &e) {
-  LogError(e);
+} catch (...) {
+  LogError(std::current_exception());
   return false;
 }
 

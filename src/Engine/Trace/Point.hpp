@@ -24,14 +24,14 @@ Copyright_License {
 #ifndef TRACE_POINT_HPP
 #define TRACE_POINT_HPP
 
-#include "Util/TypeTraits.hpp"
+#include "util/TypeTraits.hpp"
 #include "Geo/SearchPoint.hpp"
 #include "Rough/RoughAltitude.hpp"
 #include "Rough/RoughVSpeed.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 
 struct MoreData;
 struct AircraftState;

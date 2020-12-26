@@ -24,13 +24,13 @@ Copyright_License {
 #include "File.hpp"
 #include "ComboList.hpp"
 #include "LocalPath.hpp"
-#include "Util/StringAPI.hxx"
-#include "OS/FileUtil.hpp"
+#include "util/StringAPI.hxx"
+#include "system/FileUtil.hpp"
 
 #include <algorithm>
 
 #include <windef.h> /* for MAX_PATH */
-#include <assert.h>
+#include <cassert>
 #include <stdlib.h>
 
 /**

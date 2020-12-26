@@ -27,9 +27,9 @@ Copyright_License {
 #include "Screen/Color.hpp"
 #include "Screen/Features.hpp"
 #include "Debug.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <assert.h>
+#include <cassert>
 
 #ifdef USE_GDI
 class Bitmap;
@@ -134,11 +134,9 @@ public:
     color.Bind();
   }
 
-#ifdef USE_GLSL
   void BindUniform(GLint location) const {
     color.Uniform(location);
   }
-#endif
 #endif /* OPENGL */
 };
 

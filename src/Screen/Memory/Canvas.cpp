@@ -28,21 +28,22 @@ Copyright_License {
 #include "RasterCanvas.hpp"
 #include "Screen/Custom/Cache.hpp"
 #include "Math/Angle.hpp"
+#include "util/TStringView.hxx"
 
 #ifdef __ARM_NEON__
 #include "NEON.hpp"
 #endif
 
 #ifndef NDEBUG
-#include "Util/UTF8.hpp"
+#include "util/UTF8.hpp"
 #endif
 
 #ifdef UNICODE
-#include "Util/ConvertString.hpp"
+#include "util/ConvertString.hpp"
 #endif
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <string.h>
 
 class SDLRasterCanvas : public RasterCanvas<ActivePixelTraits> {
@@ -221,13 +222,13 @@ Canvas::DrawArc(PixelPoint center, unsigned radius,
 }
 
 const PixelSize
-Canvas::CalcTextSize(const TCHAR *text) const
+Canvas::CalcTextSize(TStringView text) const noexcept
 {
   assert(text != nullptr);
 #ifdef UNICODE
   const WideToUTF8Converter text2(text);
 #else
-  const char* text2 = text;
+  const StringView text2 = text;
   assert(ValidateUTF8(text));
 #endif
 
@@ -270,7 +271,7 @@ CopyTextRectangle(SDLRasterCanvas &canvas, int x, int y,
   typedef typename Operations::SourcePixelTraits SourcePixelTraits;
   canvas.CopyRectangle<decltype(o), SourcePixelTraits>
     (x, y, width, height,
-     typename SourcePixelTraits::const_pointer_type(s.data),
+     typename SourcePixelTraits::const_pointer(s.data),
      s.pitch, o);
 }
 

@@ -1,3 +1,2 @@
 fix_aarch64_ios_detect.diff
-link_framework_avfoundation.diff
-macos_link_framework_coreservices.diff
+disable_metal_ios.diff

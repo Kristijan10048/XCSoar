@@ -23,6 +23,7 @@ Copyright_License {
 
 #include "Device/Register.hpp"
 #include "Device/Driver.hpp"
+#include "Device/Driver/AirControlDisplay.hpp"
 #include "Device/Driver/CAI302.hpp"
 #include "Device/Driver/CaiGpsNav.hpp"
 #include "Device/Driver/CaiLNav.hpp"
@@ -34,6 +35,7 @@ Copyright_License {
 #include "Device/Driver/NmeaOut.hpp"
 #include "Device/Driver/PosiGraph.hpp"
 #include "Device/Driver/BorgeltB50.hpp"
+#include "Device/Driver/XCVario.hpp"
 #include "Device/Driver/Volkslogger.hpp"
 #include "Device/Driver/EWMicroRecorder.hpp"
 #include "Device/Driver/LX.hpp"
@@ -57,10 +59,10 @@ Copyright_License {
 #include "Device/Driver/ATR833.hpp"
 #include "Device/Driver/XCTracer.hpp"
 #include "Device/Driver/KRT2.hpp"
-#include "Util/Macros.hpp"
-#include "Util/StringAPI.hxx"
-#include "Device/Driver/BaroMS561101BA.hpp"
-#include <assert.h>
+#include "util/Macros.hpp"
+#include "util/StringAPI.hxx"
+
+#include <cassert>
 
 /** nullptr terminated array of available device drivers. */
 static const struct DeviceRegister *const driver_list[] = {
@@ -74,6 +76,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &nmea_out_driver,
   &posigraph_driver,
   &b50_driver,
+  &xcv_driver,
   &volkslogger_driver,
   &ew_microrecorder_driver,
   &lx_driver,
@@ -99,7 +102,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &atr833_driver,
   &xctracer_driver,
   &thermalexpress_driver,
-  &baro_driver,
+  &acd_driver,
   nullptr
 };
 

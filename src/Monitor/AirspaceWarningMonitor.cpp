@@ -27,7 +27,7 @@ Copyright_License {
 #include "Asset.hpp"
 #include "Audio/Sound.hpp"
 #include "Dialogs/Airspace/AirspaceWarningDialog.hpp"
-#include "Event/Idle.hpp"
+#include "event/Idle.hpp"
 #include "PageActions.hpp"
 #include "Widget/QuestionWidget.hpp"
 #include "Form/ActionListener.hpp"
@@ -100,11 +100,11 @@ public:
 
 private:
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
-AirspaceWarningWidget::OnAction(int id)
+AirspaceWarningWidget::OnAction(int id) noexcept
 {
   switch ((Action)id) {
   case ACK:

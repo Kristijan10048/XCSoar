@@ -24,12 +24,12 @@ Copyright_License {
 #ifndef XCSOAR_FLARM_NAME_DATABASE_HPP
 #define XCSOAR_FLARM_NAME_DATABASE_HPP
 
-#include "Util/StaticString.hxx"
-#include "Util/StaticArray.hxx"
+#include "util/StaticString.hxx"
+#include "util/StaticArray.hxx"
 #include "FlarmId.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <assert.h>
+#include <cassert>
 #include <tchar.h>
 
 class FlarmNameDatabase {

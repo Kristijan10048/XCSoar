@@ -30,7 +30,7 @@ Copyright_License {
 #include "Form/List.hpp"
 #include "Form/Button.hpp"
 #include "Form/ActionListener.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 #include "Renderer/ChartRenderer.hpp"
 
 static const TCHAR *const chart_names[] = {
@@ -155,7 +155,7 @@ public:
 
 protected:
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override {
+  void OnAction(int id) noexcept override {
     switch (id) {
     case CLOSE:
       Close();
@@ -164,15 +164,15 @@ protected:
   }
 
   /* virtual methods from ListItemRenderer */
-  virtual void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                           unsigned idx) override {
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override {
     assert(idx < ARRAY_SIZE(chart_names));
 
     canvas.DrawText(rc.left + 2, rc.top + 2, chart_names[idx]);
   }
 
   /* virtual methods from ListCursorHandler */
-  virtual void OnCursorMoved(unsigned idx) override {
+  void OnCursorMoved(unsigned idx) noexcept override {
     assert(idx < ARRAY_SIZE(chart_names));
 
     chart.SetChart(idx);

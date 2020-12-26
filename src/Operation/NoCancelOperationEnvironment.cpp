@@ -22,7 +22,7 @@ Copyright_License {
 */
 
 #include "NoCancelOperationEnvironment.hpp"
-#include "OS/Sleep.h"
+#include "system/Sleep.h"
 
 bool
 NoCancelOperationEnvironment::IsCancelled() const
@@ -31,10 +31,10 @@ NoCancelOperationEnvironment::IsCancelled() const
 }
 
 void
-NoCancelOperationEnvironment::Sleep(unsigned ms)
+NoCancelOperationEnvironment::Sleep(std::chrono::steady_clock::duration duration) noexcept
 {
   /* some OperationEnvironment implementations may ignore Sleep()
      calls when the operation is cancelled; override that */
 
-  ::Sleep(ms);
+  ::Sleep(std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
 }

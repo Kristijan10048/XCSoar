@@ -30,13 +30,14 @@ Copyright_License {
 #include "Device/Config.hpp"
 #include "DebugPort.hpp"
 #include "Engine/Waypoint/Waypoints.hpp"
-#include "OS/ConvertPathName.hpp"
+#include "system/ConvertPathName.hpp"
 #include "Operation/ConsoleOperationEnvironment.hpp"
-#include "OS/Args.hpp"
-#include "IO/Async/GlobalAsioThread.hpp"
-#include "IO/Async/AsioThread.hpp"
-#include "Util/ConvertString.hpp"
-#include "Util/PrintException.hxx"
+#include "system/Args.hpp"
+#include "io/async/GlobalAsioThread.hpp"
+#include "io/async/AsioThread.hpp"
+#include "io/NullDataHandler.hpp"
+#include "util/ConvertString.hpp"
+#include "util/PrintException.hxx"
 
 #include <stdio.h>
 
@@ -78,11 +79,6 @@ PrintFlightList(const RecordedFlightList &flight_list)
   }
 }
 
-#ifdef __clang__
-/* true, the nullptr cast below is a bad kludge */
-#pragma GCC diagnostic ignored "-Wnull-dereference"
-#endif
-
 int main(int argc, char **argv)
 try {
   NarrowString<1024> usage;
@@ -109,7 +105,8 @@ try {
 
   ScopeGlobalAsioThread global_asio_thread;
 
-  auto port = debug_port.Open(*asio_thread, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  auto port = debug_port.Open(*asio_thread, handler);
 
   const struct DeviceRegister *driver = FindDriverByName(driver_name.c_str());
   if (driver == NULL) {

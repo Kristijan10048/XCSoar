@@ -29,13 +29,14 @@ Copyright_License {
 #include "Device/Parser.hpp"
 #include "Device/Driver/FLARM/Device.hpp"
 #include "Device/Config.hpp"
-#include "OS/Args.hpp"
-#include "Util/StringUtil.hpp"
-#include "Util/ConvertString.hpp"
-#include "Util/PrintException.hxx"
+#include "system/Args.hpp"
+#include "util/StringStrip.hxx"
+#include "util/ConvertString.hpp"
+#include "util/PrintException.hxx"
 #include "Operation/ConsoleOperationEnvironment.hpp"
-#include "IO/Async/GlobalAsioThread.hpp"
-#include "IO/Async/AsioThread.hpp"
+#include "io/async/GlobalAsioThread.hpp"
+#include "io/async/AsioThread.hpp"
+#include "io/NullDataHandler.hpp"
 
 #include <stdio.h>
 
@@ -394,11 +395,6 @@ RunUI(FlarmDevice &flarm, OperationEnvironment &env)
   }
 }
 
-#ifdef __clang__
-/* true, the nullptr cast below is a bad kludge */
-#pragma GCC diagnostic ignored "-Wnull-dereference"
-#endif
-
 int
 main(int argc, char **argv)
 try {
@@ -408,7 +404,8 @@ try {
 
   ScopeGlobalAsioThread global_asio_thread;
 
-  auto port = debug_port.Open(*asio_thread, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  auto port = debug_port.Open(*asio_thread, handler);
 
   ConsoleOperationEnvironment env;
 

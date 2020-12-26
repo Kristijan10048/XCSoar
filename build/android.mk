@@ -16,11 +16,11 @@ else
   ANDROID_SDK ?= $(HOME)/opt/android-sdk-linux
 endif
 ANDROID_SDK_PLATFORM_DIR = $(ANDROID_SDK)/platforms/$(ANDROID_SDK_PLATFORM)
-ANDROID_ABI_DIR = $(ANDROID_BUILD)/lib/$(ANDROID_ABI5)
+ANDROID_ABI_DIR = $(ANDROID_BUILD)/lib/$(ANDROID_APK_LIB_ABI)
 
 JAVA_CLASSFILES_DIR = $(ABI_BIN_DIR)/bin/classes
 
-ANDROID_BUILD_TOOLS_DIR = $(ANDROID_SDK)/build-tools/26.0.0
+ANDROID_BUILD_TOOLS_DIR = $(ANDROID_SDK)/build-tools/28.0.3
 ZIPALIGN = $(ANDROID_BUILD_TOOLS_DIR)/zipalign
 AAPT = $(ANDROID_BUILD_TOOLS_DIR)/aapt
 DX = $(ANDROID_BUILD_TOOLS_DIR)/dx
@@ -46,6 +46,7 @@ NATIVE_CLASSES := \
 	NativeInputListener \
 	DownloadUtil \
 	BatteryReceiver \
+	GliderLinkReceiver \
 	NativePortListener \
 	NativeLeScanCallback \
 	NativeBMP085Listener \
@@ -53,7 +54,8 @@ NATIVE_CLASSES := \
 	NativeNunchuckListener \
 	NativeVoltageListener
 NATIVE_SOURCES = $(patsubst %,android/src/%.java,$(NATIVE_CLASSES))
-NATIVE_PREFIX = $(TARGET_OUTPUT_DIR)/include/$(subst .,_,$(JAVA_PACKAGE))_
+NATIVE_INCLUDE = $(TARGET_OUTPUT_DIR)/include
+NATIVE_PREFIX = $(NATIVE_INCLUDE)/$(subst .,_,$(JAVA_PACKAGE))_
 NATIVE_HEADERS = $(patsubst %,$(NATIVE_PREFIX)%.h,$(NATIVE_CLASSES))
 
 JAVA_SOURCES := \
@@ -173,9 +175,9 @@ else
 MANIFEST = android/AndroidManifest.xml
 endif
 
-$(ANDROID_XML_RES_COPIES): $(ANDROID_XML_RES)
+$(ANDROID_XML_RES_COPIES): $(ANDROID_BUILD)/%: android/%
 	$(Q)-$(MKDIR) -p $(dir $@)
-	$(Q)cp $(patsubst $(ANDROID_BUILD)/%,android/%,./$@) $@
+	$(Q)cp $< $@
 
 $(ANDROID_BUILD)/resources.apk: $(PNG_FILES) $(SOUND_FILES) $(ANDROID_XML_RES_COPIES) | $(ANDROID_BUILD)/gen/dirstamp
 	@$(NQ)echo "  AAPT"
@@ -192,9 +194,10 @@ $(ANDROID_BUILD)/gen/org/xcsoar/R.java: $(ANDROID_BUILD)/resources.apk
 
 $(ANDROID_BUILD)/classes.dex: $(JAVA_SOURCES) $(ANDROID_BUILD)/gen/org/xcsoar/R.java | $(JAVA_CLASSFILES_DIR)/dirstamp
 	@$(NQ)echo "  JAVAC   $(JAVA_CLASSFILES_DIR)"
-	$(Q)$(JAVAC) -source 1.5 -target 1.5 -Xlint:-options \
+	$(Q)$(JAVAC) -source 1.7 -target 1.7 -Xlint:-options \
 		-cp $(ANDROID_SDK_PLATFORM_DIR)/android.jar:$(JAVA_CLASSFILES_DIR) \
 		-d $(JAVA_CLASSFILES_DIR) $(ANDROID_BUILD)/gen/org/xcsoar/R.java \
+		-h $(NATIVE_INCLUDE) \
 		$(JAVA_SOURCES)
 	@$(NQ)echo "  DX      $@"
 	$(Q)$(DX) --dex --output $@ $(JAVA_CLASSFILES_DIR)
@@ -227,10 +230,8 @@ endef
 define generate-all-abis
 $(eval $(call generate-abi,$(1),armeabi-v7a,ANDROID7))
 $(eval $(call generate-abi,$(1),x86,ANDROID86))
-$(eval $(call generate-abi,$(1),mips,ANDROIDMIPS))
 $(eval $(call generate-abi,$(1),arm64-v8a,ANDROIDAARCH64))
 $(eval $(call generate-abi,$(1),x86_64,ANDROIDX64))
-# Not adding ANDROIDMIPS64, because this platform has not been tested yet.
 endef
 
 $(foreach NAME,$(ANDROID_LIB_NAMES),$(eval $(call generate-all-abis,$(NAME))))
@@ -245,6 +246,7 @@ $(call SRC_TO_OBJ,$(SRC)/Android/Main.cpp): $(NATIVE_HEADERS)
 $(call SRC_TO_OBJ,$(SRC)/Android/EventBridge.cpp): $(NATIVE_HEADERS)
 $(call SRC_TO_OBJ,$(SRC)/Android/InternalSensors.cpp): $(NATIVE_HEADERS)
 $(call SRC_TO_OBJ,$(SRC)/Android/Battery.cpp): $(NATIVE_HEADERS)
+$(call SRC_TO_OBJ,$(SRC)/Android/GliderLink.cpp): $(NATIVE_HEADERS)
 $(call SRC_TO_OBJ,$(SRC)/Android/NativePortListener.cpp): $(NATIVE_HEADERS)
 $(call SRC_TO_OBJ,$(SRC)/Android/NativeLeScanCallback.cpp): $(NATIVE_HEADERS)
 $(call SRC_TO_OBJ,$(SRC)/Android/NativeInputListener.cpp): $(NATIVE_HEADERS)
@@ -261,10 +263,7 @@ $(ANDROID_LIB_BUILD): $(ANDROID_ABI_DIR)/lib%.so: $(ABI_BIN_DIR)/lib%.so | $(AND
 endif # !FAT_BINARY
 
 
-$(NATIVE_HEADERS): $(NATIVE_PREFIX)%.h: $(ANDROID_BUILD)/classes.dex
-	@$(NQ)echo "  JAVAH   $@"
-	$(Q)$(JAVAH) -classpath $(ANDROID_SDK_PLATFORM_DIR)/android.jar:$(JAVA_CLASSFILES_DIR) -d $(@D) $(subst _,.,$(patsubst $(patsubst ./%,%,$(TARGET_OUTPUT_DIR))/include/%.h,%,$@))
-	@touch $@
+$(NATIVE_HEADERS): $(ANDROID_BUILD)/classes.dex
 
 .DELETE_ON_ERROR: $(ANDROID_BUILD)/unsigned.apk
 $(ANDROID_BUILD)/unsigned.apk: $(ANDROID_BUILD)/classes.dex $(ANDROID_BUILD)/resources.apk $(ANDROID_LIB_BUILD)
@@ -287,7 +286,7 @@ $(HOME)/.android/debug.keystore:
 
 $(ANDROID_BIN)/XCSoar-debug.apk: $(ANDROID_BUILD)/unsigned.apk $(HOME)/.android/debug.keystore | $(ANDROID_BIN)/dirstamp
 	@$(NQ)echo "  SIGN    $@"
-	$(Q)$(JARSIGNER) -keystore $(HOME)/.android/debug.keystore -storepass android -signedjar $@ $< androiddebugkey
+	$(Q)$(JARSIGNER) -keystore $(HOME)/.android/debug.keystore -storepass android -digestalg SHA1 -sigalg MD5withRSA -signedjar $@ $< androiddebugkey
 
 $(ANDROID_BUILD)/XCSoar-release-unaligned.apk: $(ANDROID_BUILD)/unsigned.apk
 	@$(NQ)echo "  SIGN    $@"

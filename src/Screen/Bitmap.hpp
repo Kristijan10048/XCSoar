@@ -25,7 +25,7 @@ Copyright_License {
 #define XCSOAR_SCREEN_BITMAP_HPP
 
 #include "Screen/Point.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #ifdef USE_MEMORY_CANVAS
 #include "Screen/Memory/Buffer.hpp"
@@ -42,7 +42,7 @@ Copyright_License {
 #include <windows.h>
 #endif
 
-#include <assert.h>
+#include <cassert>
 
 class Path;
 class ResourceId;

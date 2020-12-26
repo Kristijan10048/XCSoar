@@ -34,7 +34,7 @@ Copyright_License {
 
 #include <type_traits>
 
-#include <stdint.h>
+#include <cstdint>
 
 enum class AircraftSymbol : uint8_t {
   SIMPLE,
@@ -68,6 +68,12 @@ enum class FinalGlideBarDisplayMode: uint8_t {
   OFF,
   ON,
   AUTO,
+};
+
+enum class DisplaySkyLinesTrafficMapMode: uint8_t {
+  OFF,
+  SYMBOL,
+  SYMBOL_NAME,
 };
 
 struct MapItemListSettings {
@@ -186,6 +192,11 @@ struct MapSettings {
    * Overlay FAI triangle areas on the map while flying?
    */
   bool show_fai_triangle_areas;
+
+  /**
+   * Display skylines name on map
+   */
+  DisplaySkyLinesTrafficMapMode skylines_traffic_map_mode;
 
   FAITriangleSettings fai_triangle_settings;
 

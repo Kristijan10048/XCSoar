@@ -23,16 +23,16 @@ Copyright_License {
 
 #include "LibJPEG.hpp"
 #include "UncompressedImage.hpp"
-#include "OS/Path.hpp"
-#include "Util/ScopeExit.hxx"
+#include "system/Path.hpp"
+#include "util/ScopeExit.hxx"
 
 #include <algorithm>
 #include <stdexcept>
 
 #include <tchar.h>
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
-#include <stddef.h>
+#include <cstddef>
 
 extern "C" {
 #include <jpeglib.h>

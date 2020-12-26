@@ -21,11 +21,11 @@ Copyright_License {
 }
 */
 
-#include "OS/ConvertPathName.hpp"
+#include "system/ConvertPathName.hpp"
 #include "IGC/IGCWriter.hpp"
-#include "Time/GPSClock.hpp"
+#include "time/GPSClock.hpp"
 #include "DebugReplay.hpp"
-#include "OS/Args.hpp"
+#include "system/Args.hpp"
 
 #include <stdio.h>
 
@@ -46,13 +46,13 @@ int main(int argc, char **argv)
   const TCHAR *driver_name = _T("Unknown");
 
   IGCWriter writer(output_file);
-  writer.WriteHeader(replay->Basic().date_time_utc, _T("Manfred Mustermann"),
+  writer.WriteHeader(replay->Basic().date_time_utc, _T("Manfred Mustermann"), _T("Manuela Mustermann"),
                      _T("Ventus"), _T("D-1234"),
                      _T("MM"), "FOO", driver_name, true);
 
   GPSClock log_clock;
   while (replay->Next())
-    if (log_clock.CheckAdvance(replay->Basic().time, 1))
+    if (log_clock.CheckAdvance(replay->Basic().time, std::chrono::seconds(1)))
       writer.LogPoint(replay->Basic());
 
   writer.Flush();

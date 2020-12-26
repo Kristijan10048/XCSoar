@@ -25,7 +25,7 @@ Copyright_License {
 #include "WifiDialog.hpp"
 #include "Dialogs/WidgetDialog.hpp"
 #include "UIGlobals.hpp"
-#include "Event/KeyCode.hpp"
+#include "event/KeyCode.hpp"
 #include "Language/Language.hpp"
 #include "Form/Form.hpp"
 #include "Form/ActionListener.hpp"
@@ -63,7 +63,7 @@ private:
   void ToggleWifi();
 
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -101,7 +101,7 @@ NetworkWidget::ToggleWifi()
 }
 
 void
-NetworkWidget::OnAction(int id)
+NetworkWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case TOGGLE_WIFI:
@@ -127,8 +127,8 @@ ShowNetworkDialog()
 {
   const DialogLook &look = UIGlobals::GetDialogLook();
   NetworkWidget widget(look);
-  WidgetDialog dialog(look);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Network"), &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, _("Network"), &widget);
   dialog.AddButton(_("Close"), mrOK);
   dialog.ShowModal();
   dialog.StealWidget();

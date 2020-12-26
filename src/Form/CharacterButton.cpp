@@ -22,13 +22,13 @@ Copyright_License {
 */
 
 #include "Form/CharacterButton.hpp"
-#include "Util/CharUtil.hxx"
+#include "util/CharUtil.hxx"
 
 #ifndef _UNICODE
-#include "Util/UTF8.hpp"
+#include "util/UTF8.hpp"
 #endif
 
-#include <assert.h>
+#include <cassert>
 
 void
 CharacterButton::Create(ContainerWindow &parent, const ButtonLook &look,

@@ -7,10 +7,10 @@
 
 #else
 
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 
-#include "Util/ConstBuffer.hxx"
+#include "util/ConstBuffer.hxx"
 
 #define MAKE_RESOURCE(name, id) \
   extern "C" uint8_t resource_ ## id[]; \

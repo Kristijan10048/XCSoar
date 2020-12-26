@@ -26,12 +26,13 @@ Copyright_License {
 #include "Device/Port/ConfiguredPort.hpp"
 #include "Device/Config.hpp"
 #include "DebugPort.hpp"
-#include "OS/Args.hpp"
+#include "system/Args.hpp"
 #include "Operation/ConsoleOperationEnvironment.hpp"
-#include "Util/Macros.hpp"
-#include "Util/PrintException.hxx"
-#include "IO/Async/GlobalAsioThread.hpp"
-#include "IO/Async/AsioThread.hpp"
+#include "util/Macros.hpp"
+#include "util/PrintException.hxx"
+#include "io/async/GlobalAsioThread.hpp"
+#include "io/async/AsioThread.hpp"
+#include "io/NullDataHandler.hpp"
 
 #include <stdio.h>
 
@@ -149,11 +150,6 @@ RunCommand(CAI302Device &device, const char *command,
   }
 }
 
-#ifdef __clang__
-/* true, the nullptr cast below is a bad kludge */
-#pragma GCC diagnostic ignored "-Wnull-dereference"
-#endif
-
 int main(int argc, char **argv)
 try {
   const char *const usage = "PORT BAUD COMMAND\n\n"
@@ -173,7 +169,8 @@ try {
 
   ScopeGlobalAsioThread global_asio_thread;
 
-  auto port = debug_port.Open(*asio_thread, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  auto port = debug_port.Open(*asio_thread, handler);
 
   ConsoleOperationEnvironment env;
 

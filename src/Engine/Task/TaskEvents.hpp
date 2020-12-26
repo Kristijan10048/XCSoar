@@ -23,7 +23,7 @@
 #ifndef TASKEVENTS_HPP
 #define TASKEVENTS_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 class TaskWaypoint;
 struct Waypoint;

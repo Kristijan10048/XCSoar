@@ -67,13 +67,13 @@ Copyright_License {
 #include "CalculationThread.hpp"
 #include "Replay/Replay.hpp"
 #include "LocalPath.hpp"
-#include "IO/FileCache.hpp"
-#include "IO/Async/AsioThread.hpp"
-#include "IO/Async/GlobalAsioThread.hpp"
-#include "Net/HTTP/DownloadManager.hpp"
+#include "io/FileCache.hpp"
+#include "io/async/AsioThread.hpp"
+#include "io/async/GlobalAsioThread.hpp"
+#include "net/http/DownloadManager.hpp"
 #include "Hardware/DisplayDPI.hpp"
 #include "Hardware/DisplayGlue.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 #include "NMEA/Aircraft.hpp"
 #include "Waypoint/Waypoints.hpp"
 #include "Waypoint/WaypointGlue.hpp"
@@ -97,10 +97,10 @@ Copyright_License {
 #include "Tracking/TrackingGlue.hpp"
 #include "Units/Units.hpp"
 #include "Formatter/UserGeoPointFormatter.hpp"
-#include "Thread/Debug.hpp"
+#include "thread/Debug.hpp"
 
-#include "Lua/StartFile.hpp"
-#include "Lua/Background.hpp"
+#include "lua/StartFile.hpp"
+#include "lua/Background.hpp"
 
 #ifdef ENABLE_OPENGL
 #include "Screen/OpenGL/Globals.hpp"
@@ -138,8 +138,8 @@ AfterStartup()
   try {
     const auto lua_path = LocalPath(_T("lua"));
     Lua::StartFile(AllocatedPath::Build(lua_path, _T("init.lua")));
-  } catch (const std::runtime_error &e) {
-      LogError(e);
+  } catch (...) {
+      LogError(std::current_exception());
   }
 
   if (is_simulator()) {
@@ -183,8 +183,6 @@ Startup()
   Net::DownloadManager::Initialise();
 #endif
 
-  LogFormat("Display dpi=%u,%u", Display::GetXDPI(), Display::GetYDPI());
-
   // Creates the main window
 
   TopWindowStyle style;
@@ -193,28 +191,27 @@ Startup()
 
   style.Resizable();
 
+#ifdef SOFTWARE_ROTATE_DISPLAY
+  style.InitialOrientation(Display::DetectInitialOrientation());
+#endif
+
   MainWindow *const main_window = CommonInterface::main_window =
     new MainWindow();
   main_window->Create(SystemWindowSize(), style);
   if (!main_window->IsDefined())
     return false;
 
+  LogFormat("Display dpi=%u,%u", Display::GetXDPI(), Display::GetYDPI());
+
 #ifdef ENABLE_OPENGL
   LogFormat("OpenGL: "
-#ifdef ANDROID
-#ifdef USE_EGL
-            "egl=native "
-#else
-            "egl=no "
-#endif
-#endif
 #ifdef HAVE_OES_DRAW_TEXTURE
             "oesdt=%d "
 #endif
 #ifdef HAVE_DYNAMIC_MULTI_DRAW_ARRAYS
             "mda=%d "
 #endif
-            "npot=%d vbo=%d fbo=%d stencil=%#x",
+            "npot=%d fbo=%d stencil=%#x",
 #ifdef HAVE_OES_DRAW_TEXTURE
             OpenGL::oes_draw_texture,
 #endif
@@ -222,7 +219,6 @@ Startup()
             GLExt::HaveMultiDrawElements(),
 #endif
              OpenGL::texture_non_power_of_two,
-             OpenGL::vertex_buffer_object,
             OpenGL::frame_buffer_object,
             OpenGL::render_buffer_stencil);
 #endif
@@ -270,9 +266,7 @@ Startup()
 
   main_window->InitialiseConfigured();
 
-  {
-    file_cache = new FileCache(LocalPath(_T("cache")));
-  }
+  file_cache = new FileCache(LocalPath(_T("cache")));
 
   ReadLanguageFile();
 
@@ -313,8 +307,8 @@ Startup()
   if (CommandLine::replay_path != nullptr) {
     try {
       replay->Start(Path(CommandLine::replay_path));
-    } catch (const std::runtime_error &e) {
-      LogError(e);
+    } catch (...) {
+      LogError(std::current_exception());
     }
   }
 #endif
@@ -586,8 +580,8 @@ Shutdown()
   if (protected_task_manager != nullptr) {
     try {
       protected_task_manager->TaskSaveDefault();
-    } catch (const std::runtime_error &e) {
-      LogError(e);
+    } catch (...) {
+      LogError(std::current_exception());
     }
   }
 

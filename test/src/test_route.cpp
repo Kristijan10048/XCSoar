@@ -31,8 +31,8 @@
 #include "GlideSolvers/GlidePolar.hpp"
 #include "Terrain/RasterMap.hpp"
 #include "Terrain/Loader.hpp"
-#include "OS/ConvertPathName.hpp"
-#include "OS/FileUtil.hpp"
+#include "system/ConvertPathName.hpp"
+#include "system/FileUtil.hpp"
 #include "Compatibility/path.h"
 #include "Operation/Operation.hpp"
 #include "test_debug.hpp"
@@ -42,6 +42,10 @@
 #include <fstream>
 
 #include <string.h>
+
+extern "C" {
+#include "tap.h"
+}
 
 #define NUM_SOL 15
 

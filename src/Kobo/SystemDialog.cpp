@@ -52,7 +52,7 @@ private:
                        const PixelRect &rc) override;
 
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -137,7 +137,7 @@ SystemWidget::ExportUSBStorage()
 }
 
 void
-SystemWidget::OnAction(int id)
+SystemWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case REBOOT:
@@ -159,8 +159,8 @@ ShowSystemDialog()
 {
   const DialogLook &look = UIGlobals::GetDialogLook();
   SystemWidget widget(look);
-  WidgetDialog dialog(look);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), "System", &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, "System", &widget);
   dialog.AddButton(_("Close"), mrOK);
   dialog.ShowModal();
   dialog.StealWidget();

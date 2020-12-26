@@ -21,8 +21,8 @@
 */
 
 #include "Logger/GRecord.hpp"
-#include "OS/Args.hpp"
-#include "Util/PrintException.hxx"
+#include "system/Args.hpp"
+#include "util/PrintException.hxx"
 
 #include <stdio.h>
 
@@ -39,7 +39,7 @@ try {
   g.VerifyGRecordInFile(path);
   fprintf(stderr, "G record is ok\n");
   return EXIT_SUCCESS;
-} catch (const std::runtime_error &e) {
-  PrintException(e);
+} catch (...) {
+  PrintException(std::current_exception());
   return EXIT_FAILURE;
 }

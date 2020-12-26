@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_MAP_OVERLAY_HPP
 #define XCSOAR_MAP_OVERLAY_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <tchar.h>
 
@@ -39,6 +39,8 @@ struct GeoPoint;
  */
 class MapOverlay {
 public:
+  virtual ~MapOverlay() noexcept = default;
+
   /**
    * Returns a human-readable name for this overlay.
    */

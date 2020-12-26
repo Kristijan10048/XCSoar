@@ -23,7 +23,7 @@ Copyright_License {
 
 #include "Hardware/Battery.hpp"
 #include "org_xcsoar_BatteryReceiver.h"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 namespace Power {
   namespace Battery {

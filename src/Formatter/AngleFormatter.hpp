@@ -24,12 +24,12 @@ Copyright_License {
 #ifndef XCSOAR_ANGLE_FORMATTER_HPP
 #define XCSOAR_ANGLE_FORMATTER_HPP
 
-#include "Util/StringBuffer.hxx"
+#include "util/StringBuffer.hxx"
 #include "Math/Angle.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <tchar.h>
-#include <stddef.h>
+#include <cstddef>
 
 class Angle;
 

@@ -28,7 +28,7 @@ Copyright_License {
 #include "Map.hpp"
 #include "ProfileKeys.hpp"
 #include "MapSettings.hpp"
-#include "Util/Clamp.hpp"
+#include "util/Clamp.hpp"
 
 static bool
 IsValidMapOrientation(unsigned value)
@@ -70,6 +70,8 @@ Profile::Load(const ProfileMap &map, MapSettings &settings)
   map.Get(ProfileKeys::AutoZoom, settings.auto_zoom_enabled);
 
   map.GetEnum(ProfileKeys::WindArrowStyle, settings.wind_arrow_style);
+
+  map.GetEnum(ProfileKeys::SkyLinesTrafficMapMode, settings.skylines_traffic_map_mode);
 
   settings.waypoint.LoadFromProfile();
 

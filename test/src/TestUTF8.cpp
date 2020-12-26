@@ -20,11 +20,11 @@
 }
 */
 
-#include "Util/UTF8.hpp"
-#include "Util/Macros.hpp"
+#include "util/UTF8.hpp"
+#include "util/Macros.hpp"
 #include "TestUtil.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <string.h>
 
 static const char *const valid[] = {

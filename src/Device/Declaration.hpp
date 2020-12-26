@@ -25,8 +25,8 @@ Copyright_License {
 #define XCSOAR_DEVICE_DECLARATION_HPP
 
 #include "Engine/Waypoint/Waypoint.hpp"
-#include "Util/StaticString.hxx"
-#include "Compiler.h"
+#include "util/StaticString.hxx"
+#include "util/Compiler.h"
 
 #include <vector>
 #include <tchar.h>
@@ -55,6 +55,7 @@ struct Declaration {
   };
 
   StaticString<64> pilot_name;
+  StaticString<64> copilot_name;
   StaticString<32> aircraft_type;
   StaticString<32> aircraft_registration;
   StaticString<8> competition_id;

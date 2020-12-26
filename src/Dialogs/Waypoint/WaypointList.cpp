@@ -26,7 +26,7 @@ Copyright_License {
 #include "Widget/ListWidget.hpp"
 #include "Widget/TwoWidgets.hpp"
 #include "Widget/RowFormWidget.hpp"
-#include "Event/KeyCode.hpp"
+#include "event/KeyCode.hpp"
 #include "Form/Edit.hpp"
 #include "Form/DataField/Listener.hpp"
 #include "Form/DataField/Prefix.hpp"
@@ -40,12 +40,12 @@ Copyright_License {
 #include "Waypoint/Waypoints.hpp"
 #include "Components.hpp"
 #include "Form/DataField/Enum.hpp"
-#include "Util/StringPointer.hxx"
-#include "Util/AllocatedString.hxx"
+#include "util/StringPointer.hxx"
+#include "util/AllocatedString.hxx"
 #include "UIGlobals.hpp"
 #include "Look/MapLook.hpp"
 #include "Look/DialogLook.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 #include "Renderer/WaypointListRenderer.hpp"
 #include "Renderer/TwoTextRowsRenderer.hpp"
 #include "Units/Units.hpp"
@@ -58,7 +58,7 @@ Copyright_License {
 #include <algorithm>
 #include <list>
 
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
 
 enum Controls {
@@ -182,17 +182,17 @@ public:
 
   /* virtual methods from ListItemRenderer */
   void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                   unsigned idx) override;
+                   unsigned idx) noexcept override;
 
   /* virtual methods from ListCursorHandler */
-  bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return true;
   }
 
-  void OnActivateItem(unsigned index) override;
+  void OnActivateItem(unsigned index) noexcept override;
 
   /* virtual methods from ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 
   /* virtual methods from DataFieldListener */
   void OnModified(DataField &df) override;
@@ -446,7 +446,7 @@ WaypointListWidget::OnModified(DataField &df)
 
 void
 WaypointListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
-                                unsigned i)
+                                unsigned i) noexcept
 {
   if (items.empty()) {
     assert(i == 0);
@@ -479,13 +479,13 @@ WaypointListWidget::OnWaypointListEnter()
 }
 
 void
-WaypointListWidget::OnActivateItem(unsigned index)
+WaypointListWidget::OnActivateItem(unsigned index) noexcept
 {
   OnWaypointListEnter();
 }
 
 void
-WaypointListWidget::OnAction(int id)
+WaypointListWidget::OnAction(int id) noexcept
 {
   switch (Buttons(id)) {
   case SELECT:
@@ -519,7 +519,8 @@ ShowWaypointListDialog(const GeoPoint &_location,
 
   dialog_state.name.clear();
 
-  WidgetDialog dialog(look);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, _("Select Waypoint"));
 
   auto *filter_widget = new WaypointFilterWidget(look, heading);
 
@@ -538,7 +539,7 @@ ShowWaypointListDialog(const GeoPoint &_location,
 
   TwoWidgets *widget = new TwoWidgets(left_widget, list_widget, false);
 
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Select Waypoint"), widget);
+  dialog.FinishPreliminary(widget);
   return dialog.ShowModal() == mrOK
     ? list_widget->GetCursorObject()
     : nullptr;

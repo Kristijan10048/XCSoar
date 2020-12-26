@@ -24,9 +24,9 @@ Copyright_License {
 #include "NOAADownloader.hpp"
 #include "METAR.hpp"
 #include "TAF.hpp"
-#include "Net/HTTP/ToBuffer.hpp"
-#include "Util/StringUtil.hpp"
+#include "net/http/ToBuffer.hpp"
 #include "Job/Runner.hpp"
+#include "util/StringStrip.hxx"
 
 #include <cstdlib>
 
@@ -152,7 +152,7 @@ NOAADownloader::DownloadMETAR(const char *code, METAR &metar,
   // Build file url
   char url[256];
   snprintf(url, sizeof(url),
-           "http://tgftp.nws.noaa.gov/data/observations/metar/decoded/%s.TXT",
+           "https://tgftp.nws.noaa.gov/data/observations/metar/decoded/%s.TXT",
            code);
 
   // Request the file
@@ -246,7 +246,7 @@ NOAADownloader::DownloadTAF(const char *code, TAF &taf,
   // Build file url
   char url[256];
   snprintf(url, sizeof(url),
-           "http://tgftp.nws.noaa.gov/data/forecasts/taf/stations/%s.TXT",
+           "https://tgftp.nws.noaa.gov/data/forecasts/taf/stations/%s.TXT",
            code);
 
   // Request the file

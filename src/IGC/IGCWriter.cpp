@@ -26,9 +26,9 @@ Copyright_License {
 #include "Generator.hpp"
 #include "NMEA/Info.hpp"
 #include "Version.hpp"
-#include "OS/Path.hpp"
+#include "system/Path.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 IGCWriter::IGCWriter(Path path)
   :file(path,
@@ -84,7 +84,9 @@ IGCWriter::WriteLine(const char *a, const TCHAR *b)
 
 void
 IGCWriter::WriteHeader(const BrokenDateTime &date_time,
-                       const TCHAR *pilot_name, const TCHAR *aircraft_model,
+                       const TCHAR *pilot_name,
+                       const TCHAR *copilot_name,
+                       const TCHAR *aircraft_model,
                        const TCHAR *aircraft_registration,
                        const TCHAR *competition_id,
                        const char *logger_id, const TCHAR *driver_name,
@@ -94,6 +96,7 @@ IGCWriter::WriteHeader(const BrokenDateTime &date_time,
    * HFDTE141203  <- should be UTC, same as time in filename
    * HFFXA100
    * HFPLTPILOT:JOHN WHARINGTON
+   * HFCM2CREW2: LISA HAMMOND
    * HFGTYGLIDERTYPE:LS 3
    * HFGIDGLIDERID:VH-WUE
    * HFDTM100GPSDATUM:WGS-1984
@@ -104,7 +107,6 @@ IGCWriter::WriteHeader(const BrokenDateTime &date_time,
    * HFCCLCOMPETITIONCLASS:FAI
    */
 
-  assert(date_time.IsPlausible());
   assert(logger_id != NULL);
   assert(strlen(logger_id) == 3);
 
@@ -114,14 +116,17 @@ IGCWriter::WriteHeader(const BrokenDateTime &date_time,
   sprintf(buffer, "AXCS%s", logger_id);
   WriteLine(buffer);
 
-  sprintf(buffer, "HFDTE%02u%02u%02u",
-          date_time.day, date_time.month, date_time.year % 100);
-  WriteLine(buffer);
+  if (date_time.IsDatePlausible()) {
+    sprintf(buffer, "HFDTE%02u%02u%02u",
+            date_time.day, date_time.month, date_time.year % 100);
+    WriteLine(buffer);
+  }
 
   if (!simulator)
     WriteLine(GetHFFXARecord());
 
   WriteLine("HFPLTPILOTINCHARGE:", pilot_name);
+  WriteLine("HFCM2CREW2:", copilot_name);
   WriteLine("HFGTYGLIDERTYPE:", aircraft_model);
   WriteLine("HFGIDGLIDERID:", aircraft_registration);
   WriteLine("HFCIDCOMPETITIONID:", competition_id);
@@ -137,9 +142,11 @@ void
 IGCWriter::StartDeclaration(const BrokenDateTime &date_time,
                             const int number_of_turnpoints)
 {
-  char buffer[64];
-  FormatIGCTaskTimestamp(buffer, date_time, number_of_turnpoints);
-  WriteLine(buffer);
+  if (date_time.IsPlausible()) {
+    char buffer[64];
+    FormatIGCTaskTimestamp(buffer, date_time, number_of_turnpoints);
+    WriteLine(buffer);
+  }
 
   WriteLine(IGCMakeTaskTakeoff());
 }
@@ -213,7 +220,9 @@ void
 IGCWriter::LogPoint(const NMEAInfo& gps_info)
 {
   if (fix.Apply(gps_info))
-    LogPoint(fix, (int)GetEPE(gps_info.gps), GetSIU(gps_info.gps));
+    LogPoint(fix,
+             gps_info.location_available ? (int)GetEPE(gps_info.gps) : 0,
+             GetSIU(gps_info.gps));
 }
 
 void

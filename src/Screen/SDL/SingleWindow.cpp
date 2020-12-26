@@ -23,14 +23,14 @@ Copyright_License {
 
 #include "Screen/Features.hpp"
 #include "Screen/SingleWindow.hpp"
-#include "Event/SDL/Event.hpp"
+#include "event/sdl/Event.hpp"
 
 #include <SDL_events.h>
 
 #include <cassert>
 
 bool
-SingleWindow::FilterEvent(const Event &_event, Window *allowed) const
+SingleWindow::FilterEvent(const Event &_event, Window *allowed) const noexcept
 {
   assert(allowed != nullptr);
 

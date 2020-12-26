@@ -24,59 +24,59 @@ Copyright_License {
 #include "ThreadedOperationEnvironment.hpp"
 
 ThreadedOperationEnvironment::ThreadedOperationEnvironment(OperationEnvironment &_other)
-  :DelayedNotify(250), other(_other)
+  :other(_other)
 {
 }
 
 bool
 ThreadedOperationEnvironment::IsCancelled() const
 {
-  const ScopeLock lock(mutex);
+  const std::lock_guard<Mutex> lock(mutex);
   return cancel_flag;
 }
 
 void
-ThreadedOperationEnvironment::Sleep(unsigned ms)
+ThreadedOperationEnvironment::Sleep(std::chrono::steady_clock::duration duration) noexcept
 {
-  const ScopeLock lock(mutex);
+  std::unique_lock<Mutex> lock(mutex);
   if (!cancel_flag)
-    cancel_cond.timed_wait(mutex, ms);
+    cancel_cond.wait_for(lock, duration);
 }
 
 void
 ThreadedOperationEnvironment::SetErrorMessage(const TCHAR *_error)
 {
   {
-    const ScopeLock lock(mutex);
+    const std::lock_guard<Mutex> lock(mutex);
     data.SetErrorMessage(_error);
   }
 
-  SendNotification();
+  notify.SendNotification();
 }
 
 void
 ThreadedOperationEnvironment::SetText(const TCHAR *_text)
 {
   {
-    const ScopeLock lock(mutex);
+    const std::lock_guard<Mutex> lock(mutex);
     data.SetText(_text);
   }
 
-  SendNotification();
+  notify.SendNotification();
 }
 
 void
 ThreadedOperationEnvironment::SetProgressRange(unsigned range)
 {
   if (LockSetProgressRange(range))
-    SendNotification();
+    notify.SendNotification();
 }
 
 void
 ThreadedOperationEnvironment::SetProgressPosition(unsigned position)
 {
   if (LockSetProgressPosition(position))
-    SendNotification();
+    notify.SendNotification();
 }
 
 void

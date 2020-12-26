@@ -24,28 +24,12 @@ Copyright_License {
 #ifndef XCSOAR_ANDROID_PRODUCT_HPP
 #define XCSOAR_ANDROID_PRODUCT_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 extern bool has_cursor_keys;
 
 #ifdef __arm__
 extern bool is_nook, is_dithered;
-#endif
-
-/**
- * Returns whether the application is running on Galaxy Tab with Android 2.2
- */
-#ifdef __arm__
-gcc_const
-bool
-IsGalaxyTab22();
-#else
-constexpr
-static inline bool
-IsGalaxyTab22()
-{
-  return false;
-}
 #endif
 
 /**

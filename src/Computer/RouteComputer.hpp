@@ -27,7 +27,7 @@ Copyright_License {
 #include "Task/ProtectedRoutePlanner.hpp"
 #include "Engine/Task/TaskType.hpp"
 #include "Engine/Route/RoutePlanner.hpp"
-#include "Time/GPSClock.hpp"
+#include "time/GPSClock.hpp"
 
 struct MoreData;
 struct DerivedInfo;
@@ -38,7 +38,7 @@ class RasterTerrain;
 class GlidePolar;
 
 class RouteComputer {
-  static constexpr unsigned PERIOD = 5;
+  static constexpr std::chrono::steady_clock::duration PERIOD = std::chrono::seconds(5);
 
   RoutePlannerGlue route_planner;
   ProtectedRoutePlanner protected_route_planner;

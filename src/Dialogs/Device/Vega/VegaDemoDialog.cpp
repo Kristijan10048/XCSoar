@@ -32,7 +32,7 @@ Copyright_License {
 #include "Form/DataField/Listener.hpp"
 #include "Form/DataField/Float.hpp"
 #include "Form/DataField/Boolean.hpp"
-#include "Time/PeriodClock.hpp"
+#include "time/PeriodClock.hpp"
 #include "Operation/PopupOperationEnvironment.hpp"
 #include "Math/Util.hpp"
 
@@ -44,7 +44,7 @@ static void
 VegaWriteDemo()
 {
   static PeriodClock last_time;
-  if (!last_time.CheckUpdate(250))
+  if (!last_time.CheckUpdate(std::chrono::milliseconds(250)))
     return;
 
   TCHAR dbuf[100];
@@ -121,9 +121,9 @@ dlgVegaDemoShowModal()
   VarioWriteNMEA(_T("PDVSC,S,DemoMode,3"), env);
 
   const DialogLook &look = UIGlobals::GetDialogLook();
-  WidgetDialog dialog(look);
   VegaDemoWidget widget(look);
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), _("Vario Demo"), &widget);
+  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
+                      look, _("Vario Demo"), &widget);
   dialog.AddButton(_("Close"), mrOK);
   dialog.ShowModal();
   dialog.StealWidget();

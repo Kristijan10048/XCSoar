@@ -36,9 +36,9 @@ Copyright_License {
 #include "UIState.hpp"
 #include "Renderer/FinalGlideBarRenderer.hpp"
 #include "Terrain/RasterTerrain.hpp"
-#include "Util/Macros.hpp"
-#include "Util/Clamp.hpp"
-#include "Util/StringAPI.hxx"
+#include "util/Macros.hpp"
+#include "util/Clamp.hpp"
+#include "util/StringAPI.hxx"
 #include "Look/GestureLook.hpp"
 #include "Input/InputEvents.hpp"
 #include "Renderer/MapScaleRenderer.hpp"
@@ -268,10 +268,41 @@ GlueMapWindow::DrawVario(Canvas &canvas, const PixelRect &rc) const
 }
 
 void
+GlueMapWindow::SetBottomMargin(unsigned margin) noexcept
+{
+  if (margin == bottom_margin)
+    /* no change, don't redraw */
+    return;
+
+  bottom_margin = margin;
+  QuickRedraw();
+}
+
+void
+GlueMapWindow::SetBottomMarginFactor(unsigned margin_factor) noexcept
+{
+  if (margin_factor == 0) {
+    SetBottomMargin(0);
+    return;
+  }
+
+  PixelRect map_rect = GetClientRect();
+
+  if (map_rect.GetHeight() > map_rect.GetWidth()) {
+    SetBottomMargin(map_rect.bottom / margin_factor);
+  } else {
+    SetBottomMargin(0);
+  }
+}
+
+void
 GlueMapWindow::DrawMapScale(Canvas &canvas, const PixelRect &rc,
                             const MapWindowProjection &projection) const
 {
-  RenderMapScale(canvas, projection, rc, look.overlay);
+
+  PixelRect scale_pos(rc.left, rc.top, rc.right, rc.bottom - bottom_margin);
+
+  RenderMapScale(canvas, projection, scale_pos, look.overlay);
 
   if (!projection.IsValid())
     return;
@@ -322,7 +353,7 @@ GlueMapWindow::DrawMapScale(Canvas &canvas, const PixelRect &rc,
     canvas.Select(font);
     const unsigned height = font.GetCapitalHeight()
         + Layout::GetTextPadding();
-    int y = rc.bottom - height;
+    int y = scale_pos.bottom - height;
 
     TextInBoxMode mode;
     mode.vertical_position = TextInBoxMode::VerticalPosition::ABOVE;

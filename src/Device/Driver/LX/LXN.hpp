@@ -24,9 +24,9 @@
 #ifndef XCSOAR_DEVICE_DRIVER_LX_LXN_HPP
 #define XCSOAR_DEVICE_DRIVER_LX_LXN_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 /**
  * Definitions for the LXN file format.
@@ -167,6 +167,7 @@ namespace LXN {
     uint8_t cmd;
     uint16_t id;
     char pilot[19];
+    char copilot[19];
     char glider[12];
     char registration[8];
     char competition_class[4];

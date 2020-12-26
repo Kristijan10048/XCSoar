@@ -35,10 +35,11 @@ Copyright_License {
 #include "UtilsSettings.hpp"
 #include "Asset.hpp"
 #include "Menu/ShowMenuButton.hpp"
+#include "ActionInterface.hpp"
 
 #ifdef USE_POLL_EVENT
-#include "Event/Globals.hpp"
-#include "Event/Queue.hpp"
+#include "event/Globals.hpp"
+#include "event/Queue.hpp"
 #endif
 
 enum ControlIndex {
@@ -52,6 +53,10 @@ enum ControlIndex {
   AppInfoBoxBorder,
 #ifdef KOBO
   ShowMenuButton,
+#endif
+#ifdef DRAW_MOUSE_CURSOR
+  CursorSize,
+  CursorInverted,
 #endif
 };
 
@@ -72,6 +77,10 @@ static constexpr StaticEnumChoice display_orientation_list[] = {
 static constexpr StaticEnumChoice info_box_geometry_list[] = {
   { (unsigned)InfoBoxSettings::Geometry::SPLIT_8,
     N_("8 Split") },
+  { (unsigned)InfoBoxSettings::Geometry::SPLIT_10,
+    N_("10 Split") },
+  { (unsigned)InfoBoxSettings::Geometry::SPLIT_3X4,
+    N_("12 Split in 3 rows") },
   { (unsigned)InfoBoxSettings::Geometry::BOTTOM_RIGHT_8,
     N_("8 Bottom or Right") },
   { (unsigned)InfoBoxSettings::Geometry::BOTTOM_8_VARIO,
@@ -88,8 +97,12 @@ static constexpr StaticEnumChoice info_box_geometry_list[] = {
     N_("12 Left + 3 Right Vario (Landscape)") },
   { (unsigned)InfoBoxSettings::Geometry::RIGHT_5,
     N_("5 Right (Square)") },
+  { (unsigned)InfoBoxSettings::Geometry::BOTTOM_RIGHT_10,
+    N_("10 Bottom or Right") },
   { (unsigned)InfoBoxSettings::Geometry::BOTTOM_RIGHT_12,
     N_("12 Bottom or Right") },
+  { (unsigned)InfoBoxSettings::Geometry::TOP_LEFT_10,
+    N_("10 Top or Left") },
   { (unsigned)InfoBoxSettings::Geometry::TOP_LEFT_12,
     N_("12 Top or Left") },
   { (unsigned)InfoBoxSettings::Geometry::RIGHT_16,
@@ -212,6 +225,12 @@ LayoutConfigPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
   SetExpertRow(ShowMenuButton);
 #endif
 
+#ifdef DRAW_MOUSE_CURSOR
+  AddInteger(_("Cursor zoom"), _("Cursor zoom factor"), _T("%d x"), _T("%d x"), 1, 10, 1,
+             (unsigned)ui_settings.display.cursor_size);
+  AddBoolean(_("Invert cursor color"), _("Enable black cursor"),
+             ui_settings.display.invert_cursor_colors);
+#endif
 }
 
 bool
@@ -264,6 +283,14 @@ LayoutConfigPanel::Save(bool &_changed)
 
   DialogSettings &dialog_settings = CommonInterface::SetUISettings().dialog;
   changed |= SaveValueEnum(TabDialogStyle, ProfileKeys::AppDialogTabStyle, dialog_settings.tab_style);
+
+#ifdef DRAW_MOUSE_CURSOR
+  changed |= SaveValue(CursorSize, ProfileKeys::CursorSize, ui_settings.display.cursor_size);
+  CommonInterface::main_window->SetCursorSize(ui_settings.display.cursor_size);
+
+  changed |= SaveValue(CursorInverted, ProfileKeys::CursorColorsInverted, ui_settings.display.invert_cursor_colors);
+  CommonInterface::main_window->SetCursorColorsInverted(ui_settings.display.invert_cursor_colors);
+#endif
 
   if (orientation_changed) {
     assert(Display::RotateSupported());

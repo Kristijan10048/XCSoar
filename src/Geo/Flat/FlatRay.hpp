@@ -23,7 +23,7 @@
 #define FLATRAY_HPP
 
 #include "FlatGeoPoint.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <utility>
 

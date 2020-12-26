@@ -24,30 +24,28 @@ Copyright_License {
 #ifndef XCSOAR_ANDROID_NATIVE_VIEW_HPP
 #define XCSOAR_ANDROID_NATIVE_VIEW_HPP
 
-#include "Java/Object.hxx"
-#include "Java/Class.hxx"
-#include "Java/String.hxx"
-#include "OS/Path.hpp"
+#include "java/Object.hxx"
+#include "java/Class.hxx"
+#include "java/String.hxx"
+#include "system/Path.hpp"
 
 #ifndef NO_SCREEN
 #include "Screen/Point.hpp"
 #endif
 
-#include <assert.h>
+#include <cassert>
 
 class NativeView {
   JNIEnv *env;
   Java::GlobalObject obj;
 
   unsigned width, height;
-  unsigned xdpi, ydpi;
   char product[20];
 
   static Java::TrivialClass cls;
   static jfieldID textureNonPowerOfTwo_field;
   static jmethodID init_surface_method, deinit_surface_method;
   static jmethodID setRequestedOrientationID;
-  static jmethodID swap_method;
   static jmethodID loadResourceBitmap_method;
   static jmethodID loadFileBitmap_method;
   static jmethodID bitmapToTexture_method;
@@ -76,9 +74,6 @@ public:
     // see http://developer.android.com/reference/android/content/pm/ActivityInfo.html#SCREEN_ORIENTATION_REVERSE_LANDSCAPE
     REVERSE_LANDSCAPE = 8,
     REVERSE_PORTRAIT = 9,
-    // HACK for Galaxy Tab (FROYO = 2.2 = API level 8)
-    REVERSE_LANDSCAPE_GT = 7,
-    REVERSE_PORTRAIT_GT = 8,
   };
 
   static void Initialise(JNIEnv *env);
@@ -86,26 +81,13 @@ public:
 
   NativeView(JNIEnv *_env, jobject _obj, unsigned _width, unsigned _height,
              unsigned _xdpi, unsigned _ydpi,
-             jstring _product)
-    :env(_env), obj(env, _obj),
-     width(_width), height(_height),
-     xdpi(_xdpi), ydpi(_ydpi) {
-    Java::String::CopyTo(env, _product, product, sizeof(product));
-  }
+             jstring _product) noexcept;
 
 #ifndef NO_SCREEN
   PixelSize GetSize() const {
     return { width, height };
   }
 #endif
-
-  unsigned GetXDPI() const {
-    return xdpi;
-  }
-
-  unsigned GetYDPI() const {
-    return ydpi;
-  }
 
   void SetSize(unsigned _width, unsigned _height) {
     width = _width;
@@ -126,10 +108,6 @@ public:
 
   bool setRequestedOrientation(ScreenOrientation so) {
     return env->CallBooleanMethod(obj, setRequestedOrientationID, (jint)so);
-  }
-
-  void swap() {
-    env->CallVoidMethod(obj, swap_method);
   }
 
   jobject loadResourceBitmap(const char *name) {

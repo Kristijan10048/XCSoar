@@ -33,11 +33,11 @@ Copyright_License {
 #include "PixelTraits.hpp"
 #include "Buffer.hpp"
 #include "ActivePixelTraits.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <tchar.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 /* those are WIN32 macros - undefine, or Canvas::background_mode will
    break */
 #undef OPAQUE
@@ -119,8 +119,16 @@ public:
     pen = Pen(1, COLOR_WHITE);
   }
 
+  void SelectWhitePen(unsigned width) {
+    pen = Pen(width, COLOR_WHITE);
+  }
+
   void SelectBlackPen() {
     pen = Pen(1, COLOR_BLACK);
+  }
+
+  void SelectBlackPen(unsigned width) {
+    pen = Pen(width, COLOR_BLACK);
   }
 
   void SelectHollowBrush() {
@@ -225,11 +233,11 @@ public:
     Pen bright(1, Color(240, 240, 240));
     Select(bright);
     DrawTwoLines(rc.left, rc.bottom - 2, rc.left, rc.top,
-              rc.right - 2, rc.top);
+                 rc.right - 1, rc.top);
 
     Pen dark(1, Color(128, 128, 128));
     Select(dark);
-    DrawTwoLines(rc.left + 1, rc.bottom - 1, rc.right - 1, rc.bottom - 1,
+    DrawTwoLines(rc.left, rc.bottom - 1, rc.right - 1, rc.bottom - 1,
               rc.right - 1, rc.top + 1);
 
     ++rc.left;
@@ -305,7 +313,7 @@ public:
   }
 
   gcc_pure
-  const PixelSize CalcTextSize(const TCHAR *text, size_t length) const;
+  const PixelSize CalcTextSize(TStringView text) const noexcept;
 
   gcc_pure
   const PixelSize CalcTextSize(const TCHAR *text) const;

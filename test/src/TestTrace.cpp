@@ -23,16 +23,16 @@
 #include "IGC/IGCParser.hpp"
 #include "IGC/IGCFix.hpp"
 #include "IGC/IGCExtensions.hpp"
-#include "IO/FileLineReader.hpp"
-#include "OS/ConvertPathName.hpp"
+#include "io/FileLineReader.hpp"
+#include "system/ConvertPathName.hpp"
 #include "Engine/Trace/Trace.hpp"
 #include "Engine/Trace/Vector.hpp"
 #include "Printing.hpp"
 #include "TestUtil.hpp"
-#include "Util/PrintException.hxx"
+#include "util/PrintException.hxx"
 
 #include <windef.h>
-#include <assert.h>
+#include <cassert>
 #include <cstdio>
 
 static void

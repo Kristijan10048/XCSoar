@@ -28,7 +28,7 @@ Copyright_License {
 
 #include "PCMMixerDataSource.hpp"
 
-#include "Thread/Mutex.hpp"
+#include "thread/Mutex.hxx"
 
 #include <memory>
 

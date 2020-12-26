@@ -25,11 +25,11 @@ Copyright_License {
 #include "Waypoint/Factory.hpp"
 #include "Waypoint/Waypoints.hpp"
 #include "Engine/Waypoint/WaypointVisitor.hpp"
-#include "OS/ConvertPathName.hpp"
-#include "OS/Args.hpp"
+#include "system/ConvertPathName.hpp"
+#include "system/Args.hpp"
 #include "Operation/Operation.hpp"
 
-#include <stdint.h>
+#include <cstdint>
 #include <stdio.h>
 #include <tchar.h>
 

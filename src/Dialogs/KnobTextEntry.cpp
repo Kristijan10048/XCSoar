@@ -26,14 +26,18 @@ Copyright_License {
 #include "Language/Language.hpp"
 #include "Widget/WindowWidget.hpp"
 #include "Screen/Canvas.hpp"
-#include "Event/KeyCode.hpp"
+#include "event/KeyCode.hpp"
 #include "UIGlobals.hpp"
 #include "Look/DialogLook.hpp"
-#include "Util/CharUtil.hxx"
-#include "Util/Macros.hpp"
-#include "Util/TruncateString.hpp"
+#include "util/CharUtil.hxx"
+#include "util/Macros.hpp"
+#include "util/StringStrip.hxx"
+#include "util/TruncateString.hpp"
+#include "util/TStringView.hxx"
 
 #include <algorithm>
+
+#include <string.h>
 
 enum Buttons {
   DOWN,
@@ -141,7 +145,7 @@ protected:
   void OnPaint(Canvas &canvas) override;
 
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -156,8 +160,8 @@ KnobTextEntryWindow::OnPaint(Canvas &canvas)
   canvas.Select(look.text_font);
 
   PixelSize tsize = canvas.CalcTextSize(buffer);
-  PixelSize tsizec = canvas.CalcTextSize(buffer, cursor);
-  PixelSize tsizea = canvas.CalcTextSize(buffer, cursor + 1);
+  PixelSize tsizec = canvas.CalcTextSize({buffer, cursor});
+  PixelSize tsizea = canvas.CalcTextSize({buffer, cursor + 1});
 
   BulkPixelPoint p[5];
   p[0].x = 10;
@@ -184,7 +188,7 @@ KnobTextEntryWindow::OnPaint(Canvas &canvas)
 }
 
 void
-KnobTextEntryWindow::OnAction(int id)
+KnobTextEntryWindow::OnAction(int id) noexcept
 {
   switch (id) {
   case DOWN:
@@ -257,8 +261,8 @@ KnobTextEntry(TCHAR *text, size_t width,
     width = MAX_TEXTENTRY;
 
   KnobTextEntryWidget widget(text, width);
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateFull(UIGlobals::GetMainWindow(), caption, &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(), caption, &widget);
   dialog.AddButton(_("Close"), mrOK);
   widget.CreateButtons(dialog);
 

@@ -24,7 +24,7 @@ Copyright_License {
 #include "Terrain/RasterRenderer.hpp"
 #include "Terrain/RasterMap.hpp"
 #include "Math/FastMath.hpp"
-#include "Util/Clamp.hpp"
+#include "util/Clamp.hpp"
 #include "Screen/Ramp.hpp"
 #include "Screen/Layout.hpp"
 #include "Screen/Color.hpp"
@@ -32,10 +32,10 @@ Copyright_License {
 #include "Renderer/GeoBitmapRenderer.hpp"
 #include "Projection/WindowProjection.hpp"
 #include "Asset.hpp"
-#include "Event/Idle.hpp"
+#include "event/Idle.hpp"
 
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 
 /**
  * Interpolate between x and y with i/128, i.e. i/(1 << 7).

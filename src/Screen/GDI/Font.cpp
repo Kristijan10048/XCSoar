@@ -26,9 +26,10 @@ Copyright_License {
 #include "Screen/BufferCanvas.hpp"
 #include "Screen/AnyCanvas.hpp"
 #include "Look/FontDescription.hpp"
+#include "util/TStringView.hxx"
 #include "Asset.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 bool
 Font::Load(const FontDescription &d)
@@ -52,7 +53,7 @@ Font::Load(const FontDescription &d)
 }
 
 PixelSize
-Font::TextSize(const TCHAR *text) const
+Font::TextSize(TStringView text) const noexcept
 {
   AnyCanvas canvas;
   canvas.Select(*this);

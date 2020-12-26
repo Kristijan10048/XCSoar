@@ -23,16 +23,16 @@
 #include "TestUtil.hpp"
 
 #include "GlideSolvers/GlidePolar.hpp"
-#include "IO/ConfiguredFile.hpp"
-#include "OS/Path.hpp"
+#include "io/ConfiguredFile.hpp"
+#include "system/Path.hpp"
 #include "Profile/Profile.hpp"
 #include "Polar/Polar.hpp"
 #include "Polar/Parser.hpp"
 #include "Polar/PolarFileGlue.hpp"
 #include "Polar/PolarStore.hpp"
-#include "Util/ConvertString.hpp"
-#include "Util/Macros.hpp"
-#include "Util/PrintException.hxx"
+#include "util/ConvertString.hpp"
+#include "util/Macros.hpp"
+#include "util/PrintException.hxx"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -203,7 +203,7 @@ try {
     TestBuiltInPolarsPlausibility();
 
   return exit_status();
-} catch (const std::runtime_error &e) {
-  PrintException(e);
+} catch (...) {
+  PrintException(std::current_exception());
   return EXIT_FAILURE;
 }

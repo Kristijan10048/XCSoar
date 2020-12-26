@@ -23,11 +23,11 @@
 #include "IGC/IGCParser.hpp"
 #include "IGC/IGCFix.hpp"
 #include "IGC/IGCExtensions.hpp"
-#include "IO/FileLineReader.hpp"
-#include "OS/FileUtil.hpp"
-#include "Util/StaticString.hxx"
-#include "Util/PrintException.hxx"
-#include "Compiler.h"
+#include "io/FileLineReader.hpp"
+#include "system/FileUtil.hpp"
+#include "util/StaticString.hxx"
+#include "util/PrintException.hxx"
+#include "util/Compiler.h"
 
 #include <cstdio>
 
@@ -160,7 +160,7 @@ try {
   IGCFileVisitor visitor;
   Directory::VisitSpecificFiles(Path(_T(".")), _T("*.igc"), visitor);
   return 0;
-} catch (const std::runtime_error &e) {
-  PrintException(e);
+} catch (...) {
+  PrintException(std::current_exception());
   return EXIT_FAILURE;
 }

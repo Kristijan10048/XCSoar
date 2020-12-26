@@ -28,9 +28,9 @@ Copyright_License {
 #include "Math/FastRotation.hpp"
 #include "Math/Util.hpp"
 #include "Screen/Point.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <assert.h>
+#include <cassert>
 
 /**
  * This is a class that can be used for converting geographical into screen

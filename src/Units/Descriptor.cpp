@@ -24,10 +24,10 @@ Copyright_License {
 #include "Units/Descriptor.hpp"
 #include "Units/Units.hpp"
 #include "Atmosphere/Temperature.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 
-#include <assert.h>
-#include <stddef.h>
+#include <cassert>
+#include <cstddef>
 
 //SI to Local Units
 

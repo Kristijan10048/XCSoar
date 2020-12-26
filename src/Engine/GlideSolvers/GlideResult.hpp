@@ -24,11 +24,11 @@
 
 #include "Geo/GeoVector.hpp"
 #include "GlideSettings.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <type_traits>
 
-#include <stdint.h>
+#include <cstdint>
 
 struct AircraftState;
 struct GlideState;

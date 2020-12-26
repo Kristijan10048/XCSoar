@@ -26,7 +26,7 @@ Copyright_License {
 
 #include "Screen/Canvas.hpp"
 #include "Math/Angle.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 
 #ifdef ENABLE_OPENGL
 #include "Screen/OpenGL/CanvasRotateShift.hpp"
@@ -36,7 +36,7 @@ Copyright_License {
 
 #include <algorithm>
 
-#include <assert.h>
+#include <cassert>
 
 class RotatedPolygonRenderer {
 #ifdef ENABLE_OPENGL

@@ -24,9 +24,9 @@ Copyright_License {
 #include "GlideRatioCalculator.hpp"
 #include "Math/LowPassFilter.hpp"
 #include "Settings.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 /** over this, show INVALID_GR */
 static constexpr double MAXEFFICIENCYSHOW = 200;

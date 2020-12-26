@@ -25,7 +25,7 @@ Copyright_License {
 #define XCSOAR_SCREEN_FONT_HPP
 
 #include "Screen/Point.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #if defined(USE_APPKIT) || defined(USE_UIKIT)
 #import <Foundation/Foundation.h>
@@ -35,7 +35,7 @@ Copyright_License {
 typedef struct FT_FaceRec_ *FT_Face;
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -43,6 +43,7 @@ typedef struct FT_FaceRec_ *FT_Face;
 
 class FontDescription;
 class TextUtil;
+struct TStringView;
 
 /**
  * A font loaded from storage.  It is used by #Canvas to draw text.
@@ -113,7 +114,10 @@ public:
 #endif
 
   gcc_pure
-  PixelSize TextSize(const TCHAR *text) const;
+  PixelSize TextSize(TStringView text) const noexcept;
+
+  gcc_pure
+  PixelSize TextSize(const TCHAR *text) const noexcept;
 
 #if defined(USE_FREETYPE) || defined(USE_APPKIT) || defined(USE_UIKIT)
   gcc_const
@@ -121,9 +125,9 @@ public:
     return size.cx * size.cy;
   }
 
-  void Render(const TCHAR *text, const PixelSize size, void *buffer) const;
+  void Render(TStringView text, const PixelSize size, void *buffer) const;
 #elif defined(ANDROID)
-  int TextTextureGL(const TCHAR *text, PixelSize &size,
+  int TextTextureGL(TStringView text, PixelSize &size,
                     PixelSize &allocated_size) const;
 #elif defined(USE_GDI)
   HFONT Native() const {

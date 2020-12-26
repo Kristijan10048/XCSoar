@@ -23,11 +23,11 @@
 #define GLIDEPOLAR_HPP
 
 #include "PolarCoefficients.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <type_traits>
 
-#include <assert.h>
+#include <cassert>
 
 struct GlideState;
 struct GlideResult;

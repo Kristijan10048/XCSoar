@@ -39,22 +39,19 @@ Copyright_License {
 #include "Screen/EGL/System.hpp"
 #endif
 
-#ifdef USE_GLSL
 #include "Shaders.hpp"
-#endif
+#include "Math/Angle.hpp"
 
 #ifdef ANDROID
 #include "Android/Main.hpp"
 #include "Android/NativeView.hpp"
 #endif
 
-#ifdef USE_GLSL
 #include <glm/gtc/matrix_transform.hpp>
-#endif
 
 #include <algorithm>
 
-#include <assert.h>
+#include <cassert>
 #include <string.h>
 
 #ifdef __APPLE__
@@ -112,23 +109,6 @@ CheckOESDrawTexture()
   return OpenGL::IsExtensionSupported("GL_OES_draw_texture");
 }
 
-#endif
-
-#ifdef ANDROID
-/**
- * Is it safe to use VBO?
- */
-gcc_pure
-static bool
-EnableVBO()
-{
-  /* disable VBO on Android with OpenGL/ES 1.0 (that's Android 1.6 and
-     the Android emulator) - on those versions, glDeleteBuffers()
-     crashes instantly, see
-     http://code.google.com/p/android/issues/detail?id=4273 */
-  const char *version = (const char *)glGetString(GL_VERSION);
-  return version != nullptr && strstr(version, "ES-CM 1.0") == nullptr;
-}
 #endif
 
 /**
@@ -243,8 +223,6 @@ OpenGL::SetupContext()
 
 #ifdef ANDROID
   native_view->SetTexturePowerOfTwo(texture_non_power_of_two);
-
-  vertex_buffer_object = EnableVBO();
 #endif
 
 #ifdef HAVE_OES_MAPBUFFER
@@ -290,15 +268,9 @@ OpenGL::SetupContext()
   glDisable(GL_LIGHTING);
 #endif
 
-#ifndef USE_GLSL
-  glEnableClientState(GL_VERTEX_ARRAY);
-#endif
-
   InitShapes();
 
-#ifdef USE_GLSL
   InitShaders();
-#endif
 }
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
@@ -349,31 +321,21 @@ OpenGL::SetupViewport(UnsignedPoint2D size)
 
   glViewport(0, 0, size.x, size.y);
 
-#ifdef USE_GLSL
 #ifdef SOFTWARE_ROTATE_DISPLAY
-  projection_matrix = glm::rotate(glm::mat4(),
-                                  OrientationToRotation(display_orientation),
-                                  glm::vec3(0, 0, 1));
   OrientationSwap(size, display_orientation);
-#endif
-  projection_matrix = glm::ortho<float>(0, size.x, size.y, 0, -1, 1);
-  UpdateShaderProjectionMatrix();
-#else
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-#ifdef SOFTWARE_ROTATE_DISPLAY
-  glRotatef(OrientationToRotation(display_orientation), 0, 0, 1);
-  OrientationSwap(size, display_orientation);
-#endif
-#ifdef HAVE_GLES
-  glOrthox(0, size.x << 16, size.y << 16, 0, -(1<<16), 1<<16);
-#else
-  glOrtho(0, size.x, size.y, 0, -1, 1);
 #endif
 
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+  projection_matrix = glm::ortho<float>(0, size.x, size.y, 0, -1, 1);
+
+#ifdef SOFTWARE_ROTATE_DISPLAY
+  glm::mat4 rot_matrix = glm::rotate(
+    glm::mat4(1),
+    (GLfloat)Angle::Degrees(OrientationToRotation(display_orientation)).Radians(),
+    glm::vec3(0, 0, 1));
+  projection_matrix = rot_matrix * projection_matrix;
 #endif
+
+  UpdateShaderProjectionMatrix();
 
   viewport_size = size;
 
@@ -383,9 +345,7 @@ OpenGL::SetupViewport(UnsignedPoint2D size)
 void
 OpenGL::Deinitialise()
 {
-#ifdef USE_GLSL
   DeinitShaders();
-#endif
 
   DeinitShapes();
 

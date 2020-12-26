@@ -22,10 +22,10 @@ Copyright_License {
 */
 
 #include "Environment.hpp"
-#include "Java/Class.hxx"
-#include "Java/String.hxx"
-#include "Java/File.hxx"
-#include "Util/StringUtil.hpp"
+#include "java/Class.hxx"
+#include "java/String.hxx"
+#include "java/File.hxx"
+#include "util/StringUtil.hpp"
 
 namespace Environment {
   static Java::TrivialClass cls;
@@ -85,7 +85,7 @@ Environment::getExternalStorageDirectory(char *buffer, size_t max_size)
     return nullptr;
 
   Java::String value2(env, value);
-  value2.CopyTo(buffer, max_size);
+  value2.CopyTo(env, buffer, max_size);
   return buffer;
 }
 
@@ -113,6 +113,6 @@ Environment::getExternalStoragePublicDirectory(char *buffer, size_t max_size,
     return nullptr;
 
   Java::String path2(env, path);
-  path2.CopyTo(buffer, max_size);
+  path2.CopyTo(env, buffer, max_size);
   return buffer;
 }

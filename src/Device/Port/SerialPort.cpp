@@ -23,14 +23,14 @@ Copyright_License {
 
 #include "SerialPort.hpp"
 #include "Asset.hpp"
-#include "OS/LogError.hpp"
-#include "OS/Sleep.h"
-#include "OS/OverlappedEvent.hpp"
+#include "system/LogError.hpp"
+#include "system/Sleep.h"
+#include "system/OverlappedEvent.hpp"
 
 #include <windows.h>
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <tchar.h>
 #include <stdio.h>
 
@@ -234,7 +234,7 @@ SerialPort::WaitDataPending(OverlappedEvent &overlapped,
 }
 
 void
-SerialPort::Run()
+SerialPort::Run() noexcept
 {
   assert(Thread::IsInside());
 

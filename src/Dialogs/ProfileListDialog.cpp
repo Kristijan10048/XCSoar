@@ -29,17 +29,18 @@ Copyright_License {
 #include "Dialogs/WidgetDialog.hpp"
 #include "Widget/TextListWidget.hpp"
 #include "Form/Button.hpp"
-#include "OS/FileUtil.hpp"
-#include "OS/Path.hpp"
+#include "system/FileUtil.hpp"
+#include "system/Path.hpp"
 #include "LocalPath.hpp"
 #include "Profile/Map.hpp"
 #include "Profile/File.hpp"
 #include "UIGlobals.hpp"
 #include "Language/Language.hpp"
+#include "util/StaticString.hxx"
 
 #include <vector>
 
-#include <assert.h>
+#include <cassert>
 
 /* this macro exists in the WIN32 API */
 #ifdef DELETE
@@ -121,22 +122,22 @@ public:
 
 protected:
   /* virtual methods from TextListWidget */
-  const TCHAR *GetRowText(unsigned i) const override {
+  const TCHAR *GetRowText(unsigned i) const noexcept override {
     return list[i].name;
   }
 
   /* virtual methods from ListCursorHandler */
-  virtual bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return select;
   }
 
-  virtual void OnActivateItem(unsigned index) override {
+  void OnActivateItem(unsigned index) noexcept override {
     form->SetModalResult(mrOK);
   }
 
 private:
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -231,8 +232,8 @@ ProfileListWidget::PasswordClicked()
 
   try {
     Profile::LoadFile(data, item.path);
-  } catch (const std::runtime_error &e) {
-    ShowError(e, _("Failed to load file."));
+  } catch (...) {
+    ShowError(std::current_exception(), _("Failed to load file."));
     return;
   }
 
@@ -242,8 +243,8 @@ ProfileListWidget::PasswordClicked()
 
   try {
     Profile::SaveFile(data, item.path);
-  } catch (const std::runtime_error &e) {
-    ShowError(e, _("Failed to save file."));
+  } catch (...) {
+    ShowError(std::current_exception(), _("Failed to save file."));
     return;
   }
 }
@@ -260,8 +261,8 @@ ProfileListWidget::CopyClicked()
 
   try {
     Profile::LoadFile(data, old_path);
-  } catch (const std::runtime_error &e) {
-    ShowError(e, _("Failed to load file."));
+  } catch (...) {
+    ShowError(std::current_exception(), _("Failed to load file."));
     return;
   }
 
@@ -286,9 +287,9 @@ ProfileListWidget::CopyClicked()
   }
 
   try {
-    Profile::SaveFile(data, item.path);
-  } catch (const std::runtime_error &e) {
-    ShowError(e, _("Failed to save file."));
+    Profile::SaveFile(data, new_path);
+  } catch (...) {
+    ShowError(std::current_exception(), _("Failed to save file."));
     return;
   }
 
@@ -333,8 +334,8 @@ ProfileListWidget::DeleteClicked()
       CheckProfilePasswordResult(password_result);
       return;
     }
-  } catch (const std::runtime_error &e) {
-    ShowError(e, _("Password"));
+  } catch (...) {
+    ShowError(std::current_exception(), _("Password"));
     return;
   }
 
@@ -343,7 +344,7 @@ ProfileListWidget::DeleteClicked()
 }
 
 void
-ProfileListWidget::OnAction(int id)
+ProfileListWidget::OnAction(int id) noexcept
 {
   switch ((Buttons)id) {
   case NEW:
@@ -368,8 +369,9 @@ void
 ProfileListDialog()
 {
   ProfileListWidget widget;
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Profiles"), &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _("Profiles"), &widget);
   widget.CreateButtons(dialog);
   dialog.AddButton(_("Close"), mrOK);
   dialog.EnableCursorSelection();
@@ -382,8 +384,9 @@ AllocatedPath
 SelectProfileDialog(Path selected_path)
 {
   ProfileListWidget widget(true);
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Select profile"), &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _("Select profile"), &widget);
   dialog.AddButton(_("Select"), mrOK);
   widget.CreateButtons(dialog);
   dialog.AddButton(_("Cancel"), mrCancel);

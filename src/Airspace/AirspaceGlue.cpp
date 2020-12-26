@@ -28,11 +28,11 @@ Copyright_License {
 #include "Operation/Operation.hpp"
 #include "Language/Language.hpp"
 #include "LogFile.hpp"
-#include "OS/Path.hpp"
-#include "IO/FileLineReader.hpp"
-#include "IO/ZipArchive.hpp"
-#include "IO/ZipLineReader.hpp"
-#include "IO/MapFile.hpp"
+#include "system/Path.hpp"
+#include "io/FileLineReader.hpp"
+#include "io/ZipArchive.hpp"
+#include "io/ZipLineReader.hpp"
+#include "io/MapFile.hpp"
 #include "Profile/Profile.hpp"
 
 #include <string.h>
@@ -49,9 +49,9 @@ try {
   }
 
   return true;
-} catch (const std::runtime_error &e) {
+} catch (...) {
   LogFormat(_T("Failed to parse airspace file: %s"), path.c_str());
-  LogError(e);
+  LogError(std::current_exception());
   return false;
 }
 
@@ -68,9 +68,9 @@ try {
   }
 
   return true;
-} catch (const std::runtime_error &e) {
+} catch (...) {
   LogFormat("Failed to parse airspace file: %s", path);
-  LogError(e);
+  LogError(std::current_exception());
   return false;
 }
 

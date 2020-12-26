@@ -27,21 +27,17 @@ Copyright_License {
 #include "Blackboard/DeviceBlackboard.hpp"
 #include "Look/Look.hpp"
 #include "Interface.hpp"
-#include "Time/PeriodClock.hpp"
-#include "Event/Idle.hpp"
+#include "time/PeriodClock.hpp"
+#include "event/Idle.hpp"
 #include "Topography/Thread.hpp"
 #include "Terrain/Thread.hpp"
 
 GlueMapWindow::GlueMapWindow(const Look &look)
   :MapWindow(look.map, look.traffic),
-#ifdef ENABLE_OPENGL
-   kinetic_timer(*this),
-#endif
    thermal_band_renderer(look.thermal_band, look.chart),
    final_glide_bar_renderer(look.final_glide_bar, look.map.task),
    vario_bar_renderer(look.vario_bar),
-   gesture_look(look.gesture),
-   map_item_timer(*this)
+   gesture_look(look.gesture)
 {
 }
 
@@ -65,7 +61,7 @@ GlueMapWindow::SetTopography(TopographyStore *_topography)
     topography_thread =
       new TopographyThread(*_topography,
                            [this](){
-                             SendUser(unsigned(Command::INVALIDATE));
+                             redraw_notify.SendNotification();
                            });
 }
 
@@ -84,7 +80,7 @@ GlueMapWindow::SetTerrain(RasterTerrain *_terrain)
     terrain_thread =
       new TerrainThread(*_terrain,
                         [this](){
-                          SendUser(unsigned(Command::INVALIDATE));
+                          redraw_notify.SendNotification();
                         });
 }
 
@@ -96,7 +92,7 @@ GlueMapWindow::SetMapSettings(const MapSettings &new_value)
 #ifdef ENABLE_OPENGL
   ReadMapSettings(new_value);
 #else
-  ScopeLock protect(next_mutex);
+  std::lock_guard<Mutex> lock(next_mutex);
   next_settings_map = new_value;
 #endif
 }
@@ -109,7 +105,7 @@ GlueMapWindow::SetComputerSettings(const ComputerSettings &new_value)
 #ifdef ENABLE_OPENGL
   ReadComputerSettings(new_value);
 #else
-  ScopeLock protect(next_mutex);
+  std::lock_guard<Mutex> lock(next_mutex);
   next_settings_computer = new_value;
 #endif
 }
@@ -122,7 +118,7 @@ GlueMapWindow::SetUIState(const UIState &new_value)
 #ifdef ENABLE_OPENGL
   ReadUIState(new_value);
 #else
-  ScopeLock protect(next_mutex);
+  std::lock_guard<Mutex> lock(next_mutex);
   next_ui_state = new_value;
 #endif
 }
@@ -133,14 +129,14 @@ GlueMapWindow::ExchangeBlackboard()
   /* copy device_blackboard to MapWindow */
 
   {
-    const ScopeLock lock(device_blackboard->mutex);
+    const std::lock_guard<Mutex> lock(device_blackboard->mutex);
     ReadBlackboard(device_blackboard->Basic(),
                    device_blackboard->Calculated());
   }
 
 #ifndef ENABLE_OPENGL
   {
-    const ScopeLock lock(next_mutex);
+    const std::lock_guard<Mutex> lock(next_mutex);
     ReadMapSettings(next_settings_map);
     ReadComputerSettings(next_settings_computer);
     ReadUIState(next_ui_state);
@@ -175,6 +171,13 @@ GlueMapWindow::FullRedraw()
   UpdateMapScale();
   UpdateScreenBounds();
 
+  PartialRedraw();
+}
+
+void
+GlueMapWindow::PartialRedraw() noexcept
+{
+
 #ifdef ENABLE_OPENGL
   Invalidate();
 #else
@@ -207,21 +210,4 @@ GlueMapWindow::QuickRedraw()
      trigger that now */
   draw_thread->TriggerRedraw();
 #endif
-}
-
-bool
-GlueMapWindow::OnUser(unsigned id)
-{
-  switch (Command(id)) {
-  case Command::INVALIDATE:
-#ifdef ENABLE_OPENGL
-    Invalidate();
-#else
-    draw_thread->TriggerRedraw();
-#endif
-    return true;
-
-  default:
-    return MapWindow::OnUser(id);
-  }
 }

@@ -7,6 +7,7 @@ endif
 DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Inflate.cpp \
 	$(SRC)/Dialogs/Message.cpp \
+	$(SRC)/Dialogs/LockScreen.cpp \
 	$(SRC)/Dialogs/Error.cpp \
 	$(SRC)/Dialogs/ListPicker.cpp \
 	$(SRC)/Dialogs/ProgressDialog.cpp \
@@ -283,13 +284,14 @@ XCSOAR_SOURCES := \
 	$(SRC)/IGC/IGCWriter.cpp \
 	$(SRC)/IGC/IGCString.cpp \
 	$(SRC)/IGC/Generator.cpp \
-	$(SRC)/Logger/MD5.cpp \
+	$(SRC)/util/MD5.cpp \
 	$(SRC)/Logger/NMEALogger.cpp \
 	$(SRC)/Logger/ExternalLogger.cpp \
 	$(SRC)/Logger/FlightLogger.cpp \
 	$(SRC)/Logger/GlueFlightLogger.cpp \
 	$(SRC)/NMEA/Info.cpp \
 	$(SRC)/NMEA/MoreData.cpp \
+	$(SRC)/NMEA/GPSState.cpp \
 	$(SRC)/NMEA/Acceleration.cpp \
 	$(SRC)/NMEA/Attitude.cpp \
 	$(SRC)/NMEA/ExternalSettings.cpp \
@@ -386,6 +388,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/InfoBoxes/Content/Trace.cpp \
 	$(SRC)/InfoBoxes/Content/Weather.cpp \
 	$(SRC)/InfoBoxes/Content/Airspace.cpp \
+	$(SRC)/InfoBoxes/Content/Radio.cpp \
 	$(SRC)/InfoBoxes/Data.cpp \
 	$(SRC)/InfoBoxes/Format.cpp \
 	$(SRC)/InfoBoxes/Units.cpp \
@@ -400,6 +403,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/InfoBoxes/Panel/MacCreadySetup.cpp \
 	$(SRC)/InfoBoxes/Panel/WindEdit.cpp \
 	$(SRC)/InfoBoxes/Panel/ATCReference.cpp \
+	$(SRC)/InfoBoxes/Panel/RadioEdit.cpp \
 	$(SRC)/Pan.cpp \
 	$(SRC)/Input/InputConfig.cpp \
 	$(SRC)/Input/InputDefaults.cpp \
@@ -601,7 +605,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/FLARM/TrafficDatabases.cpp \
 	$(SRC)/UtilsSettings.cpp \
 	$(SRC)/UtilsSystem.cpp \
-	$(SRC)/OS/LogError.cpp \
+	$(SRC)/system/LogError.cpp \
 	$(SRC)/Version.cpp \
 	$(SRC)/Audio/Sound.cpp \
 	$(SRC)/Compatibility/fmode.c \
@@ -648,7 +652,6 @@ XCSOAR_SOURCES := \
 	\
 	$(SRC)/Look/FontDescription.cpp \
 	$(SRC)/Look/GlobalFonts.cpp \
-	$(SRC)/Look/AutoFont.cpp \
 	$(SRC)/Look/DefaultFonts.cpp \
 	\
 	$(SRC)/Polar/PolarGlue.cpp \
@@ -707,13 +710,13 @@ endif
 ifeq ($(TARGET),ANDROID)
 XCSOAR_SOURCES += \
 	$(SRC)/Dialogs/Device/ScanBluetoothLeDialog.cpp \
-	$(SRC)/Java/Global.cxx \
-	$(SRC)/Java/Object.cxx \
-	$(SRC)/Java/String.cxx \
-	$(SRC)/Java/Exception.cxx \
-	$(SRC)/Java/File.cxx \
-	$(SRC)/Java/InputStream.cxx \
-	$(SRC)/Java/URL.cxx \
+	$(SRC)/java/Global.cxx \
+	$(SRC)/java/Object.cxx \
+	$(SRC)/java/String.cxx \
+	$(SRC)/java/Exception.cxx \
+	$(SRC)/java/File.cxx \
+	$(SRC)/java/InputStream.cxx \
+	$(SRC)/java/URL.cxx \
 	$(SRC)/Device/Port/AndroidPort.cpp \
 	$(SRC)/Device/Port/AndroidBluetoothPort.cpp \
 	$(SRC)/Device/Port/AndroidIOIOUartPort.cpp \
@@ -732,6 +735,7 @@ XCSOAR_SOURCES += \
 	$(SRC)/Android/BluetoothHelper.cpp \
 	$(SRC)/Android/NativeLeScanCallback.cpp \
 	$(SRC)/Android/Battery.cpp \
+	$(SRC)/Android/GliderLink.cpp \
 	$(SRC)/Android/DownloadManager.cpp \
 	$(SRC)/Android/Vibrator.cpp \
 	$(SRC)/Android/Context.cpp \
@@ -777,7 +781,7 @@ XCSOAR_SOURCES += \
 	$(SRC)/Weather/NOAAUpdater.cpp
 
 XCSOAR_SOURCES += \
-	$(SRC)/Tracking/LiveTrack24/Client.cpp
+	$(SRC)/Tracking/LiveTrack24.cpp
 endif
 
 XCSOAR_SOURCES += \

@@ -23,9 +23,9 @@ Copyright_License {
 
 #include "Task/TaskFileXCSoar.hpp"
 #include "LoadFile.hpp"
-#include "OS/Path.hpp"
+#include "system/Path.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 OrderedTask* 
 TaskFileXCSoar::GetTask(const TaskBehaviour &task_behaviour,

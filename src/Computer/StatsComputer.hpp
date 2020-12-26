@@ -26,14 +26,14 @@ Copyright_License {
 
 #include "Geo/GeoPoint.hpp"
 #include "FlightStatistics.hpp"
-#include "Time/GPSClock.hpp"
+#include "time/GPSClock.hpp"
 
 struct NMEAInfo;
 struct MoreData;
 struct DerivedInfo;
 
 class StatsComputer {
-  static constexpr unsigned PERIOD = 60;
+  static constexpr std::chrono::steady_clock::duration PERIOD = std::chrono::minutes(1);
 
   GeoPoint last_location;
 

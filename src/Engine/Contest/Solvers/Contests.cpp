@@ -22,7 +22,7 @@ Copyright_License {
 */
 
 #include "Contests.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 
 static const TCHAR *const contest_to_string[] = {
   _T("OLC Sprint"),
@@ -39,7 +39,7 @@ static const TCHAR *const contest_to_string[] = {
 };
 
 const TCHAR*
-ContestToString(Contest contest)
+ContestToString(Contest contest) noexcept
 {
   unsigned i = (unsigned)contest;
   return i < ARRAY_SIZE(contest_to_string)

@@ -24,12 +24,12 @@ Copyright_License {
 #ifndef XCSOAR_ASYNC_JOB_RUNNER_HPP
 #define XCSOAR_ASYNC_JOB_RUNNER_HPP
 
-#include "Thread/Thread.hpp"
+#include "thread/Thread.hpp"
 
 #include <atomic>
 #include <exception>
 
-#include <assert.h>
+#include <cassert>
 
 class Job;
 class OperationEnvironment;
@@ -114,7 +114,7 @@ public:
 
 private:
   /* virtual methods from class Thread */
-  void Run() override;
+  void Run() noexcept override;
 };
 
 #endif

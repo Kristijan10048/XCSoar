@@ -25,9 +25,11 @@ Copyright_License {
 #define XCSOAR_SCREEN_WINDOW_LIST_HPP
 
 #include "Screen/Window.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <assert.h>
+#include <boost/intrusive/list.hpp>
+
+#include <cassert>
 
 struct PixelPoint;
 class Window;

@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_SCREEN_DOUBLE_CLICK_HPP
 #define XCSOAR_SCREEN_DOUBLE_CLICK_HPP
 
-#include "Time/PeriodClock.hpp"
+#include "time/PeriodClock.hpp"
 #include "Screen/Point.hpp"
 #include "Asset.hpp"
 
@@ -36,7 +36,7 @@ class DoubleClick {
   /**
    * The maximum time span between two clicks for a double click [ms].
    */
-  static constexpr unsigned INTERVAL_MS = IsKobo()? 750 : 500;
+  static constexpr auto INTERVAL = std::chrono::milliseconds(IsKobo() ? 750 : 500);
 
   /**
    * The maximum distance between two clicks.
@@ -72,7 +72,7 @@ public:
    * @return true if a double click was detected
    */
   bool Check(PixelPoint _location) {
-    const bool result = !clock.CheckAlwaysUpdate(INTERVAL_MS) &&
+    const bool result = !clock.CheckAlwaysUpdate(INTERVAL) &&
       (unsigned)ManhattanDistance(location, _location) <= MAX_DISTANCE_PX;
 
     location = _location;

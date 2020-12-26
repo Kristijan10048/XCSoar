@@ -24,9 +24,9 @@ Copyright_License {
 #ifndef XCSOAR_MO_FILE_HPP
 #define XCSOAR_MO_FILE_HPP
 
-#include "Util/AllocatedArray.hxx"
+#include "util/AllocatedArray.hxx"
 
-#include <stdint.h>
+#include <cstdint>
 
 /**
  * Loader for GNU gettext *.mo files.

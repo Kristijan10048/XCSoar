@@ -22,6 +22,7 @@
 
 #include "Device/Driver/Generic.hpp"
 #include "Device/Driver/AltairPro.hpp"
+#include "Device/Driver/AirControlDisplay.hpp"
 #include "Device/Driver/BlueFlyVario.hpp"
 #include "Device/Driver/BorgeltB50.hpp"
 #include "Device/Driver/CAI302.hpp"
@@ -65,6 +66,7 @@
 #include "FaultInjectionPort.hpp"
 #include "TestUtil.hpp"
 #include "Units/System.hpp"
+#include "io/NullDataHandler.hpp"
 
 #include <memory>
 
@@ -1215,6 +1217,11 @@ TestOpenVario()
              Temperature::FromCelsius(23.52).ToKelvin()));
   nmea_info.Reset();
 
+  // Relative humidity is read
+  ok1(device->ParseNMEA("$POV,H,58.42*24", nmea_info));
+  ok1(nmea_info.humidity_available);
+  ok1(equals(nmea_info.humidity, 58.42));
+
   delete device;
 }
 
@@ -1481,15 +1488,54 @@ TestXCTracer()
   delete device;
 }
 
-#ifdef __clang__
-/* true, the nullptr cast below is a bad kludge */
-#pragma GCC diagnostic ignored "-Wnull-dereference"
-#endif
+static void
+TestACD()
+{
+  NullPort null;
+  Device *device = acd_driver.CreateOnPort(dummy_config, null);
+  ok1(device != NULL);
+
+  NMEAInfo nmea_info;
+
+  nmea_info.Reset();
+  nmea_info.clock = 1;
+
+  /* $PAAVS responses from XPDR must be ignored */
+  ok1(!device->ParseNMEA("$PAAVS,XPDR,7000,1,0,1697,0,0*68",nmea_info));
+
+  nmea_info.Reset();
+  nmea_info.clock = 1;
+
+  /* test ALT response */
+  ok1(device->ParseNMEA("$PAAVS,ALT,526.23,457.33,100500*0E",
+                        nmea_info));
+
+  ok1(nmea_info.pressure_altitude_available);
+  ok1(equals(nmea_info.pressure_altitude, 526.23));
+  ok1(nmea_info.baro_altitude_available);
+  ok1(equals(nmea_info.baro_altitude, 457.33));
+  ok1(nmea_info.settings.qnh_available);
+  ok1(equals(nmea_info.settings.qnh.GetPascal(), 100500));
+
+  nmea_info.Reset();
+  nmea_info.clock = 1;
+
+  /* test COM response */
+  ok1(device->ParseNMEA("$PAAVS,COM,130330,122500,100,75,1,1,0,0*0D",
+                        nmea_info));
+
+  ok1(nmea_info.settings.active_frequency.GetKiloHertz() == 130330);
+  ok1(nmea_info.settings.standby_frequency.GetKiloHertz() == 122500);
+  ok1(equals(nmea_info.settings.volume, 100));
+
+  delete device;
+}
 
 static void
 TestDeclare(const struct DeviceRegister &driver)
 {
-  FaultInjectionPort port(nullptr, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  FaultInjectionPort port(nullptr, handler);
   Device *device = driver.CreateOnPort(dummy_config, port);
   ok1(device != NULL);
 
@@ -1531,7 +1577,8 @@ TestDeclare(const struct DeviceRegister &driver)
 static void
 TestFlightList(const struct DeviceRegister &driver)
 {
-  FaultInjectionPort port(nullptr, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  FaultInjectionPort port(nullptr, handler);
   Device *device = driver.CreateOnPort(dummy_config, port);
   ok1(device != NULL);
 
@@ -1555,7 +1602,7 @@ TestFlightList(const struct DeviceRegister &driver)
 
 int main(int argc, char **argv)
 {
-  plan_tests(811);
+  plan_tests(827);
 
   TestGeneric();
   TestTasman();
@@ -1581,6 +1628,7 @@ int main(int argc, char **argv)
   TestFlyNet();
   TestVaulter();
   TestXCTracer();
+  TestACD();
 
   /* XXX the Triadis drivers have too many dependencies, not enabling
      for now */

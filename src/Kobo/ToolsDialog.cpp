@@ -26,9 +26,9 @@ Copyright_License {
 #include "UIGlobals.hpp"
 #include "Language/Language.hpp"
 #include "Widget/RowFormWidget.hpp"
-#include "OS/FileUtil.hpp"
-#include "OS/Process.hpp"
-#include "Util/StringAPI.hxx"
+#include "system/FileUtil.hpp"
+#include "system/Process.hpp"
+#include "util/StringAPI.hxx"
 
 #include <vector>
 #include <windef.h> /* for MAX_PATH */
@@ -76,7 +76,7 @@ public:
 
 private:
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 
 };
 
@@ -97,7 +97,7 @@ ToolsWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 }
 
 void
-ToolsWidget::OnAction(int id)
+ToolsWidget::OnAction(int id) noexcept
 {
   if (id >= 0 && id < (int) list.size())
     Run(list[id].path.c_str());
@@ -108,8 +108,8 @@ ShowToolsDialog()
 {
   const DialogLook &look = UIGlobals::GetDialogLook();
   ToolsWidget widget(look);
-  WidgetDialog dialog(look);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Tools"), &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, _("Tools"), &widget);
   dialog.AddButton(_("Close"), mrOK);
   dialog.ShowModal();
   dialog.StealWidget();

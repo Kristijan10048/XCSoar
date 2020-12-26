@@ -89,12 +89,13 @@ NullPort::Read(void *Buffer, size_t Size)
 }
 
 Port::WaitResult
-NullPort::WaitRead(unsigned timeout_ms)
+NullPort::WaitRead(std::chrono::steady_clock::duration timeout)
 {
   return WaitResult::FAILED;
 }
 
-void
-NullPort::DataReceived(const void *data, size_t length)
+bool
+NullPort::DataReceived(const void *data, size_t length) noexcept
 {
+  return true;
 }

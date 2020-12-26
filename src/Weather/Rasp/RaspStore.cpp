@@ -24,18 +24,18 @@ Copyright_License {
 #include "RaspStore.hpp"
 #include "Language/Language.hpp"
 #include "Units/Units.hpp"
-#include "OS/ConvertPathName.hpp"
-#include "OS/Path.hpp"
-#include "IO/ZipArchive.hpp"
-#include "Util/StringCompare.hxx"
-#include "Util/Macros.hpp"
-#include "Util/tstring.hpp"
+#include "system/ConvertPathName.hpp"
+#include "system/Path.hpp"
+#include "io/ZipArchive.hpp"
+#include "util/StringCompare.hxx"
+#include "util/Macros.hpp"
+#include "util/tstring.hpp"
 #include "zzip/zzip.h"
 #include "LogFile.hpp"
 
 #include <set>
 
-#include <assert.h>
+#include <cassert>
 #include <tchar.h>
 #include <stdio.h>
 #include <windef.h> // for MAX_PATH
@@ -217,6 +217,6 @@ try {
   }
 
   // TODO: scan the rest
-} catch (const std::runtime_error &e) {
-  LogError("No rasp data file", e);
+} catch (...) {
+  LogError(std::current_exception(), "No rasp data file");
 }

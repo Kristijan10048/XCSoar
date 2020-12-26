@@ -22,12 +22,12 @@ Copyright_License {
 */
 
 #include "Logger/NMEALogger.hpp"
-#include "IO/TextWriter.hpp"
+#include "io/TextWriter.hpp"
 #include "LocalPath.hpp"
-#include "Time/BrokenDateTime.hpp"
-#include "Thread/Mutex.hpp"
-#include "OS/Path.hpp"
-#include "Util/StaticString.hxx"
+#include "time/BrokenDateTime.hpp"
+#include "thread/Mutex.hxx"
+#include "system/Path.hpp"
+#include "util/StaticString.hxx"
 
 namespace NMEALogger
 {
@@ -81,7 +81,7 @@ NMEALogger::Log(const char *text)
   if (!enabled)
     return;
 
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   if (Start())
     writer->WriteLine(text);
 }

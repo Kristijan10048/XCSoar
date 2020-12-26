@@ -56,11 +56,11 @@ Copyright_License {
 #include "Dialogs/Message.hpp"
 #endif
 
-#if !defined(WIN32) && !defined(ANDROID)
+#if !defined(_WIN32) && !defined(ANDROID)
 #include <unistd.h>
 #endif
 
-#if !defined(WIN32) && !defined(ANDROID)
+#if !defined(_WIN32) && !defined(ANDROID)
 #include <unistd.h> /* for execl() */
 #endif
 
@@ -120,26 +120,6 @@ GetMapRectAbove(const PixelRect &rc, const PixelRect &bottom_rect)
   return result;
 }
 
-MainWindow::MainWindow()
-  :look(nullptr),
-#ifdef HAVE_SHOW_MENU_BUTTON
-   show_menu_button(nullptr),
-#endif
-   map(nullptr), bottom_widget(nullptr), widget(nullptr), vario(*this),
-   traffic_gauge(*this),
-   suppress_traffic_gauge(false), force_traffic_gauge(false),
-   thermal_assistant(*this),
-   dragging(false),
-   popup(nullptr),
-   timer(*this),
-   FullScreen(false),
-#ifndef ENABLE_OPENGL
-   draw_suspended(false),
-#endif
-   restore_page_pending(false)
-{
-}
-
 /**
  * Destructor of the MainWindow-Class
  * @return
@@ -155,7 +135,7 @@ MainWindow::Create(PixelSize size, TopWindowStyle style)
   SingleWindow::Create(title, size, style);
 }
 
-gcc_noreturn
+[[noreturn]]
 static void
 FatalError(const TCHAR *msg)
 {
@@ -169,7 +149,7 @@ FatalError(const TCHAR *msg)
   LogFormat(_T("%s"), msg);
 
   /* now try to get a GUI error message out to the user */
-#ifdef WIN32
+#ifdef _WIN32
   MessageBox(nullptr, msg, _T("XCSoar"), MB_ICONEXCLAMATION|MB_OK);
 #elif !defined(ANDROID) && !defined(KOBO)
   execl("/usr/bin/xmessage", "xmessage", msg, nullptr);
@@ -178,7 +158,7 @@ FatalError(const TCHAR *msg)
   exit(EXIT_FAILURE);
 }
 
-gcc_noreturn
+[[noreturn]]
 static void
 NoFontsAvailable()
 {
@@ -191,6 +171,10 @@ MainWindow::Initialise()
   Layout::Initialize(GetSize(),
                      CommonInterface::GetUISettings().GetPercentScale(),
                      CommonInterface::GetUISettings().custom_dpi);
+#ifdef DRAW_MOUSE_CURSOR
+  SetCursorSize(CommonInterface::GetDisplaySettings().cursor_size);
+  SetCursorColorsInverted(CommonInterface::GetDisplaySettings().invert_cursor_colors);
+#endif
 
   LogFormat("Initialise fonts");
   if (!Fonts::Initialize()) {
@@ -309,7 +293,27 @@ MainWindow::ReinitialiseLayoutTA(PixelRect rc,
 {
   unsigned sz = std::min(layout.control_size.cy,
                          layout.control_size.cx) * 2;
-  rc.right = rc.left + sz;
+
+  switch (CommonInterface::GetUISettings().thermal_assistant_position) {
+  case (UISettings::ThermalAssistantPosition::BOTTOM_LEFT_AVOID_IB):
+    rc.bottom = GetMainRect().bottom;
+    rc.left = GetMainRect().left;
+    rc.right = rc.left + sz;
+    break;
+  case (UISettings::ThermalAssistantPosition::BOTTOM_RIGHT_AVOID_IB):
+    rc.bottom = GetMainRect().bottom;
+    rc.right = GetMainRect().right;
+    rc.left = rc.right - sz;
+    break;
+  case (UISettings::ThermalAssistantPosition::BOTTOM_RIGHT):
+    rc.right = GetMainRect().right;
+    rc.left = rc.right - sz;
+    break;
+  default: // BOTTOM_LEFT
+    rc.left = GetMainRect().left;
+    rc.right = rc.left + sz;
+    break;
+  } 
   rc.top = rc.bottom - sz;
   thermal_assistant.Move(rc);
 }
@@ -458,7 +462,7 @@ MainWindow::Destroy()
 void
 MainWindow::FinishStartup()
 {
-  timer.Schedule(500); // 2 times per second
+  timer.Schedule(std::chrono::milliseconds(500)); // 2 times per second
 
   ResumeThreads();
 }
@@ -627,17 +631,14 @@ MainWindow::OnKeyDown(unsigned key_code)
     SingleWindow::OnKeyDown(key_code);
 }
 
-bool
-MainWindow::OnTimer(WindowTimer &_timer)
+void
+MainWindow::RunTimer() noexcept
 {
-  if (_timer != timer)
-    return SingleWindow::OnTimer(_timer);
-
   ProcessTimer();
 
   UpdateGaugeVisibility();
 
-  if (!CommonInterface::GetUISettings().enable_thermal_assistant_gauge) {
+  if (CommonInterface::GetUISettings().thermal_assistant_position == UISettings::ThermalAssistantPosition::OFF) {
     thermal_assistant.Clear();
   } else if (!CommonInterface::Calculated().circling ||
              InputEvents::IsFlavour(_T("TA"))) {
@@ -657,29 +658,25 @@ MainWindow::OnTimer(WindowTimer &_timer)
   }
 
   battery_timer.Process();
-
-  return true;
 }
 
-bool
-MainWindow::OnUser(unsigned id)
+void
+MainWindow::OnGpsNotify() noexcept
 {
-  switch ((Command)id) {
-  case Command::GPS_UPDATE:
-    UIReceiveSensorData();
-    return true;
+  UIReceiveSensorData();
+}
 
-  case Command::CALCULATED_UPDATE:
-    UIReceiveCalculatedData();
-    return true;
+void
+MainWindow::OnCalculatedNotify() noexcept
+{
+  UIReceiveCalculatedData();
+}
 
-  case Command::RESTORE_PAGE:
-    if (restore_page_pending)
-      PageActions::Restore();
-    return true;
-  }
-
-  return false;
+void
+MainWindow::OnRestorePageNotify() noexcept
+{
+  if (restore_page_pending)
+    PageActions::Restore();
 }
 
 void
@@ -693,7 +690,9 @@ MainWindow::OnDestroy()
   SingleWindow::OnDestroy();
 }
 
-bool MainWindow::OnClose() {
+bool
+MainWindow::OnClose() noexcept
+{
   if (HasDialog() || !IsRunning())
     /* no shutdown dialog if XCSoar hasn't completed initialization
        yet (e.g. if we are in the simulator prompt) */
@@ -823,7 +822,7 @@ MainWindow::DeferredRestorePage()
     return;
 
   restore_page_pending = true;
-  SendUser((unsigned)Command::RESTORE_PAGE);
+  restore_page_notify.SendNotification();
 }
 
 void
@@ -1018,7 +1017,7 @@ MainWindow::ToggleForceFLARMRadar()
 #ifdef ANDROID
 
 void
-MainWindow::OnPause()
+MainWindow::OnPause() noexcept
 {
   if (!IsRunning() && HasDialog())
     /* suspending before initialization has finished doesn't leave

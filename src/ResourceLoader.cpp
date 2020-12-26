@@ -24,7 +24,7 @@ Copyright_License {
 #include "ResourceLoader.hpp"
 #include "ResourceId.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 #ifdef USE_WIN32_RESOURCES
 
@@ -43,7 +43,7 @@ ResourceLoader::Init(HINSTANCE hInstance)
 #else /* !WIN32 */
 
 #include "resource_data.h"
-#include "Util/StringAPI.hxx"
+#include "util/StringAPI.hxx"
 
 #endif /* !WIN32 */
 
@@ -55,19 +55,19 @@ ResourceLoader::Load(const TCHAR *name, const TCHAR *type)
 
   HRSRC resource = ::FindResource(ResourceLoaderInstance, name, type);
   if (resource == nullptr)
-    return Data::Null();
+    return nullptr;
 
   DWORD size = ::SizeofResource(ResourceLoaderInstance, resource);
   if (size == 0)
-    return Data::Null();
+    return nullptr;
 
   HGLOBAL handle = ::LoadResource(ResourceLoaderInstance, resource);
   if (handle == nullptr)
-    return Data::Null();
+    return nullptr;
 
   LPVOID data = LockResource(handle);
   if (data == nullptr)
-    return Data::Null();
+    return nullptr;
 
   return Data(data, size);
 #else
@@ -76,7 +76,7 @@ ResourceLoader::Load(const TCHAR *name, const TCHAR *type)
     if (StringIsEqual(named_resources[i].name, name))
       return named_resources[i].data;
 
-  return Data::Null();
+  return nullptr;
 #endif
 }
 

@@ -51,7 +51,7 @@ public:
 
 private:
   /* virtual methods from ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -84,7 +84,7 @@ ManageFLARMWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 }
 
 void
-ManageFLARMWidget::OnAction(int id)
+ManageFLARMWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case Setup:
@@ -107,10 +107,11 @@ ManageFLARMWidget::OnAction(int id)
 void
 ManageFlarmDialog(Device &device, const FlarmVersion &version)
 {
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), _T("FLARM"),
-                    new ManageFLARMWidget(UIGlobals::GetDialogLook(),
-                                          (FlarmDevice &)device, version));
+  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _T("FLARM"),
+                      new ManageFLARMWidget(UIGlobals::GetDialogLook(),
+                                            (FlarmDevice &)device, version));
   dialog.AddButton(_("Close"), mrCancel);
   dialog.ShowModal();
 }

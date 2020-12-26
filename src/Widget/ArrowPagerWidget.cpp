@@ -23,7 +23,7 @@ Copyright_License {
 
 #include "ArrowPagerWidget.hpp"
 #include "Screen/Layout.hpp"
-#include "Event/KeyCode.hpp"
+#include "event/KeyCode.hpp"
 #include "Language/Language.hpp"
 #include "Form/Form.hpp"
 #include "Renderer/SymbolButtonRenderer.hpp"
@@ -227,7 +227,7 @@ ArrowPagerWidget::KeyPress(unsigned key_code)
 }
 
 void
-ArrowPagerWidget::OnAction(int id)
+ArrowPagerWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case PREVIOUS:

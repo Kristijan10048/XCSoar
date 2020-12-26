@@ -21,12 +21,12 @@
 */
 
 #include "Logger/GRecord.hpp"
-#include "OS/Args.hpp"
-#include "IO/FileTransaction.hpp"
-#include "IO/FileLineReader.hpp"
-#include "IO/FileOutputStream.hxx"
-#include "IO/BufferedOutputStream.hxx"
-#include "Util/PrintException.hxx"
+#include "system/Args.hpp"
+#include "io/FileTransaction.hpp"
+#include "io/FileLineReader.hpp"
+#include "io/FileOutputStream.hxx"
+#include "io/BufferedOutputStream.hxx"
+#include "util/PrintException.hxx"
 
 #include <string.h>
 #include <stdio.h>
@@ -114,7 +114,7 @@ try {
 
   printf("New G record written\n");
   return EXIT_SUCCESS;
-} catch (const std::runtime_error &e) {
-  PrintException(e);
+} catch (...) {
+  PrintException(std::current_exception());
   return EXIT_FAILURE;
 }

@@ -29,7 +29,7 @@ Copyright_License {
 #include "Renderer/TextRowRenderer.hpp"
 #include "UIGlobals.hpp"
 #include "Look/DialogLook.hpp"
-#include "Util/StaticString.hxx"
+#include "util/StaticString.hxx"
 
 static const ComboList *ComboListPopup;
 
@@ -46,7 +46,7 @@ public:
   }
 
   virtual void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                           unsigned i) override {
+                           unsigned i) noexcept override {
     row_renderer.DrawTextRow(canvas, rc, combo_list[i].display_string.c_str());
   }
 };
@@ -54,10 +54,7 @@ public:
 static const TCHAR*
 OnItemHelp(unsigned i)
 {
-  if (!(*ComboListPopup)[i].help_text.IsNull())
-    return (*ComboListPopup)[i].help_text.c_str();
-
-  return _T("");
+  return (*ComboListPopup)[i].help_text.c_str();
 }
 
 int

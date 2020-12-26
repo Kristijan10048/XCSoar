@@ -30,21 +30,20 @@
 #include "Screen/Canvas.hpp"
 #include "Form/Button.hpp"
 #include "Widget/ListWidget.hpp"
-#include "Java/Global.hxx"
+#include "java/Global.hxx"
 #include "Android/LeScanCallback.hpp"
 #include "Android/BluetoothHelper.hpp"
 #include "Language/Language.hpp"
-#include "Thread/Mutex.hpp"
-#include "Event/Notify.hpp"
-#include "Util/StringCompare.hxx"
+#include "thread/Mutex.hxx"
+#include "event/Notify.hpp"
+#include "util/StringCompare.hxx"
 
-#include <string>
 #include <vector>
 #include <forward_list>
 #include <set>
 
 class ScanBluetoothLeWidget final
-  : public ListWidget, public LeScanCallback, Notify {
+  : public ListWidget, public LeScanCallback {
 
   struct Item {
     std::string address;
@@ -55,6 +54,8 @@ class ScanBluetoothLeWidget final
   };
 
   WidgetDialog &dialog;
+
+  Notify le_scan_notify{[this]{ OnLeScanNotification(); }};
 
   std::vector<Item> items;
 
@@ -69,8 +70,8 @@ public:
     :dialog(_dialog) {}
 
   gcc_pure
-  const char *GetSelectedAddress() const {
-    return items[GetList().GetCursorIndex()].address.c_str();
+  const auto &GetSelectedAddress() const {
+    return items[GetList().GetCursorIndex()].address;
   }
 
   void CreateButtons() {
@@ -88,14 +89,15 @@ private:
   void Unprepare() override;
 
   /* virtual methods from class ListItemRenderer */
-  void OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned idx) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override;
 
   /* virtual methods from class ListCursorHandler */
-  bool CanActivateItem(unsigned index) const override {
+  bool CanActivateItem(unsigned index) const noexcept override {
     return true;
   }
 
-  void OnActivateItem(unsigned index) override {
+  void OnActivateItem(unsigned index) noexcept override {
     dialog.SetModalResult(mrOK);
   }
 
@@ -111,19 +113,18 @@ private:
     }
 
     {
-      const ScopeLock protect(mutex);
+      const std::lock_guard<Mutex> lock(mutex);
       new_items.emplace_front(address, name);
     }
 
-    Notify::SendNotification();
+    le_scan_notify.SendNotification();
   };
 
-  /* virtual methods from class Notify */
-  void OnNotification() override {
+  void OnLeScanNotification() noexcept {
     const bool was_empty = items.empty();
 
     {
-      const ScopeLock protect(mutex);
+      const std::lock_guard<Mutex> lock(mutex);
 
       if (new_items.empty())
         return;
@@ -158,14 +159,14 @@ ScanBluetoothLeWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 void
 ScanBluetoothLeWidget::Unprepare()
 {
-  Notify::ClearNotification();
+  le_scan_notify.ClearNotification();
 
   DeleteWindow();
 }
 
 void
 ScanBluetoothLeWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
-                                   unsigned i)
+                                   unsigned i) noexcept
 {
   const auto &item = items[i];
 
@@ -178,10 +179,11 @@ ScanBluetoothLeWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
   canvas.DrawText(rc.left + margin, rc.top + margin, name);
 }
 
-bool
-ScanBluetoothLeDialog(char *address, size_t address_size)
+std::string
+ScanBluetoothLeDialog() noexcept
 {
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(), _("Bluetooth LE"));
   ScanBluetoothLeWidget widget(dialog);
 
   const auto env = Java::GetEnv();
@@ -190,12 +192,12 @@ ScanBluetoothLeDialog(char *address, size_t address_size)
     const TCHAR *message =
       _("Bluetooth LE is not available on this device.");
     ShowMessageBox(message, _("Bluetooth LE"), MB_OK);
-    return false;
+    return {};
   }
 
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Bluetooth LE"), &widget);
   widget.CreateButtons();
   dialog.AddButton(_("Cancel"), mrCancel);
+  dialog.FinishPreliminary(&widget);
 
   int result = dialog.ShowModal();
   BluetoothHelper::StopLeScan(env, callback);
@@ -203,8 +205,7 @@ ScanBluetoothLeDialog(char *address, size_t address_size)
   dialog.StealWidget();
 
   if (result != mrOK)
-    return false;
+    return {};
 
-  CopyString(address, widget.GetSelectedAddress(), address_size);
-  return true;
+  return widget.GetSelectedAddress();
 }

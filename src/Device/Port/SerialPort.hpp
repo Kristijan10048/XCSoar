@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_DEVICE_SERIAL_PORT_HPP
 #define XCSOAR_DEVICE_SERIAL_PORT_HPP
 
-#include "Thread/StoppableThread.hpp"
+#include "thread/StoppableThread.hpp"
 #include "BufferedPort.hpp"
 
 #include <windef.h>
@@ -105,7 +105,7 @@ public:
 
 protected:
   /* virtual methods from class Thread */
-  virtual void Run() override;
+  void Run() noexcept override;
 };
 
 #endif

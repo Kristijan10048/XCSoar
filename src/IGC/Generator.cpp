@@ -22,12 +22,12 @@ Copyright_License {
 */
 
 #include "Generator.hpp"
-#include "Time/BrokenDateTime.hpp"
+#include "time/BrokenDateTime.hpp"
 #include "Geo/GeoPoint.hpp"
 #include "Math/Util.hpp"
-#include "Util/ASCII.hxx"
+#include "util/ASCII.hxx"
 
-#include <assert.h>
+#include <cassert>
 #include <string.h>
 #include <stdio.h>
 

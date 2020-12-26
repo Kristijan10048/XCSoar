@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_SCREEN_OPENGL_FUNCTION_HPP
 #define XCSOAR_SCREEN_OPENGL_FUNCTION_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #ifdef USE_EGL
 #include "Screen/EGL/System.hpp"
@@ -42,6 +42,8 @@ Copyright_License {
 #undef Window
 #undef Display
 
+#elif defined(ENABLE_SDL)
+#include <SDL_video.h>
 #else
 #include <dlfcn.h>
 #endif
@@ -56,6 +58,8 @@ namespace OpenGL {
     return eglGetProcAddress(name);
 #elif defined(USE_GLX)
     return glXGetProcAddressARB((const GLubyte *)name);
+#elif defined(ENABLE_SDL)
+    return (Function)SDL_GL_GetProcAddress(name);
 #else
     return (Function)dlsym(RTLD_DEFAULT, name);
 #endif

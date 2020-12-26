@@ -24,9 +24,10 @@ Copyright_License {
 #ifndef XCSOAR_DEVICE_CONFIG_HPP
 #define XCSOAR_DEVICE_CONFIG_HPP
 
-#include "Util/StaticString.hxx"
+#include "util/StaticString.hxx"
 
-#include <stdint.h>
+#include <cstdint>
+
 #include <tchar.h>
 
 /**
@@ -101,6 +102,11 @@ struct DeviceConfig {
      * for debugging.
      */
     PTY,
+
+    /**
+     * A GliderLink broadcast receiver. Available on Android only
+     */
+    GLIDER_LINK,
   };
 
   /**

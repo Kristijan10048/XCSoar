@@ -23,16 +23,16 @@ Copyright_License {
 
 #include "InputEvents.hpp"
 #include "Dialogs/Message.hpp"
-#include "Lua/StartFile.hpp"
+#include "lua/StartFile.hpp"
 #include "Dialogs/Error.hpp"
 #include "Dialogs/ComboPicker.hpp"
 #include "Language/Language.hpp"
 #include "LocalPath.hpp"
-#include "OS/Path.hpp"
-#include "OS/FileUtil.hpp"
+#include "system/Path.hpp"
+#include "system/FileUtil.hpp"
 #include "Form/DataField/ComboList.hpp"
-#include "Util/StringFormat.hpp"
-#include "Util/StringCompare.hxx"
+#include "util/StringFormat.hpp"
+#include "util/StringCompare.hxx"
 
 #include <stdexcept>
 
@@ -88,9 +88,9 @@ InputEvents::eventRunLuaFile(const TCHAR *misc)
 
   try {
     Lua::StartFile(path);
-  } catch (const std::runtime_error &e) {
+  } catch (...) {
     TCHAR buffer[MAX_PATH];
     StringFormat(buffer, MAX_PATH, _T("RunLuaFile %s"), misc);
-    ShowError(e, buffer);
+    ShowError(std::current_exception(), buffer);
   }
 }

@@ -38,7 +38,7 @@ Copyright_License {
 #include "Interface.hpp"
 #include "Language/Language.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
 
 /**
@@ -60,12 +60,11 @@ dlgInfoBoxAccessShowModeless(const int id, const InfoBoxPanel *panels)
 
   PixelRect form_rc = InfoBoxManager::layout.remaining;
 
-  WidgetDialog dialog(look);
-
   TabWidget tab_widget(TabWidget::Orientation::HORIZONTAL);
-  dialog.Create(UIGlobals::GetMainWindow(),
-                gettext(InfoBoxFactory::GetName(old_type)),
-                form_rc, &tab_widget);
+
+  WidgetDialog dialog(UIGlobals::GetMainWindow(), look, form_rc,
+                      gettext(InfoBoxFactory::GetName(old_type)),
+                      &tab_widget);
   dialog.PrepareWidget();
 
   bool found_setup = false;

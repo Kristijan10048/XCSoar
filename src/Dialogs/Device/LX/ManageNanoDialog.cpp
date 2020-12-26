@@ -49,7 +49,7 @@ public:
 
 private:
   /* virtual methods from ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -85,7 +85,7 @@ ManageNanoWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 }
 
 void
-ManageNanoWidget::OnAction(int id)
+ManageNanoWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case SETUP:
@@ -101,10 +101,11 @@ ManageNanoWidget::OnAction(int id)
 void
 ManageNanoDialog(Device &device, const DeviceInfo &info)
 {
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), _T("LXNAV Nano"),
-                    new ManageNanoWidget(UIGlobals::GetDialogLook(),
-                                         (LXDevice &)device, info));
+  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _T("LXNAV Nano"),
+                      new ManageNanoWidget(UIGlobals::GetDialogLook(),
+                                           (LXDevice &)device, info));
   dialog.AddButton(_("Close"), mrCancel);
   dialog.ShowModal();
 }

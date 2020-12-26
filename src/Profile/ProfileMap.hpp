@@ -24,11 +24,11 @@ Copyright_License {
 #ifndef XCSOAR_PROFILE_MAP_HPP
 #define XCSOAR_PROFILE_MAP_HPP
 
-#include "Util/StringBuffer.hxx"
-#include "Compiler.h"
+#include "util/StringBuffer.hxx"
+#include "util/Compiler.h"
 
 #include <tchar.h>
-#include <stdint.h>
+#include <cstdint>
 
 class KeyValueFileWriter;
 
@@ -54,7 +54,7 @@ namespace Profile {
    * profile), or default_value if the key does not exist
    */
   gcc_pure
-  const char *Get(const char *key, const char *default_value=NULL);
+  const char *Get(const char *key, const char *default_value=nullptr);
 
   /**
    * Reads a value from the profile map
@@ -62,7 +62,7 @@ namespace Profile {
    * @param value Pointer to the output buffer
    * @param max_size Maximum size of the output buffer
    */
-  bool Get(const char *key, TCHAR *value, size_t max_size);
+  bool Get(const char *key, TCHAR *value, std::size_t max_size);
 
   /**
    * Writes a value to the profile map
@@ -110,7 +110,7 @@ namespace Profile {
     Set(key, (int)value);
   }
 
-  template<size_t max>
+  template<std::size_t max>
   static inline bool
   Get(const char *key, BasicStringBuffer<TCHAR, max> &value)
   {

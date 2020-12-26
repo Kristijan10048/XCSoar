@@ -24,10 +24,10 @@ Copyright_License {
 #include "VegaParametersWidget.hpp"
 #include "Device/Driver/Vega/Internal.hpp"
 #include "Language/Language.hpp"
-#include "OS/Sleep.h"
+#include "system/Sleep.h"
 #include "Operation/PopupOperationEnvironment.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 void
 VegaParametersWidget::AddBoolean(const char *name, const TCHAR *label,

@@ -26,28 +26,28 @@ Copyright_License {
 #include "Screen/OpenGL/Surface.hpp"
 #include "Screen/OpenGL/Shapes.hpp"
 #include "Screen/Custom/TopCanvas.hpp"
-#include "Event/Queue.hpp"
-#include "Event/Android/Loop.hpp"
-#include "Event/Globals.hpp"
+#include "event/Queue.hpp"
+#include "event/android/Loop.hpp"
+#include "event/Globals.hpp"
 #include "Android/Main.hpp"
 #include "Android/NativeView.hpp"
 
 void
-TopWindow::Invalidate()
+TopWindow::Invalidate() noexcept
 {
   invalidated = true;
 }
 
 void
-TopWindow::AnnounceResize(PixelSize _new_size)
+TopWindow::AnnounceResize(PixelSize _new_size) noexcept
 {
-  ScopeLock protect(paused_mutex);
+  std::lock_guard<Mutex> lock(paused_mutex);
   resized = true;
   new_size = _new_size;
 }
 
 bool
-TopWindow::ResumeSurface()
+TopWindow::ResumeSurface() noexcept
 {
   /* Try to reinitialize OpenGL.  This often fails on the first
      attempt (IllegalArgumentException "Make sure the SurfaceView or
@@ -73,18 +73,18 @@ TopWindow::ResumeSurface()
 }
 
 bool
-TopWindow::CheckResumeSurface()
+TopWindow::CheckResumeSurface() noexcept
 {
   return (!resumed || ResumeSurface()) && !paused && surface_valid;
 }
 
 void
-TopWindow::RefreshSize()
+TopWindow::RefreshSize() noexcept
 {
   PixelSize new_size_copy;
 
   {
-    ScopeLock protect(paused_mutex);
+    std::lock_guard<Mutex> lock(paused_mutex);
     if (!resized)
       return;
 
@@ -106,7 +106,7 @@ TopWindow::OnResize(PixelSize new_size)
 }
 
 void
-TopWindow::OnPause()
+TopWindow::OnPause() noexcept
 {
   if (paused)
     return;
@@ -118,14 +118,14 @@ TopWindow::OnPause()
 
   native_view->deinitSurface();
 
-  const ScopeLock lock(paused_mutex);
+  const std::lock_guard<Mutex> lock(paused_mutex);
   paused = true;
   resumed = false;
-  paused_cond.signal();
+  paused_cond.notify_one();
 }
 
 void
-TopWindow::OnResume()
+TopWindow::OnResume() noexcept
 {
   if (!paused)
     return;
@@ -138,24 +138,23 @@ TopWindow::OnResume()
 }
 
 static bool
-match_pause_and_resume(const Event &event, void *ctx)
+match_pause_and_resume(const Event &event, void *ctx) noexcept
 {
   return event.type == Event::PAUSE || event.type == Event::RESUME;
 }
 
 void
-TopWindow::Pause()
+TopWindow::Pause() noexcept
 {
   event_queue->Purge(match_pause_and_resume, nullptr);
   event_queue->Push(Event::PAUSE);
 
-  const ScopeLock lock(paused_mutex);
-  while (!paused)
-    paused_cond.wait(paused_mutex);
+  std::unique_lock<Mutex> lock(paused_mutex);
+  paused_cond.wait(lock, [this]{ return !running || paused; });
 }
 
 void
-TopWindow::Resume()
+TopWindow::Resume() noexcept
 {
   event_queue->Purge(match_pause_and_resume, nullptr);
   event_queue->Push(Event::RESUME);
@@ -169,7 +168,6 @@ TopWindow::OnEvent(const Event &event)
 
   case Event::NOP:
   case Event::TIMER:
-  case Event::USER:
   case Event::CALLBACK:
     break;
 
@@ -240,8 +238,14 @@ TopWindow::OnEvent(const Event &event)
 }
 
 int
-TopWindow::RunEventLoop()
+TopWindow::RunEventLoop() noexcept
 {
+  {
+    std::lock_guard<Mutex> lock(paused_mutex);
+    assert(!running);
+    running = true;
+  }
+
   Refresh();
 
   EventLoop loop(*event_queue, *this);
@@ -249,11 +253,20 @@ TopWindow::RunEventLoop()
   while (IsDefined() && loop.Get(event))
     loop.Dispatch(event);
 
+  {
+    std::lock_guard<Mutex> lock(paused_mutex);
+    assert(running);
+    running = false;
+    /* wake up the Android Activity thread, just in case it's waiting
+       inside Pause() */
+    paused_cond.notify_one();
+  }
+
   return 0;
 }
 
 void
-TopWindow::PostQuit()
+TopWindow::PostQuit() noexcept
 {
   event_queue->Quit();
 }

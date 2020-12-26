@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_BATTERY_TIMER_HPP
 #define XCSOAR_BATTERY_TIMER_HPP
 
-#include "Time/PeriodClock.hpp"
+#include "time/PeriodClock.hpp"
 
 class BatteryTimer {
   // Battery status for SIMULATOR mode
@@ -32,7 +32,7 @@ class BatteryTimer {
 
   static constexpr unsigned BATTERY_WARNING = 10;
   static constexpr unsigned BATTERY_EXIT = 5;
-  static constexpr unsigned BATTERY_REMINDER = 5 * 60 * 1000;
+  static constexpr auto BATTERY_REMINDER = std::chrono::minutes(5);
 
   PeriodClock last_warning;
 

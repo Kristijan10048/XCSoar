@@ -26,11 +26,7 @@
 #include "Printing.hpp"
 
 #include "Replay/TaskAutoPilot.hpp"
-#include "OS/Path.hpp"
-
-extern "C" {
-#include "tap.h"
-}
+#include "system/Path.hpp"
 
 #include <iosfwd>
 #include <string>

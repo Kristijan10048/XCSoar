@@ -25,15 +25,13 @@ Copyright_License {
 #include "Screen/OpenGL/Debug.hpp"
 #include "Screen/Point.hpp"
 
+#include <glm/mat4x4.hpp>
+
 namespace OpenGL {
   bool texture_non_power_of_two;
 
 #ifdef HAVE_OES_DRAW_TEXTURE
   bool oes_draw_texture;
-#endif
-
-#ifdef ANDROID
-  bool vertex_buffer_object;
 #endif
 
 #ifdef HAVE_OES_MAPBUFFER
@@ -52,9 +50,7 @@ namespace OpenGL {
 
   PixelPoint translate;
 
-#ifdef USE_GLSL
   glm::mat4 projection_matrix;
-#endif
 
 #ifndef NDEBUG
   pthread_t thread;

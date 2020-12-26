@@ -25,9 +25,9 @@ Copyright_License {
 #include "ALSAEnv.hpp"
 
 #include "LogFile.hpp"
-#include "Util/NumberParser.hpp"
+#include "util/NumberParser.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <stdlib.h>
 
 

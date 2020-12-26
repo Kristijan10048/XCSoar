@@ -28,12 +28,12 @@ Copyright_License {
 #define PCMPLAYER_SYNTHESISER_ONLY
 #endif
 
-#if !defined(ANDROID) && !defined(WIN32)
+#if !defined(ANDROID) && !defined(_WIN32)
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 
 #endif
 
@@ -78,7 +78,7 @@ protected:
   PCMDataSource *source = nullptr;
 #endif
 
-#if !defined(ANDROID) && !defined(WIN32)
+#if !defined(ANDROID) && !defined(_WIN32)
   unsigned channels;
 
   /**

@@ -32,11 +32,11 @@ Copyright_License {
 #include "Tracking/SkyLines/Handler.hpp"
 #include "Tracking/SkyLines/Glue.hpp"
 #include "Tracking/SkyLines/Data.hpp"
-#include "Thread/StandbyThread.hpp"
-#include "Tracking/LiveTrack24/Client.hpp"
-#include "Time/PeriodClock.hpp"
+#include "thread/StandbyThread.hpp"
+#include "Tracking/LiveTrack24.hpp"
+#include "time/PeriodClock.hpp"
 #include "Geo/GeoPoint.hpp"
-#include "Time/BrokenDateTime.hpp"
+#include "time/BrokenDateTime.hpp"
 
 struct MoreData;
 struct DerivedInfo;
@@ -45,6 +45,20 @@ class TrackingGlue final
   : protected StandbyThread,
     private SkyLinesTracking::Handler
 {
+  struct LiveTrack24State
+  {
+    LiveTrack24::SessionID session_id;
+    unsigned packet_id;
+
+    void ResetSession() {
+      session_id = 0;
+    }
+
+    bool HasSession() {
+      return session_id != 0;
+    }
+  };
+
   PeriodClock clock;
 
   TrackingSettings settings;
@@ -53,7 +67,7 @@ class TrackingGlue final
 
   SkyLinesTracking::Data skylines_data;
 
-  LiveTrack24::Client livetrack24;
+  LiveTrack24State state;
 
   /**
    * The Unix UTC time stamp that was last submitted to the tracking
@@ -69,7 +83,7 @@ class TrackingGlue final
   bool flying = false, last_flying;
 
 public:
-  explicit TrackingGlue(boost::asio::io_service &io_service);
+  explicit TrackingGlue(boost::asio::io_context &io_context);
 
   void StopAsync();
   void WaitStopped();
@@ -78,7 +92,7 @@ public:
   void OnTimer(const MoreData &basic, const DerivedInfo &calculated);
 
 protected:
-  void Tick() override;
+  void Tick() noexcept override;
 
 private:
   /* virtual methods from SkyLinesTracking::Handler */
@@ -90,7 +104,7 @@ private:
   void OnThermal(unsigned time_of_day_ms,
                  const AGeoPoint &bottom, const AGeoPoint &top,
                  double lift) override;
-  void OnSkyLinesError(const std::exception &e) override;
+  void OnSkyLinesError(std::exception_ptr e) override;
 
 public:
   const SkyLinesTracking::Data &GetSkyLinesData() const {

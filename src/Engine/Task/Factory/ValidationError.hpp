@@ -24,9 +24,9 @@ Copyright_License {
 #ifndef XCSOAR_TASK_VALIDATION_ERROR_HPP
 #define XCSOAR_TASK_VALIDATION_ERROR_HPP
 
-#include "Util/EnumBitSet.hpp"
+#include "util/EnumBitSet.hpp"
 
-#include <stdint.h>
+#include <cstdint>
 
 /** Task Validation Error Types */
 enum class TaskValidationErrorType : uint8_t {

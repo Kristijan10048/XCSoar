@@ -33,37 +33,33 @@ Copyright_License {
 #include "Screen/Canvas.hpp"
 #include "Language/Language.hpp"
 #include "LocalPath.hpp"
-#include "OS/FileUtil.hpp"
-#include "OS/Path.hpp"
-#include "IO/FileLineReader.hpp"
+#include "system/FileUtil.hpp"
+#include "system/Path.hpp"
+#include "io/FileLineReader.hpp"
 #include "Formatter/ByteSizeFormatter.hpp"
 #include "Formatter/TimeFormatter.hpp"
-#include "Time/BrokenDateTime.hpp"
-#include "Net/HTTP/Features.hpp"
-#include "Util/ConvertString.hpp"
-#include "Util/Macros.hpp"
+#include "time/BrokenDateTime.hpp"
+#include "net/http/Features.hpp"
+#include "util/ConvertString.hpp"
+#include "util/Macros.hpp"
 #include "Repository/FileRepository.hpp"
 #include "Repository/Parser.hpp"
-
-#ifdef ANDROID
-#include "Android/Main.hpp"
-#endif
 
 #ifdef HAVE_DOWNLOAD_MANAGER
 #include "Repository/Glue.hpp"
 #include "ListPicker.hpp"
 #include "Form/Button.hpp"
-#include "Net/HTTP/DownloadManager.hpp"
-#include "Event/Notify.hpp"
-#include "Thread/Mutex.hpp"
-#include "Event/Timer.hpp"
+#include "net/http/DownloadManager.hpp"
+#include "event/Notify.hpp"
+#include "thread/Mutex.hxx"
+#include "event/PeriodicTimer.hpp"
 
 #include <map>
 #include <set>
 #include <vector>
 #endif
 
-#include <assert.h>
+#include <cassert>
 
 static AllocatedPath
 LocalPath(const AvailableFile &file)
@@ -104,18 +100,39 @@ CanDownload(const FileRepository &repository, const TCHAR *name)
   return FindRemoteFile(repository, name) != nullptr;
 }
 
+static bool
+UpdateAvailable(const FileRepository &repository, const TCHAR *name)
+{
+#ifdef HAVE_POSIX
+  const AvailableFile *remote_file = FindRemoteFile(repository, name);
+
+  if (remote_file == nullptr)
+    return false;
+
+  BrokenDate remote_changed = remote_file->update_date;
+
+  const auto path = LocalPath(name);
+  BrokenDate local_changed = static_cast<BrokenDate>(BrokenDateTime::FromUnixTimeUTC(
+                              File::GetLastModification(path)));
+
+  return local_changed < remote_changed;
+#else
+  return false;
+#endif
+}
 #endif
 
 class ManagedFileListWidget
   : public ListWidget,
 #ifdef HAVE_DOWNLOAD_MANAGER
-    private Timer, private Net::DownloadListener, private Notify,
+    private Net::DownloadListener,
 #endif
     private ActionListener {
   enum Buttons {
     DOWNLOAD,
     ADD,
     CANCEL,
+    UPDATE,
   };
 
   struct DownloadStatus {
@@ -127,12 +144,12 @@ class ManagedFileListWidget
     StaticString<32u> size;
     StaticString<32u> last_modified;
 
-    bool downloading, failed;
+    bool downloading, failed, out_of_date;
 
     DownloadStatus download_status;
 
     void Set(const TCHAR *_name, const DownloadStatus *_download_status,
-             bool _failed) {
+             bool _failed, bool _out_of_date) {
       name = _name;
 
       const auto path = LocalPath(name);
@@ -157,13 +174,21 @@ class ManagedFileListWidget
         download_status = *_download_status;
 
       failed = _failed;
+
+      out_of_date = _out_of_date;
     }
   };
 
   TwoTextRowsRenderer row_renderer;
 
 #ifdef HAVE_DOWNLOAD_MANAGER
-  Button *download_button, *add_button, *cancel_button;
+  Button *download_button, *add_button, *cancel_button, *update_button;
+
+  /**
+  * Whether at least one file is out of date.
+  * Used to activate "Update All" button.
+  */
+  bool some_out_of_date;
 #endif
 
   FileRepository repository;
@@ -186,6 +211,10 @@ class ManagedFileListWidget
    */
   std::set<std::string> failures;
 
+  PeriodicTimer refresh_download_timer{[this]{ OnTimer(); }};
+
+  Notify download_notify{[this]{ OnDownloadNotification(); }};
+
   /**
    * Was the repository file modified, and needs to be reloaded by
    * LoadRepositoryFile()?
@@ -207,7 +236,7 @@ protected:
   gcc_pure
   bool IsDownloading(const char *name) const {
 #ifdef HAVE_DOWNLOAD_MANAGER
-    ScopeLock protect(mutex);
+    std::lock_guard<Mutex> lock(mutex);
     return downloads.find(name) != downloads.end();
 #else
     return false;
@@ -222,7 +251,7 @@ protected:
   gcc_pure
   bool IsDownloading(const char *name, DownloadStatus &status_r) const {
 #ifdef HAVE_DOWNLOAD_MANAGER
-    ScopeLock protect(mutex);
+    std::lock_guard<Mutex> lock(mutex);
     auto i = downloads.find(name);
     if (i == downloads.end())
       return false;
@@ -243,7 +272,7 @@ protected:
   gcc_pure
   bool HasFailed(const char *name) const {
 #ifdef HAVE_DOWNLOAD_MANAGER
-    ScopeLock protect(mutex);
+    std::lock_guard<Mutex> lock(mutex);
     return failures.find(name) != failures.end();
 #else
     return false;
@@ -265,6 +294,7 @@ protected:
   void Download();
   void Add();
   void Cancel();
+  void UpdateFiles();
 
 public:
   /* virtual methods from class Widget */
@@ -272,16 +302,15 @@ public:
   virtual void Unprepare() override;
 
   /* virtual methods from class List::Handler */
-  virtual void OnPaintItem(Canvas &canvas, const PixelRect rc,
-                           unsigned idx) override;
-  virtual void OnCursorMoved(unsigned index) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override;
+  void OnCursorMoved(unsigned index) noexcept override;
 
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 
 #ifdef HAVE_DOWNLOAD_MANAGER
-  /* virtual methods from class Timer */
-  virtual void OnTimer() override;
+  void OnTimer();
 
   /* virtual methods from class Net::DownloadListener */
   virtual void OnDownloadAdded(Path path_relative,
@@ -289,8 +318,7 @@ public:
   virtual void OnDownloadComplete(Path path_relative,
                                   bool success) override;
 
-  /* virtual methods from class Notify */
-  virtual void OnNotification() override;
+  void OnDownloadNotification() noexcept;
 #endif
 };
 
@@ -321,12 +349,12 @@ void
 ManagedFileListWidget::Unprepare()
 {
 #ifdef HAVE_DOWNLOAD_MANAGER
-  Timer::Cancel();
+  refresh_download_timer.Cancel();
 
   if (Net::DownloadManager::IsAvailable())
     Net::DownloadManager::RemoveListener(*this);
 
-  ClearNotification();
+  download_notify.ClearNotification();
 #endif
 
   DeleteWindow();
@@ -346,10 +374,11 @@ void
 ManagedFileListWidget::LoadRepositoryFile()
 try {
 #ifdef HAVE_DOWNLOAD_MANAGER
-  mutex.Lock();
-  repository_modified = false;
-  repository_failed = false;
-  mutex.Unlock();
+  {
+    const std::lock_guard<Mutex> lock(mutex);
+    repository_modified = false;
+    repository_failed = false;
+  }
 #endif
 
   repository.Clear();
@@ -365,6 +394,8 @@ ManagedFileListWidget::RefreshList()
 {
   items.clear();
 
+  some_out_of_date = false;
+
   bool download_active = false;
   for (auto i = repository.begin(), end = repository.end(); i != end; ++i) {
     const auto &remote_file = *i;
@@ -372,17 +403,31 @@ ManagedFileListWidget::RefreshList()
     const bool is_downloading = IsDownloading(remote_file, download_status);
 
     const auto path = LocalPath(remote_file);
+    const bool file_exists = File::Exists(path);
+
     if (!path.IsNull() &&
-        (is_downloading || File::Exists(path))) {
+        (is_downloading || file_exists)) {
       download_active |= is_downloading;
 
       const Path base = path.GetBase();
       if (base.IsNull())
         continue;
 
+      bool is_out_of_date = false;
+#ifdef HAVE_POSIX
+      if (file_exists) {
+        BrokenDate local_changed = static_cast<BrokenDate>(BrokenDateTime::FromUnixTimeUTC(
+                                    File::GetLastModification(path)));
+        is_out_of_date = (local_changed < remote_file.update_date);
+
+        if (is_out_of_date)
+          some_out_of_date = true;
+      }
+#endif
+
       items.append().Set(base.c_str(),
                          is_downloading ? &download_status : nullptr,
-                         HasFailed(remote_file));
+                         HasFailed(remote_file), is_out_of_date);
     }
   }
 
@@ -391,8 +436,8 @@ ManagedFileListWidget::RefreshList()
   list.Invalidate();
 
 #ifdef HAVE_DOWNLOAD_MANAGER
-  if (download_active && !Timer::IsActive())
-    Timer::Schedule(1000);
+  if (download_active && !refresh_download_timer.IsActive())
+    refresh_download_timer.Schedule(std::chrono::seconds(1));
 #endif
 }
 
@@ -404,6 +449,7 @@ ManagedFileListWidget::CreateButtons(WidgetDialog &dialog)
     download_button = dialog.AddButton(_("Download"), *this, DOWNLOAD);
     add_button = dialog.AddButton(_("Add"), *this, ADD);
     cancel_button = dialog.AddButton(_("Cancel"), *this, CANCEL);
+    update_button = dialog.AddButton(_("Update all"), *this, UPDATE);
   }
 #endif
 }
@@ -418,13 +464,14 @@ ManagedFileListWidget::UpdateButtons()
     download_button->SetEnabled(!items.empty() &&
                                 CanDownload(repository, items[current].name));
     cancel_button->SetEnabled(!items.empty() && items[current].downloading);
+    update_button->SetEnabled(!items.empty() && some_out_of_date);
   }
 #endif
 }
 
 void
 ManagedFileListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
-                                   unsigned i)
+                                   unsigned i) noexcept
 {
   const FileItem &file = items[i];
 
@@ -453,13 +500,17 @@ ManagedFileListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
     row_renderer.DrawRightFirstRow(canvas, rc, text);
   }
 
-  row_renderer.DrawRightSecondRow(canvas, rc, file.last_modified.c_str());
-
   row_renderer.DrawSecondRow(canvas, rc, file.size.c_str());
+
+  if (file.out_of_date) {
+    row_renderer.DrawRightSecondRow(canvas, rc, _("Update available"));
+  } else {
+    row_renderer.DrawRightSecondRow(canvas, rc, file.last_modified.c_str());
+  }
 }
 
 void
-ManagedFileListWidget::OnCursorMoved(unsigned index)
+ManagedFileListWidget::OnCursorMoved(unsigned index) noexcept
 {
   UpdateButtons();
 }
@@ -505,12 +556,12 @@ public:
     return row_renderer.CalculateLayout(*look.list.font);
   }
 
-  void OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned i) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned i) noexcept override;
 };
 
 void
 AddFileListItemRenderer::OnPaintItem(Canvas &canvas, const PixelRect rc,
-                                     unsigned i)
+                                     unsigned i) noexcept
 {
   assert(i < list.size());
 
@@ -566,6 +617,27 @@ ManagedFileListWidget::Add()
 }
 
 void
+ManagedFileListWidget::UpdateFiles() {
+#ifdef HAVE_DOWNLOAD_MANAGER
+  assert(Net::DownloadManager::IsAvailable());
+
+  for (const auto &file : items) {
+    if (UpdateAvailable(repository, file.name)) {
+      const AvailableFile *remote_file = FindRemoteFile(repository, file.name);
+
+      if (remote_file != nullptr) {
+        const UTF8ToWideConverter base(remote_file->GetName());
+        if (!base.IsValid())
+          return;
+
+        Net::DownloadManager::Enqueue(remote_file->GetURI(), Path(base));
+      }
+    }
+  }
+#endif
+}
+
+void
 ManagedFileListWidget::Cancel()
 {
 #ifdef HAVE_DOWNLOAD_MANAGER
@@ -583,7 +655,7 @@ ManagedFileListWidget::Cancel()
 }
 
 void
-ManagedFileListWidget::OnAction(int id)
+ManagedFileListWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case DOWNLOAD:
@@ -597,6 +669,10 @@ ManagedFileListWidget::OnAction(int id)
   case CANCEL:
     Cancel();
     break;
+
+  case UPDATE:
+    UpdateFiles();
+    break;
   }
 }
 
@@ -605,16 +681,19 @@ ManagedFileListWidget::OnAction(int id)
 void
 ManagedFileListWidget::OnTimer()
 {
-  mutex.Lock();
-  const bool download_active = !downloads.empty();
-  mutex.Unlock();
+  bool download_active;
+
+  {
+    const std::lock_guard<Mutex> lock(mutex);
+    download_active = !downloads.empty();
+  }
 
   if (download_active) {
     Net::DownloadManager::Enumerate(*this);
     RefreshList();
     UpdateButtons();
   } else
-    Timer::Cancel();
+    refresh_download_timer.Cancel();
 }
 
 void
@@ -631,12 +710,13 @@ ManagedFileListWidget::OnDownloadAdded(Path path_relative,
 
   const std::string name3(name2);
 
-  mutex.Lock();
-  downloads[name3] = DownloadStatus{size, position};
-  failures.erase(name3);
-  mutex.Unlock();
+  {
+    const std::lock_guard<Mutex> lock(mutex);
+    downloads[name3] = DownloadStatus{size, position};
+    failures.erase(name3);
+  }
 
-  SendNotification();
+  download_notify.SendNotification();
 }
 
 void
@@ -653,31 +733,32 @@ ManagedFileListWidget::OnDownloadComplete(Path path_relative,
 
   const std::string name3(name2);
 
-  mutex.Lock();
+  {
+    const std::lock_guard<Mutex> lock(mutex);
 
-  downloads.erase(name3);
+    downloads.erase(name3);
 
-  if (StringIsEqual(name2, "repository")) {
-    repository_failed = !success;
-    if (success)
-      repository_modified = true;
-  } else if (!success)
-    failures.insert(name3);
+    if (StringIsEqual(name2, "repository")) {
+      repository_failed = !success;
+      if (success)
+        repository_modified = true;
+    } else if (!success)
+      failures.insert(name3);
+  }
 
-  mutex.Unlock();
-
-  SendNotification();
+  download_notify.SendNotification();
 }
 
 void
-ManagedFileListWidget::OnNotification()
+ManagedFileListWidget::OnDownloadNotification() noexcept
 {
-  mutex.Lock();
-  bool repository_modified2 = repository_modified;
-  repository_modified = false;
-  const bool repository_failed2 = repository_failed;
-  repository_failed = false;
-  mutex.Unlock();
+  bool repository_modified2, repository_failed2;
+
+  {
+    const std::lock_guard<Mutex> lock(mutex);
+    repository_modified2 = std::exchange(repository_modified, false);
+    repository_failed2 = std::exchange(repository_failed, false);
+  }
 
   if (repository_modified2)
     LoadRepositoryFile();
@@ -694,8 +775,9 @@ static void
 ShowFileManager2()
 {
   ManagedFileListWidget widget;
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("File Manager"), &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _("File Manager"), &widget);
   dialog.AddButton(_("Close"), mrOK);
   widget.CreateButtons(dialog);
 
@@ -719,10 +801,6 @@ ShowFileManager()
 
   const TCHAR *message =
     _("The file manager is not available on this device.");
-#ifdef ANDROID
-  if (android_api_level < 9)
-    message = _("The file manager requires Android 2.3.");
-#endif
 
   ShowMessageBox(message, _("File Manager"), MB_OK);
 }

@@ -23,10 +23,10 @@ Copyright_License {
 */
 
 #include "Language/Language.hpp"
-#include "Util/StringCompare.hxx"
-#include "Util/UTF8.hpp"
+#include "util/StringCompare.hxx"
+#include "util/UTF8.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <string.h>
 
 #if defined(HAVE_POSIX) && !defined(ANDROID) && !defined(KOBO) && !defined(__APPLE__)
@@ -44,8 +44,8 @@ Copyright_License {
 const MOFile *mo_file;
 
 #ifdef _UNICODE
-#include "Util/Macros.hpp"
-#include "Util/tstring.hpp"
+#include "util/Macros.hpp"
+#include "util/tstring.hpp"
 #include <map>
 typedef std::map<tstring,tstring> translation_map;
 static translation_map translations;

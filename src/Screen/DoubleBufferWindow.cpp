@@ -46,27 +46,17 @@ DoubleBufferWindow::OnDestroy()
   buffers[1].Destroy();
 }
 
-bool
-DoubleBufferWindow::OnUser(unsigned id)
-{
-  if (id == INVALIDATE) {
-    Invalidate();
-    return true;
-  } else
-    return false;
-}
-
 void
 DoubleBufferWindow::Flip()
 {
   /* enable the drawing buffer */
   {
-    const ScopeLock lock(mutex);
+    const std::lock_guard<Mutex> lock(mutex);
     current ^= 1;
   }
 
   /* commit the finished buffer to the screen (asynchronously) */
-  SendUser(INVALIDATE);
+  invalidate_notify.SendNotification();
 
   /* grow the current buffer, just in case the window has been
      resized */
@@ -76,7 +66,7 @@ DoubleBufferWindow::Flip()
 void
 DoubleBufferWindow::OnPaint(Canvas &canvas)
 {
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   canvas.Copy(GetVisibleCanvas());
 }
 

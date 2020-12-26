@@ -39,11 +39,11 @@ Copyright_License {
 #include "Weather/PCMet/Overlays.hpp"
 #include "Interface.hpp"
 #include "LocalPath.hpp"
-#include "OS/Path.hpp"
-#include "OS/FileUtil.hpp"
-#include "Util/StaticString.hxx"
-#include "Util/StringAPI.hxx"
-#include "Util/StringCompare.hxx"
+#include "system/Path.hpp"
+#include "system/FileUtil.hpp"
+#include "util/StaticString.hxx"
+#include "util/StringAPI.hxx"
+#include "util/StringCompare.hxx"
 
 #include <vector>
 
@@ -173,12 +173,13 @@ protected:
   }
 
   /* virtual methods from TextListWidget */
-  const TCHAR *GetRowText(unsigned i) const override {
+  const TCHAR *GetRowText(unsigned i) const noexcept override {
     return items[i].name.c_str();
   }
 
   /* virtual methods from ListItemRenderer */
-  void OnPaintItem(Canvas &canvas, PixelRect rc, unsigned i) override {
+  void OnPaintItem(Canvas &canvas, PixelRect rc,
+                   unsigned i) noexcept override {
     if (int(i) == active_index) {
       rc.left = row_renderer.DrawColumn(canvas, rc, _T(" > "));
       rc.right = row_renderer.DrawRightColumn(canvas, rc, _T(" < "));
@@ -188,15 +189,15 @@ protected:
   }
 
   /* virtual methods from ListCursorHandler */
-  virtual void OnCursorMoved(unsigned i) override {
+  void OnCursorMoved(unsigned i) noexcept override {
     UpdatePreview(items[i].path);
   }
 
-  virtual bool CanActivateItem(unsigned i) const override {
+  bool CanActivateItem(unsigned i) const noexcept override {
     return true;
   }
 
-  virtual void OnActivateItem(unsigned i) override {
+  void OnActivateItem(unsigned i) noexcept override {
     UseClicked(i);
   }
 
@@ -216,7 +217,7 @@ private:
   void UpdateClicked();
 
   /* virtual methods from class ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -272,7 +273,7 @@ WeatherMapOverlayListWidget::UpdateList()
  * Set up reasonable defaults for the given overlay.
  */
 static void
-SetupOverlay(MapOverlayBitmap &bmp, Path::const_pointer_type name)
+SetupOverlay(MapOverlayBitmap &bmp, Path::const_pointer name)
 {
   /* File name convention according to DWD paper:
    *
@@ -332,8 +333,8 @@ WeatherMapOverlayListWidget::SetOverlay(Path path, const TCHAR *label)
   std::unique_ptr<MapOverlayBitmap> bmp;
   try {
     bmp.reset(new MapOverlayBitmap(path));
-  } catch (const std::exception &e) {
-    ShowError(e, _("Weather"));
+  } catch (...) {
+    ShowError(std::current_exception(), _("Weather"));
     return;
   }
 
@@ -373,8 +374,8 @@ WeatherMapOverlayListWidget::UseClicked(unsigned i)
                                               settings, runner);
         item.path = AllocatedPath(overlay.path.c_str());
         UpdatePreview(item.path);
-      } catch (const std::exception &exception) {
-        ShowError(exception, _T("pc_met"));
+      } catch (...) {
+        ShowError(std::current_exception(), _T("pc_met"));
       }
     }
   }
@@ -399,8 +400,8 @@ WeatherMapOverlayListWidget::UpdateClicked()
         if (i == active_index)
           SetOverlay(overlay.path, info.label.c_str());
         item.path = AllocatedPath(overlay.path.c_str());
-      } catch (const std::exception &exception) {
-        ShowError(exception, _T("pc_met"));
+      } catch (...) {
+        ShowError(std::current_exception(), _T("pc_met"));
         break;
       }
     }
@@ -410,7 +411,7 @@ WeatherMapOverlayListWidget::UpdateClicked()
 }
 
 void
-WeatherMapOverlayListWidget::OnAction(int id)
+WeatherMapOverlayListWidget::OnAction(int id) noexcept
 {
   switch ((Buttons)id) {
   case USE:

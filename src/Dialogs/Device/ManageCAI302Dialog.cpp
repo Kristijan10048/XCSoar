@@ -58,7 +58,7 @@ public:
 
 private:
   /* virtual methods from ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -102,7 +102,7 @@ UploadWaypoints(const DialogLook &look, CAI302Device &device)
 }
 
 void
-ManageCAI302Widget::OnAction(int id)
+ManageCAI302Widget::OnAction(int id) noexcept
 {
   switch (id) {
   case Units:
@@ -151,9 +151,10 @@ void
 ManageCAI302Dialog(SingleWindow &parent, const DialogLook &look,
                    Device &device)
 {
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), _T("CAI 302"),
-                    new ManageCAI302Widget(look, (CAI302Device &)device));
+  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _T("CAI 302"),
+                      new ManageCAI302Widget(look, (CAI302Device &)device));
   dialog.AddButton(_("Close"), mrCancel);
   dialog.ShowModal();
 }

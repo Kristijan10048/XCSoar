@@ -24,10 +24,10 @@ Copyright_License {
 #ifndef REPLAY_HPP
 #define REPLAY_HPP
 
-#include "Event/Timer.hpp"
+#include "event/Timer.hpp"
 #include "NMEA/Info.hpp"
-#include "Time/PeriodClock.hpp"
-#include "OS/Path.hpp"
+#include "time/PeriodClock.hpp"
+#include "system/Path.hpp"
 
 class Logger;
 class ProtectedTaskManager;
@@ -36,8 +36,9 @@ class CatmullRomInterpolator;
 class Error;
 
 class Replay final
-  : private Timer
 {
+  Timer timer{[this]{ OnTimer(); }};
+
   double time_scale;
 
   AbstractReplay *replay;
@@ -135,7 +136,7 @@ public:
   }
 
 private:
-  void OnTimer() override;
+  void OnTimer();
 };
 
 #endif

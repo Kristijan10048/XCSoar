@@ -29,6 +29,7 @@ Copyright_License {
 #include "SoundUtil.hpp"
 #include "Vibrator.hpp"
 #include "InternalSensors.hpp"
+#include "GliderLink.hpp"
 #include "PortBridge.hpp"
 #include "BluetoothHelper.hpp"
 #include "NativeLeScanCallback.hpp"
@@ -44,8 +45,8 @@ Copyright_License {
 #include "Version.hpp"
 #include "Screen/Debug.hpp"
 #include "Look/GlobalFonts.hpp"
-#include "Event/Globals.hpp"
-#include "Event/Queue.hpp"
+#include "event/Globals.hpp"
+#include "event/Queue.hpp"
 #include "Screen/OpenGL/Init.hpp"
 #include "Dialogs/Message.hpp"
 #include "Simulator.hpp"
@@ -53,15 +54,15 @@ Copyright_License {
 #include "MainWindow.hpp"
 #include "Startup.hpp"
 #include "Interface.hpp"
-#include "Java/Global.hxx"
-#include "Java/File.hxx"
-#include "Java/InputStream.hxx"
-#include "Java/URL.hxx"
-#include "Compiler.h"
+#include "java/Global.hxx"
+#include "java/File.hxx"
+#include "java/InputStream.hxx"
+#include "java/URL.hxx"
+#include "util/Compiler.h"
 #include "org_xcsoar_NativeView.h"
-#include "IO/Async/GlobalAsioThread.hpp"
-#include "IO/Async/AsioThread.hpp"
-#include "Thread/Debug.hpp"
+#include "io/async/GlobalAsioThread.hpp"
+#include "io/async/AsioThread.hpp"
+#include "thread/Debug.hpp"
 
 #include "IOIOHelper.hpp"
 #include "NativeBMP085Listener.hpp"
@@ -78,7 +79,7 @@ Copyright_License {
 #include "Screen/OpenGL/Buffer.hpp"
 #endif
 
-#include <assert.h>
+#include <cassert>
 #include <stdlib.h>
 
 unsigned android_api_level;
@@ -135,6 +136,7 @@ Java_org_xcsoar_NativeView_initializeNative(JNIEnv *env, jobject obj,
   Environment::Initialise(env);
   AndroidBitmap::Initialise(env);
   InternalSensors::Initialise(env);
+  GliderLink::Initialise(env);
   NativePortListener::Initialise(env);
   NativeInputListener::Initialise(env);
   PortBridge::Initialise(env);
@@ -256,6 +258,7 @@ Java_org_xcsoar_NativeView_deinitializeNative(JNIEnv *env, jobject obj)
   NativeInputListener::Deinitialise(env);
   NativePortListener::Deinitialise(env);
   InternalSensors::Deinitialise(env);
+  GliderLink::Deinitialise(env);
   AndroidBitmap::Deinitialise(env);
   Environment::Deinitialise(env);
   NativeView::Deinitialise(env);
@@ -286,9 +289,8 @@ JNIEXPORT void JNICALL
 Java_org_xcsoar_NativeView_pauseNative(JNIEnv *env, jobject obj)
 {
   if (event_queue == nullptr || CommonInterface::main_window == nullptr)
-    /* pause before we have initialized the event subsystem does not
-       work - let's bail out, nothing is lost anyway */
-    exit(0);
+    return;
+    /* event subsystem is not initialized, there is nothing to pause */
 
   CommonInterface::main_window->Pause();
 
@@ -301,8 +303,8 @@ JNIEXPORT void JNICALL
 Java_org_xcsoar_NativeView_resumeNative(JNIEnv *env, jobject obj)
 {
   if (event_queue == nullptr || CommonInterface::main_window == nullptr)
-    /* there is nothing here yet which can be resumed */
-    exit(0);
+    return;
+    /* event subsystem is not initialized, there is nothing to resume */
 
   CommonInterface::main_window->Resume();
 }

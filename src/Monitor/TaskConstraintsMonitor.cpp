@@ -28,7 +28,7 @@ Copyright_License {
 #include "Message.hpp"
 #include "Language/Language.hpp"
 #include "Formatter/UserUnits.hpp"
-#include "Util/StaticString.hxx"
+#include "util/StaticString.hxx"
 
 gcc_pure
 static bool
@@ -52,7 +52,7 @@ TaskConstraintsMonitor::Check()
 
     if (basic.ground_speed_available &&
         !settings.start_constraints.CheckSpeed(basic.ground_speed) &&
-        max_start_speed_clock.CheckUpdate(30000)) {
+        max_start_speed_clock.CheckUpdate(std::chrono::seconds(30))) {
       StaticString<256> msg;
       msg.Format(_T("%s (%s > %s)"), _("Maximum start speed exceeded"),
                  FormatUserSpeed(basic.ground_speed).c_str(),

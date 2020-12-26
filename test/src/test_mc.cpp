@@ -27,12 +27,16 @@
 #include "GlideSolvers/GlideResult.hpp"
 #include "GlideSolvers/MacCready.hpp"
 #include "Navigation/Aircraft.hpp"
-#include "OS/FileUtil.hpp"
+#include "system/FileUtil.hpp"
 
 #include <stdio.h>
 #include <fstream>
 #include <string>
 #include <math.h>
+
+extern "C" {
+#include "tap.h"
+}
 
 const double Vmin(5.0);
 

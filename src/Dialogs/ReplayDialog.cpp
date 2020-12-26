@@ -69,7 +69,7 @@ public:
 
 private:
   /* virtual methods from ActionListener */
-  virtual void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 
   /* methods from DataFieldListener */
   virtual void OnModified(DataField &df) override;
@@ -107,13 +107,13 @@ ReplayControlWidget::OnStartClicked()
 
   try {
     replay->Start(path);
-  } catch (const std::runtime_error &e) {
-    ShowError(e, _("Replay"));
+  } catch (...) {
+    ShowError(std::current_exception(), _("Replay"));
   }
 }
 
 void
-ReplayControlWidget::OnAction(int id)
+ReplayControlWidget::OnAction(int id) noexcept
 {
   switch (id) {
   case START:
@@ -149,8 +149,8 @@ ShowReplayDialog()
 {
   const DialogLook &look = UIGlobals::GetDialogLook();
   ReplayControlWidget *widget = new ReplayControlWidget(look);
-  WidgetDialog dialog(look);
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), _("Replay"), widget);
+  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
+                      look, _("Replay"), widget);
   widget->CreateButtons(dialog);
   dialog.AddButton(_("Close"), mrOK);
 

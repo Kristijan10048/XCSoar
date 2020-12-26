@@ -28,8 +28,10 @@ Copyright_License {
 #include "Math/Point2D.hpp"
 #include "Screen/OpenGL/Surface.hpp"
 
+#include <glm/mat4x4.hpp>
+
 #ifdef SOFTWARE_ROTATE_DISPLAY
-#include <stdint.h>
+#include <cstdint>
 enum class DisplayOrientation : uint8_t;
 #endif
 
@@ -51,9 +53,7 @@ class BufferCanvas : public Canvas, private GLSurfaceListener {
   GLint old_viewport[4];
 #endif
 
-#ifdef USE_GLSL
   glm::mat4 old_projection_matrix;
-#endif
 
   PixelPoint old_translate;
   UnsignedPoint2D old_size;

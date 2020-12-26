@@ -33,6 +33,7 @@ Copyright_License {
 #include "Look/DialogLook.hpp"
 #include "Language/Language.hpp"
 #include "Weather/Features.hpp"
+#include "util/StaticString.hxx"
 
 static int weather_page = 0;
 
@@ -49,7 +50,9 @@ void
 ShowWeatherDialog(const TCHAR *page)
 {
   const DialogLook &look = UIGlobals::GetDialogLook();
-  WidgetDialog dialog(look);
+
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, _("Status"));
 
   auto *close_button = new ButtonWidget(look.button, _("Close"),
                                         dialog, mrOK);
@@ -59,7 +62,7 @@ ShowWeatherDialog(const TCHAR *page)
       SetTitle(dialog, widget);
     });
 
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Status"), &widget);
+  dialog.FinishPreliminary(&widget);
   dialog.PrepareWidget();
 
   int start_page = -1;

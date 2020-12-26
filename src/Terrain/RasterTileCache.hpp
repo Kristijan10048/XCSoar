@@ -28,12 +28,12 @@ Copyright_License {
 #include "RasterTile.hpp"
 #include "RasterLocation.hpp"
 #include "Geo/GeoBounds.hpp"
-#include "Util/StaticArray.hxx"
-#include "Util/Serial.hpp"
+#include "util/StaticArray.hxx"
+#include "util/Serial.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
-#include <stdint.h>
+#include <cstdint>
 
 #define RASTER_SLOPE_FACT 12
 

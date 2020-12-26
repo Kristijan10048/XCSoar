@@ -23,10 +23,11 @@ Copyright_License {
 
 #include "WaypointReaderOzi.hpp"
 #include "Waypoint/Waypoints.hpp"
-#include "IO/LineReader.hpp"
+#include "io/LineReader.hpp"
 #include "Units/System.hpp"
-#include "Util/Macros.hpp"
-#include "Util/ExtractParameters.hpp"
+#include "util/Macros.hpp"
+#include "util/ExtractParameters.hpp"
+#include "util/StringStrip.hxx"
 
 #include <stdlib.h>
 

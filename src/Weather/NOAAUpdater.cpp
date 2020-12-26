@@ -24,10 +24,8 @@ Copyright_License {
 #include "NOAAUpdater.hpp"
 #include "NOAADownloader.hpp"
 #include "METARParser.hpp"
-#include "Net/HTTP/Session.hpp"
+#include "net/http/Session.hpp"
 #include "LogFile.hpp"
-
-#include <exception>
 
 namespace NOAAUpdater {
   static bool Update(NOAAStore::Item &item,
@@ -65,15 +63,15 @@ NOAAUpdater::Update(NOAAStore &store, JobRunner &runner)
     for (auto &i : store) {
       try {
         result = Update(i, session, runner) && result;
-      } catch (const std::exception &exception) {
-        LogError(exception);
+      } catch (...) {
+        LogError(std::current_exception());
         result = false;
       }
     }
 
     return result;
-  } catch (const std::exception &exception) {
-    LogError(exception);
+  } catch (...) {
+    LogError(std::current_exception());
     return false;
   }
 }
@@ -84,8 +82,8 @@ NOAAUpdater::Update(NOAAStore::Item &item, JobRunner &runner)
   try {
     Net::Session session;
     return Update(item, session, runner);
-  } catch (const std::exception &exception) {
-    LogError(exception);
+  } catch (...) {
+    LogError(std::current_exception());
     return false;
   }
 }

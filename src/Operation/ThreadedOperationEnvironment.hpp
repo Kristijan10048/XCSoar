@@ -25,10 +25,10 @@ Copyright_License {
 #define XCSOAR_THREAD_OPERATION_HPP
 
 #include "Operation/Operation.hpp"
-#include "Event/DelayedNotify.hpp"
-#include "Thread/Mutex.hpp"
-#include "Thread/Cond.hxx"
-#include "Util/StaticString.hxx"
+#include "event/DelayedNotify.hpp"
+#include "thread/Mutex.hxx"
+#include "thread/Cond.hxx"
+#include "util/StaticString.hxx"
 
 /**
  * This is an OperationEnvironment implementation that can be run in
@@ -37,8 +37,7 @@ Copyright_License {
  * another thread.
  */
 class ThreadedOperationEnvironment
-  : public OperationEnvironment,
-    protected DelayedNotify {
+  : public OperationEnvironment{
   struct Data {
     StaticString<256u> error;
     StaticString<128u> text;
@@ -89,6 +88,11 @@ class ThreadedOperationEnvironment
     }
   };
 
+  DelayedNotify notify{
+    std::chrono::milliseconds(250),
+    [this]{ OnNotification(); },
+  };
+
   OperationEnvironment &other;
 
   mutable Mutex mutex;
@@ -100,27 +104,31 @@ class ThreadedOperationEnvironment
 public:
   explicit ThreadedOperationEnvironment(OperationEnvironment &_other);
 
+  void SendNotification() noexcept {
+    notify.SendNotification();
+  }
+
   void Cancel() {
-    const ScopeLock lock(mutex);
+    const std::lock_guard<Mutex> lock(mutex);
     if (!cancel_flag) {
       cancel_flag = true;
-      cancel_cond.signal();
+      cancel_cond.notify_one();
     }
   }
 
 private:
   bool LockSetProgressRange(unsigned range) {
-    const ScopeLock lock(mutex);
+    const std::lock_guard<Mutex> lock(mutex);
     return data.SetProgressRange(range);
   }
 
   bool LockSetProgressPosition(unsigned position) {
-    const ScopeLock lock(mutex);
+    const std::lock_guard<Mutex> lock(mutex);
     return data.SetProgressPosition(position);
   }
 
   Data LockReceiveData() {
-    const ScopeLock lock(mutex);
+    const std::lock_guard<Mutex> lock(mutex);
     Data new_data = data;
     data.ClearUpdate();
     return new_data;
@@ -129,15 +137,14 @@ private:
 public:
   /* virtual methods from class OperationEnvironment */
   bool IsCancelled() const override;
-  void Sleep(unsigned ms) override;
+  void Sleep(std::chrono::steady_clock::duration duration) noexcept override;
   void SetErrorMessage(const TCHAR *error) override;
   void SetText(const TCHAR *text) override;
   void SetProgressRange(unsigned range) override;
   void SetProgressPosition(unsigned position) override;
 
 protected:
-  /* virtual methods from class DelayedNotify */
-  void OnNotification() override;
+  virtual void OnNotification();
 };
 
 #endif

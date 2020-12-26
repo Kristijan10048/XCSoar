@@ -27,7 +27,7 @@ Copyright_License {
 #include "Units/System.hpp"
 #include "Operation/Operation.hpp"
 #include "LogFile.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 
 static LiveTrack24::VehicleType
 MapVehicleTypeToLivetrack24(LiveTrack24::Settings::VehicleType vt)
@@ -48,25 +48,25 @@ MapVehicleTypeToLivetrack24(LiveTrack24::Settings::VehicleType vt)
   return vehicleTypeMap[vti];
 }
 
-TrackingGlue::TrackingGlue(boost::asio::io_service &io_service)
+TrackingGlue::TrackingGlue(boost::asio::io_context &io_context)
   :StandbyThread("Tracking"),
-   skylines(io_service, this)
+   skylines(io_context, this)
 {
   settings.SetDefaults();
-  livetrack24.SetServer(settings.livetrack24.server);
+  LiveTrack24::SetServer(settings.livetrack24.server);
 }
 
 void
 TrackingGlue::StopAsync()
 {
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   StandbyThread::StopAsync();
 }
 
 void
 TrackingGlue::WaitStopped()
 {
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   StandbyThread::WaitStopped();
 }
 
@@ -83,12 +83,12 @@ TrackingGlue::SetSettings(const TrackingSettings &_settings)
 
     /* now it's safe to access these variables without a lock */
     settings = _settings;
-    livetrack24.ResetSession();
-    livetrack24.SetServer(_settings.livetrack24.server);
+    state.ResetSession();
+    LiveTrack24::SetServer(_settings.livetrack24.server);
   } else {
     /* no fundamental setting changes; the write needs to be protected
        by the mutex, because another job may be running already */
-    ScopeLock protect(mutex);
+    std::lock_guard<Mutex> lock(mutex);
     settings = _settings;
   }
 }
@@ -98,8 +98,8 @@ TrackingGlue::OnTimer(const MoreData &basic, const DerivedInfo &calculated)
 {
   try {
     skylines.Tick(basic, calculated);
-  } catch (const std::runtime_error &e) {
-    LogError("SkyLines error", e);
+  } catch (...) {
+    LogError(std::current_exception(), "SkyLines error");
   }
 
   if (!settings.livetrack24.enabled)
@@ -113,11 +113,11 @@ TrackingGlue::OnTimer(const MoreData &basic, const DerivedInfo &calculated)
     /* can't track without a valid GPS fix */
     return;
 
-  if (!clock.CheckUpdate(settings.livetrack24.interval * 1000))
+  if (!clock.CheckUpdate(std::chrono::seconds(settings.livetrack24.interval)))
     /* later */
     return;
 
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   if (IsBusy())
     /* still running, skip this submission */
     return;
@@ -146,12 +146,13 @@ TrackingGlue::OnTimer(const MoreData &basic, const DerivedInfo &calculated)
 }
 
 void
-TrackingGlue::Tick()
+TrackingGlue::Tick() noexcept
 {
   if (!settings.livetrack24.enabled)
     /* settings have been cleared meanwhile, bail out */
     return;
 
+  unsigned tracking_interval = settings.livetrack24.interval;
   LiveTrack24::Settings copy = this->settings.livetrack24;
 
   const ScopeUnlock unlock(mutex);
@@ -160,10 +161,10 @@ TrackingGlue::Tick()
 
   try {
     if (!flying) {
-      if (last_flying && livetrack24.HasSession()) {
+      if (last_flying && state.HasSession()) {
         /* landing: end tracking session */
-        livetrack24.EndTracking(env);
-        livetrack24.ResetSession();
+        LiveTrack24::EndTracking(state.session_id, state.packet_id, env);
+        state.ResetSession();
         last_timestamp = 0;
       }
 
@@ -173,36 +174,45 @@ TrackingGlue::Tick()
 
     const int64_t current_timestamp = date_time.ToUnixTimeUTC();
 
-    if (livetrack24.HasSession() && current_timestamp + 60 < last_timestamp) {
+    if (state.HasSession() && current_timestamp + 60 < last_timestamp) {
       /* time warp: create a new session */
-      livetrack24.EndTracking(env);
-      livetrack24.ResetSession();
+      LiveTrack24::EndTracking(state.session_id, state.packet_id, env);
+      state.ResetSession();
     }
 
     last_timestamp = current_timestamp;
 
-    if (!livetrack24.HasSession()) {
-      bool success = false;
+    if (!state.HasSession()) {
+      LiveTrack24::UserID user_id = 0;
       if (!copy.username.empty() && !copy.password.empty())
-        success = livetrack24.GenerateSessionID(copy.username, copy.password, env);
+        user_id = LiveTrack24::GetUserID(copy.username, copy.password, env);
 
-      if (!success) {
+      if (user_id == 0) {
         copy.username.clear();
         copy.password.clear();
-        livetrack24.GenerateSessionID();
+        state.session_id = LiveTrack24::GenerateSessionID();
+      } else {
+        state.session_id = LiveTrack24::GenerateSessionID(user_id);
       }
 
-      if (!livetrack24.StartTracking(MapVehicleTypeToLivetrack24(settings.livetrack24.vehicleType),
-                                    settings.livetrack24.vehicle_name, env)) {
-        livetrack24.ResetSession();
+      if (!LiveTrack24::StartTracking(state.session_id, copy.username,
+                                      copy.password, tracking_interval,
+                                      MapVehicleTypeToLivetrack24(settings.livetrack24.vehicleType),
+                                      settings.livetrack24.vehicle_name,
+                                      env)) {
+        state.ResetSession();
         return;
       }
+
+      state.packet_id = 2;
     }
 
-    livetrack24.SendPosition(location, altitude, ground_speed, track,
-                             current_timestamp, env);
-  } catch (const std::exception &exception) {
-    LogError("LiveTrack24 error", exception);
+    LiveTrack24::SendPosition(state.session_id, state.packet_id++,
+                              location, altitude, ground_speed, track,
+                              current_timestamp,
+                              env);
+  } catch (...) {
+    LogError(std::current_exception(), "LiveTrack24 error");
   }
 }
 
@@ -213,7 +223,7 @@ TrackingGlue::OnTraffic(uint32_t pilot_id, unsigned time_of_day_ms,
   bool user_known;
 
   {
-    const ScopeLock protect(skylines_data.mutex);
+    const std::lock_guard<Mutex> lock(skylines_data.mutex);
     const SkyLinesTracking::Data::Traffic traffic(time_of_day_ms,
                                                   location, altitude);
     skylines_data.traffic[pilot_id] = traffic;
@@ -230,7 +240,7 @@ TrackingGlue::OnTraffic(uint32_t pilot_id, unsigned time_of_day_ms,
 void
 TrackingGlue::OnUserName(uint32_t user_id, const TCHAR *name)
 {
-  const ScopeLock protect(skylines_data.mutex);
+  const std::lock_guard<Mutex> lock(skylines_data.mutex);
   skylines_data.user_names[user_id] = name;
 }
 
@@ -238,7 +248,7 @@ void
 TrackingGlue::OnWave(unsigned time_of_day_ms,
                      const GeoPoint &a, const GeoPoint &b)
 {
-  const ScopeLock protect(skylines_data.mutex);
+  const std::lock_guard<Mutex> lock(skylines_data.mutex);
 
   /* garbage collection - hard-coded upper limit */
   auto n = skylines_data.waves.size();
@@ -254,7 +264,7 @@ TrackingGlue::OnThermal(unsigned time_of_day_ms,
                         const AGeoPoint &bottom, const AGeoPoint &top,
                         double lift)
 {
-  const ScopeLock protect(skylines_data.mutex);
+  const std::lock_guard<Mutex> lock(skylines_data.mutex);
 
   /* garbage collection - hard-coded upper limit */
   auto n = skylines_data.thermals.size();
@@ -266,7 +276,7 @@ TrackingGlue::OnThermal(unsigned time_of_day_ms,
 }
 
 void
-TrackingGlue::OnSkyLinesError(const std::exception &e)
+TrackingGlue::OnSkyLinesError(std::exception_ptr e)
 {
-  LogError("SkyLines error", e);
+  LogError(e, "SkyLines error");
 }

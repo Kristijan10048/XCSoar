@@ -24,10 +24,10 @@ Copyright_License {
 #ifndef BUTTON_LABEL_HPP
 #define BUTTON_LABEL_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
 #include <tchar.h>
-#include <stddef.h>
+#include <cstddef>
 
 struct PixelRect;
 struct ButtonLook;

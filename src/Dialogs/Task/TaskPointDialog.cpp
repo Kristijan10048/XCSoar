@@ -44,7 +44,7 @@ Copyright_License {
 #include "Task/ObservationZones/KeyholeZone.hpp"
 #include "Task/TypeStrings.hpp"
 #include "Gauge/TaskView.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 #include "UIGlobals.hpp"
 #include "Look/MapLook.hpp"
 #include "Look/DialogLook.hpp"
@@ -189,7 +189,7 @@ private:
   void OnModified(ObservationZoneEditWidget &widget) override;
 
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 TaskPointWidget::Layout::Layout(PixelRect rc, const DialogLook &look)
@@ -300,7 +300,7 @@ TaskPointWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 }
 
 void
-TaskPointWidget::OnAction(int id)
+TaskPointWidget::OnAction(int id) noexcept
 {
     switch (id) {
     case PREVIOUS:
@@ -382,7 +382,7 @@ TaskPointWidget::RefreshView()
   } else
     properties_dock.SetWidget(new PanelWidget());
 
-  type_label.SetCaption(OrderedTaskPointName(ordered_task.GetFactory().GetType(tp)));
+  type_label.SetText(OrderedTaskPointName(ordered_task.GetFactory().GetType(tp)));
 
   previous_button->SetEnabled(active_index > 0);
   next_button->SetEnabled(active_index < (ordered_task.TaskSize() - 1));
@@ -437,7 +437,7 @@ TaskPointWidget::RefreshView()
     StaticString<100> buffer;
     buffer.Format(_T("%s %s"), name_prefix_buffer.c_str(),
                   tp.GetWaypoint().name.c_str());
-    waypoint_name.SetCaption(buffer);
+    waypoint_name.SetText(buffer);
   }
 }
 
@@ -581,11 +581,12 @@ dlgTaskPointShowModal(OrderedTask &task,
 {
   const DialogLook &look = UIGlobals::GetDialogLook();
 
-  WidgetDialog dialog(look);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, _("Waypoint"));
 
   TaskPointWidget widget(dialog, task, index);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Waypoint"), &widget);
   dialog.AddButton(_("Close"), mrOK);
+  dialog.FinishPreliminary(&widget);
   widget.CreateButtons();
   dialog.ShowModal();
   dialog.StealWidget();

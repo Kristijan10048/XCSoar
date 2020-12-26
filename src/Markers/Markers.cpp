@@ -23,13 +23,11 @@ Copyright_License {
 
 #include "Markers.hpp"
 #include "Geo/GeoPoint.hpp"
-#include "Time/BrokenDateTime.hpp"
-#include "IO/FileOutputStream.hxx"
-#include "IO/BufferedOutputStream.hxx"
+#include "time/BrokenDateTime.hpp"
+#include "io/FileOutputStream.hxx"
+#include "io/BufferedOutputStream.hxx"
 #include "LogFile.hpp"
 #include "LocalPath.hpp"
-
-#include <stdexcept>
 
 void
 MarkLocation(const GeoPoint &loc, const BrokenDateTime &time)
@@ -46,6 +44,6 @@ try {
             (double)loc.latitude.Degrees());
   os.Flush();
   file.Commit();
-} catch (const std::runtime_error &e) {
-  LogError(e);
+} catch (...) {
+  LogError(std::current_exception());
 }

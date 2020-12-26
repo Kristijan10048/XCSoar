@@ -1,12 +1,16 @@
 XCSoar
 ======
+.. image:: https://circleci.com/gh/XCSoar/XCSoar.svg?style=svg
+    :target: https://circleci.com/gh/XCSoar/XCSoar
 
 XCSoar is a tactical glide computer for Android, Linux, Mac OS X,
-Windows and Windows CE/Mobile.
+and Windows.
 
-This file is aimed at developers.  Users should read the manual which
-can be found on the `XCSoar home page <http://www.xcsoar.org/>`__.
+This file is aimed at developers. Developers should read the manual which 
+can be found on the `XCSoar home page <https://xcsoar.org/discover/manual.html>`__.
 
+Users can refer to the Users' Manual which, for the latest release, can be
+downloaded via the `XCSoar home page <https://xcsoar.org/discover/manual.html>`__.
 
 Getting the source
 ------------------
@@ -14,7 +18,7 @@ Getting the source
 The XCSoar source code is managed with `git <http://git-scm.com/>`__.  It
 can be downloaded with the following command::
 
- git clone git://github.com/XCSoar/XCSoar
+ git clone --recursive git://github.com/XCSoar/XCSoar
 
 To update your repository, type::
 
@@ -26,20 +30,11 @@ For more information, please refer to the git documentation.
 Compiling from source
 ---------------------
 
-Please read the developer manual for detailed build instructions.  You
-can download it on `the XCSoar website
-<http://www.xcsoar.org/discover/manual.html>`__.
-
+Please read the current Developers' Manual for detailed build instructions.
 
 Submitting patches
 ------------------
 
-Subscribe to the `XCSoar developer mailing list
-<https://lists.sourceforge.net/lists/listinfo/xcsoar-devel>`__.
-
-Use this mailing list to submit patches or "git pull" requests.
-
-- patches should be self-contained
-- patches should be self-documenting (add a good description on what
-  is changed, and why you are changing it)
-- write one patch for one change
+Patches may be submitted using the Developers' mail list or GitHub. Refer to
+chapter 3 of the current Developers' Manual for details of how to write and 
+submit patches upstream.

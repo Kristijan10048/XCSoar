@@ -23,13 +23,13 @@ Copyright_License {
 
 #include "InputEvents.hpp"
 #include "InputConfig.hpp"
-#include "Event/KeyCode.hpp"
+#include "event/KeyCode.hpp"
 #include "Asset.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 
-#include <assert.h>
+#include <cassert>
 
-#ifdef WIN32
+#ifdef _WIN32
 /* we don't need that WIN32 API function, it's a macro that will
    disallow using InputConfig::AppendMenu() */
 #undef AppendMenu

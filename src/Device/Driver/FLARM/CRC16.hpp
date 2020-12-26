@@ -24,10 +24,10 @@ Copyright_License {
 #ifndef XCSOAR_FLARM_CRC16_HPP
 #define XCSOAR_FLARM_CRC16_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <stdint.h>
-#include <stddef.h>
+#include <cstdint>
+#include <cstddef>
 
 namespace FLARM {
   struct FrameHeader;

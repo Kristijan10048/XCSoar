@@ -33,7 +33,7 @@ Copyright_License {
 #include "UIGlobals.hpp"
 #include "Look/Look.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 AirspaceClassRendererSettingsPanel::AirspaceClassRendererSettingsPanel(AirspaceClass _type)
   :RowFormWidget(UIGlobals::GetDialogLook()), border_color_changed(false),
@@ -43,7 +43,7 @@ AirspaceClassRendererSettingsPanel::AirspaceClassRendererSettingsPanel(AirspaceC
 }
 
 void
-AirspaceClassRendererSettingsPanel::OnAction(int id)
+AirspaceClassRendererSettingsPanel::OnAction(int id) noexcept
 {
   if (id == BorderColor)
     border_color_changed |= ShowColorListDialog(settings.border_color);

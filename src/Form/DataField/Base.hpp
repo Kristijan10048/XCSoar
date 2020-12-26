@@ -24,11 +24,11 @@ Copyright_License {
 #ifndef XCSOAR_DATA_FIELD_BASE_HPP
 #define XCSOAR_DATA_FIELD_BASE_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <assert.h>
+#include <cassert>
 #include <tchar.h>
-#include <stdint.h>
+#include <cstdint>
 
 #define OUTBUFFERSIZE 128
 

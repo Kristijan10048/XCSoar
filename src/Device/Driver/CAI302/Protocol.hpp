@@ -24,10 +24,11 @@ Copyright_License {
 #ifndef XCSOAR_CAI302_PROTOCOL_HPP
 #define XCSOAR_CAI302_PROTOCOL_HPP
 
-#include "OS/ByteOrder.hpp"
-#include "Compiler.h"
+#include "system/ByteOrder.hpp"
+#include "util/Compiler.h"
 
-#include <stdint.h>
+#include <chrono>
+#include <cstdint>
 
 class OperationEnvironment;
 class Port;
@@ -334,7 +335,7 @@ namespace CAI302 {
    */
   bool
   SendCommand(Port &port, const char *cmd, OperationEnvironment &env,
-              unsigned timeout_ms=2000);
+              std::chrono::steady_clock::duration timeout=std::chrono::seconds(2));
 
   /**
    * Enter "log" mode, but don't wait for the command prompt.
@@ -362,7 +363,8 @@ namespace CAI302 {
    */
   int
   ReadShortReply(Port &port, void *buffer, unsigned max_size,
-                 OperationEnvironment &env, unsigned timeout_ms=2000);
+                 OperationEnvironment &env,
+                 std::chrono::steady_clock::duration timeout=std::chrono::seconds(2));
 
   /**
    * Receive a "large" reply from the CAI302.
@@ -373,7 +375,8 @@ namespace CAI302 {
    */
   int
   ReadLargeReply(Port &port, void *buffer, unsigned max_size,
-                 OperationEnvironment &env, unsigned timeout_ms=8000);
+                 OperationEnvironment &env,
+                 std::chrono::steady_clock::duration timeout=std::chrono::seconds(8));
 
   /**
    * Send an upload command, and read the short response.  CAI302 must
@@ -389,7 +392,8 @@ namespace CAI302 {
   int
   UploadShort(Port &port, const char *command,
               void *response, unsigned max_size,
-              OperationEnvironment &env, unsigned timeout_ms=2000);
+              OperationEnvironment &env,
+              std::chrono::steady_clock::duration timeout=std::chrono::seconds(2));
 
   /**
    * Send an upload command, and read the large response.  CAI302 must
@@ -405,7 +409,8 @@ namespace CAI302 {
   int
   UploadLarge(Port &port, const char *command,
               void *response, unsigned max_size,
-              OperationEnvironment &env, unsigned timeout_ms=8000);
+              OperationEnvironment &env,
+              std::chrono::steady_clock::duration timeout=std::chrono::seconds(8));
 
   bool
   UploadGeneralInfo(Port &port, GeneralInfo &data, OperationEnvironment &env);
@@ -466,7 +471,8 @@ namespace CAI302 {
    */
   bool
   DownloadCommand(Port &port, const char *command,
-                  OperationEnvironment &env, unsigned timeout_ms=2000);
+                  OperationEnvironment &env,
+                  std::chrono::steady_clock::duration timeout=std::chrono::seconds(2));
 
   bool
   DownloadPilot(Port &port, const Pilot &data, unsigned ordinal,

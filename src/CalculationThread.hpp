@@ -24,8 +24,8 @@ Copyright_License {
 #ifndef XCSOAR_CALCULATION_THREAD_HPP
 #define XCSOAR_CALCULATION_THREAD_HPP
 
-#include "Thread/WorkerThread.hpp"
-#include "Thread/Mutex.hpp"
+#include "thread/WorkerThread.hpp"
+#include "thread/Mutex.hxx"
 #include "Computer/Settings.hpp"
 
 class GlideComputer;
@@ -73,7 +73,7 @@ public:
   void ForceTrigger();
 
 protected:
-  virtual void Tick();
+  void Tick() noexcept override;
 };
 
 #endif

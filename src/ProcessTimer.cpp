@@ -29,7 +29,7 @@ Copyright_License {
 #include "Device/MultipleDevices.hpp"
 #include "Blackboard/DeviceBlackboard.hpp"
 #include "Components.hpp"
-#include "Time/PeriodClock.hpp"
+#include "time/PeriodClock.hpp"
 #include "MainWindow.hpp"
 #include "PopupMessage.hpp"
 #include "Simulator.hpp"
@@ -39,7 +39,7 @@ Copyright_License {
 #include "BallastDumpManager.hpp"
 #include "Operation/Operation.hpp"
 #include "Tracking/TrackingGlue.hpp"
-#include "Event/Idle.hpp"
+#include "event/Idle.hpp"
 #include "Dialogs/Tracking/CloudEnableDialog.hpp"
 
 static void
@@ -59,7 +59,7 @@ MessageProcessTimer()
 static void
 SystemClockTimer()
 {
-#ifdef WIN32
+#ifdef _WIN32
   const NMEAInfo &basic = CommonInterface::Basic();
 
   // as soon as we get a fix for the first time, set the
@@ -255,7 +255,7 @@ ProcessTimer()
 
     if (replay && replay->IsActive()) {
       m_clock.Update();
-    } else if (m_clock.Elapsed() >= 1000) {
+    } else if (m_clock.Elapsed() >= std::chrono::seconds(1)) {
       m_clock.Update();
       device_blackboard->ProcessSimulation();
     } else if (!m_clock.IsDefined())

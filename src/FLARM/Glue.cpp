@@ -29,13 +29,15 @@ Copyright_License {
 #include "Components.hpp"
 #include "MergeThread.hpp"
 #include "LocalPath.hpp"
-#include "IO/DataFile.hpp"
-#include "IO/LineReader.hpp"
-#include "IO/FileOutputStream.hxx"
-#include "IO/BufferedOutputStream.hxx"
+#include "io/DataFile.hpp"
+#include "io/LineReader.hpp"
+#include "io/FileOutputStream.hxx"
+#include "io/BufferedOutputStream.hxx"
 #include "Profile/FlarmProfile.hpp"
 #include "Profile/Current.hpp"
 #include "LogFile.hpp"
+#include "Profile/Profile.hpp"
+#include "Profile/ProfileKeys.hpp"
 
 /**
  * Loads the FLARMnet file
@@ -43,13 +45,16 @@ Copyright_License {
 static void
 LoadFLARMnet(FlarmNetDatabase &db)
 try {
-  auto reader = OpenDataTextFileA(_T("data.fln"));
+  auto path = Profile::GetPath(ProfileKeys::FlarmFile);
+  if (path.IsNull()) {
+    return;
+  }
 
-  unsigned num_records = FlarmNetReader::LoadFile(*reader, db);
+  unsigned num_records = FlarmNetReader::LoadFile(path, db);
   if (num_records > 0)
     LogFormat("%u FLARMnet ids found", num_records);
-} catch (const std::runtime_error &e) {
-  LogError(e);
+} catch (...) {
+  LogError(std::current_exception());
 }
 
 /**
@@ -64,8 +69,8 @@ try {
 
   auto reader = OpenDataTextFile(_T("xcsoar-flarm.txt"));
   LoadFlarmNameFile(*reader, db);
-} catch (const std::runtime_error &e) {
-  LogError(e);
+} catch (...) {
+  LogError(std::current_exception());
 }
 
 void
@@ -74,6 +79,12 @@ LoadFlarmDatabases()
   if (traffic_databases != nullptr)
     return;
 
+  ReloadFlarmDatabases();
+}
+
+void
+ReloadFlarmDatabases()
+{
   traffic_databases = new TrafficDatabases();
 
   /* the MergeThread must be suspended, because it reads the FLARM
@@ -106,8 +117,8 @@ try {
   SaveFlarmNameFile(bos, flarm_names);
   bos.Flush();
   fos.Commit();
-} catch (const std::runtime_error &e) {
-  LogError(e);
+} catch (...) {
+  LogError(std::current_exception());
 }
 
 void
@@ -123,4 +134,3 @@ DeinitTrafficGlobals()
   delete traffic_databases;
   traffic_databases = nullptr;
 }
-

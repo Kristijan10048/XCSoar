@@ -24,8 +24,8 @@ Copyright_License {
 #include "FlightLogger.hpp"
 #include "NMEA/MoreData.hpp"
 #include "NMEA/Derived.hpp"
-#include "IO/FileOutputStream.hxx"
-#include "IO/BufferedOutputStream.hxx"
+#include "io/FileOutputStream.hxx"
+#include "io/BufferedOutputStream.hxx"
 #include "LogFile.hpp"
 
 void
@@ -54,8 +54,8 @@ try {
 
   writer.Flush();
   file.Commit();
-} catch (const std::runtime_error &e) {
-  LogError(e);
+} catch (...) {
+  LogError(std::current_exception());
 }
 
 void

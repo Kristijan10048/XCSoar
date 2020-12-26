@@ -31,8 +31,8 @@ Copyright_License {
 #include "Plane/Plane.hpp"
 #include "Plane/PlaneGlue.hpp"
 #include "Plane/PlaneFileGlue.hpp"
-#include "OS/FileUtil.hpp"
-#include "OS/Path.hpp"
+#include "system/FileUtil.hpp"
+#include "system/Path.hpp"
 #include "LocalPath.hpp"
 #include "Components.hpp"
 #include "Profile/Profile.hpp"
@@ -41,10 +41,10 @@ Copyright_License {
 #include "Look/DialogLook.hpp"
 #include "Interface.hpp"
 #include "Language/Language.hpp"
-#include "Util/StringAPI.hxx"
+#include "util/StringAPI.hxx"
 
 #include <vector>
-#include <assert.h>
+#include <cassert>
 
 /* this macro exists in the WIN32 API */
 #ifdef DELETE
@@ -112,18 +112,19 @@ public:
 
 protected:
   /* virtual methods from ListItemRenderer */
-  void OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned idx) override;
+  void OnPaintItem(Canvas &canvas, const PixelRect rc,
+                   unsigned idx) noexcept override;
 
   /* virtual methods from ListCursorHandler */
-  bool CanActivateItem(gcc_unused unsigned index) const override {
+  bool CanActivateItem(gcc_unused unsigned index) const noexcept override {
     return true;
   }
 
-  void OnActivateItem(unsigned index) override;
+  void OnActivateItem(unsigned index) noexcept override;
 
 private:
   /* virtual methods from class ActionListener */
-  void OnAction(int id) override;
+  void OnAction(int id) noexcept override;
 };
 
 void
@@ -177,7 +178,8 @@ PlaneListWidget::Unprepare()
 }
 
 void
-PlaneListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned i)
+PlaneListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
+                             unsigned i) noexcept
 {
   assert(i < list.size());
 
@@ -266,8 +268,8 @@ PlaneListWidget::NewClicked()
 
     try {
       PlaneGlue::WriteFile(plane, path);
-    } catch (const std::runtime_error &e) {
-      ShowError(e, _("Failed to save file."));
+    } catch (...) {
+      ShowError(std::current_exception(), _("Failed to save file."));
       return;
     }
 
@@ -315,8 +317,8 @@ PlaneListWidget::EditClicked()
 
       try {
         PlaneGlue::WriteFile(plane, path);
-      } catch (const std::runtime_error &e) {
-        ShowError(e, _("Failed to save file."));
+      } catch (...) {
+        ShowError(std::current_exception(), _("Failed to save file."));
         return;
       }
 
@@ -328,8 +330,8 @@ PlaneListWidget::EditClicked()
     } else {
       try {
         PlaneGlue::WriteFile(plane, old_path);
-      } catch (const std::runtime_error &e) {
-        ShowError(e, _("Failed to save file."));
+      } catch (...) {
+        ShowError(std::current_exception(), _("Failed to save file."));
         return;
       }
 
@@ -362,7 +364,7 @@ PlaneListWidget::DeleteClicked()
 }
 
 void
-PlaneListWidget::OnAction(int id)
+PlaneListWidget::OnAction(int id) noexcept
 {
   switch ((Buttons)id) {
   case NEW:
@@ -384,7 +386,7 @@ PlaneListWidget::OnAction(int id)
 }
 
 void
-PlaneListWidget::OnActivateItem(unsigned i)
+PlaneListWidget::OnActivateItem(unsigned i) noexcept
 {
   assert(i < list.size());
 
@@ -400,8 +402,9 @@ void
 dlgPlanesShowModal()
 {
   PlaneListWidget widget;
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Planes"), &widget);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      _("Planes"), &widget);
   dialog.AddButton(_("Close"), mrOK);
   widget.CreateButtons(dialog);
   dialog.EnableCursorSelection();

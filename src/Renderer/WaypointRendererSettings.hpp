@@ -26,7 +26,7 @@ Copyright_License {
 
 #include "LabelShape.hpp"
 
-#include <stdint.h>
+#include <cstdint>
 
 struct WaypointRendererSettings {
   /** What type of text to draw next to the waypoint icon */
@@ -48,6 +48,7 @@ struct WaypointRendererSettings {
     TERRAIN,
     GLIDE_AND_TERRAIN,
     REQUIRED_GR,
+    REQUIRED_GR_AND_TERRAIN,
   } arrival_height_display;
 
   /** What type of waypoint labels to render */

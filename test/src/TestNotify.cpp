@@ -20,25 +20,25 @@
 }
 */
 
-#include "Thread/Thread.hpp"
-#include "Event/Notify.hpp"
-#include "Event/Globals.hpp"
+#include "thread/Thread.hpp"
+#include "event/Notify.hpp"
+#include "event/Globals.hpp"
 #include "Screen/Init.hpp"
 #include "TestUtil.hpp"
 
 #ifdef ANDROID
-#include "Event/Android/Loop.hpp"
-#include "Event/Shared/Event.hpp"
+#include "event/android/Loop.hpp"
+#include "event/shared/Event.hpp"
 #elif defined(USE_POLL_EVENT)
-#include "Event/Shared/Event.hpp"
-#include "Event/Poll/Loop.hpp"
+#include "event/shared/Event.hpp"
+#include "event/poll/Loop.hpp"
 #include "Screen/TopWindow.hpp"
 #elif defined(ENABLE_SDL)
-#include "Event/SDL/Event.hpp"
-#include "Event/SDL/Loop.hpp"
+#include "event/sdl/Event.hpp"
+#include "event/sdl/Loop.hpp"
 #else
-#include "Event/Windows/Event.hpp"
-#include "Event/Windows/Loop.hpp"
+#include "event/windows/Event.hpp"
+#include "event/windows/Loop.hpp"
 #endif
 
 #ifdef USE_FB
@@ -55,7 +55,7 @@ Display::Rotate(DisplayOrientation orientation)
 #if defined(USE_EGL) || defined(USE_GLX)
 /* avoid TopWindow.cpp from being linked, as it brings some heavy
    dependencies */
-void TopWindow::Refresh() {}
+void TopWindow::Refresh() noexcept {}
 #endif
 
 #ifdef USE_POLL_EVENT
@@ -66,22 +66,15 @@ bool TopWindow::OnEvent(const Event &event) { return false; }
 
 static bool quit;
 
-class TestThread : public Thread {
+class TestThread final : public Thread {
   Notify &notify;
 
 public:
   TestThread(Notify &_notify):notify(_notify) {}
 
 protected:
-  virtual void Run() {
+  void Run() noexcept override {
     notify.SendNotification();
-  }
-};
-
-class TestNotify : public Notify {
-protected:
-  virtual void OnNotification() {
-    quit = true;
   }
 };
 
@@ -94,7 +87,7 @@ int main(int argc, char **argv)
   EventLoop loop(*event_queue);
   Event event;
 
-  TestNotify notify;
+  Notify notify{[]{ quit = true; }};
   TestThread thread(notify);
   thread.Start();
 

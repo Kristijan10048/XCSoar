@@ -30,12 +30,12 @@
 #include "Units/Units.hpp"
 #include "Math/Screen.hpp"
 #include "Language/Language.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 #include "Look/FlarmTrafficLook.hpp"
 
 #include <algorithm>
 
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
 
 #ifdef ENABLE_OPENGL

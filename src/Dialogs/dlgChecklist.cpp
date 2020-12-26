@@ -27,9 +27,10 @@ Copyright_License {
 #include "Widget/LargeTextWidget.hpp"
 #include "Look/DialogLook.hpp"
 #include "UIGlobals.hpp"
-#include "Util/StringCompare.hxx"
-#include "IO/DataFile.hpp"
-#include "IO/LineReader.hpp"
+#include "util/StaticString.hxx"
+#include "util/StringCompare.hxx"
+#include "io/DataFile.hpp"
+#include "io/LineReader.hpp"
 #include "Language/Language.hpp"
 
 #define XCSCHKLIST  "xcsoar-checklist.txt"
@@ -120,7 +121,7 @@ try {
   if (inDetails) {
     addChecklist(Name, Details);
   }
-} catch (const std::runtime_error &e) {
+} catch (...) {
 }
 
 void
@@ -137,14 +138,15 @@ dlgChecklistShowModal()
 
   const DialogLook &look = UIGlobals::GetDialogLook();
 
-  WidgetDialog dialog(look);
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, _("Checklist"));
 
   ArrowPagerWidget widget(dialog, look.button);
   for (int i = 0; i < nLists; ++i)
     widget.Add(new LargeTextWidget(look, ChecklistText[i]));
   widget.SetCurrent(current_page);
 
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Checklist"), &widget);
+  dialog.FinishPreliminary(&widget);
 
   widget.SetPageFlippedCallback([&dialog, &widget](){
       UpdateCaption(dialog, widget.GetCurrentIndex());

@@ -23,14 +23,14 @@ Copyright_License {
 
 #include "DownloadManager.hpp"
 #include "Main.hpp"
-#include "Net/HTTP/DownloadManager.hpp"
+#include "net/http/DownloadManager.hpp"
 #include "Context.hpp"
-#include "Java/Class.hxx"
-#include "Java/String.hxx"
+#include "java/Class.hxx"
+#include "java/String.hxx"
 #include "LocalPath.hpp"
-#include "OS/FileUtil.hpp"
-#include "Util/Macros.hpp"
-#include "Util/StringAPI.hxx"
+#include "system/FileUtil.hpp"
+#include "util/Macros.hpp"
+#include "util/StringAPI.hxx"
 #include "org_xcsoar_DownloadUtil.h"
 
 #include <algorithm>
@@ -49,8 +49,7 @@ AndroidDownloadManager::Initialise(JNIEnv *env)
   assert(util_class == nullptr);
   assert(env != nullptr);
 
-  if (android_api_level < 9 ||
-      !util_class.FindOptional(env, "org/xcsoar/DownloadUtil"))
+  if (!util_class.FindOptional(env, "org/xcsoar/DownloadUtil"))
     return false;
 
   enumerate_method = env->GetStaticMethodID(util_class, "enumerate",
@@ -94,7 +93,7 @@ AndroidDownloadManager::Create(JNIEnv *env, Context &context)
 void
 AndroidDownloadManager::AddListener(Net::DownloadListener &listener)
 {
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
 
   assert(std::find(listeners.begin(), listeners.end(),
                    &listener) == listeners.end());
@@ -105,7 +104,7 @@ AndroidDownloadManager::AddListener(Net::DownloadListener &listener)
 void
 AndroidDownloadManager::RemoveListener(Net::DownloadListener &listener)
 {
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
 
   auto i = std::find(listeners.begin(), listeners.end(), &listener);
   assert(i != listeners.end());
@@ -116,7 +115,7 @@ void
 AndroidDownloadManager::OnDownloadComplete(Path path_relative,
                                            bool success)
 {
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   for (auto i = listeners.begin(), end = listeners.end(); i != end; ++i)
     (*i)->OnDownloadComplete(path_relative, success);
 }
@@ -205,7 +204,7 @@ AndroidDownloadManager::Enqueue(JNIEnv *env, const char *uri,
                             object.Get(), j_uri.Get(),
                             j_path.Get());
 
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   for (auto i = listeners.begin(), end = listeners.end(); i != end; ++i)
     (*i)->OnDownloadAdded(path_relative, -1, -1);
 }

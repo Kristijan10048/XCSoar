@@ -22,11 +22,11 @@ Copyright_License {
 */
 
 #include "BufferedPort.hpp"
-#include "Time/TimeoutClock.hpp"
+#include "time/TimeoutClock.hpp"
 
 #include <algorithm>
 
-#include <assert.h>
+#include <cassert>
 
 BufferedPort::BufferedPort(PortListener *_listener, DataHandler &_handler)
   :Port(_listener, _handler),
@@ -37,9 +37,9 @@ BufferedPort::BufferedPort(PortListener *_listener, DataHandler &_handler)
 void
 BufferedPort::BeginClose()
 {
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   closing = true;
-  cond.signal();
+  cond.notify_one();
 }
 
 void
@@ -50,30 +50,30 @@ BufferedPort::EndClose()
 void
 BufferedPort::Flush()
 {
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   buffer.Clear();
 }
 
 bool
 BufferedPort::StopRxThread()
 {
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   running = false;
 
-  cond.broadcast();
+  cond.notify_all();
   return true;
 }
 
 bool
 BufferedPort::StartRxThread()
 {
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
   if (!running) {
     running = true;
     buffer.Clear();
   }
 
-  cond.broadcast();
+  cond.notify_all();
   return true;
 }
 
@@ -83,7 +83,7 @@ BufferedPort::Read(void *dest, size_t length)
   assert(!closing);
   assert(!running);
 
-  ScopeLock protect(mutex);
+  std::lock_guard<Mutex> lock(mutex);
 
   auto r = buffer.Read();
   if (r.size == 0)
@@ -96,40 +96,40 @@ BufferedPort::Read(void *dest, size_t length)
 }
 
 Port::WaitResult
-BufferedPort::WaitRead(unsigned timeout_ms)
+BufferedPort::WaitRead(std::chrono::steady_clock::duration _timeout)
 {
-  TimeoutClock timeout(timeout_ms);
-  ScopeLock protect(mutex);
+  TimeoutClock timeout(_timeout);
+  std::unique_lock<Mutex> lock(mutex);
 
-  while (buffer.IsEmpty()) {
+  while (buffer.empty()) {
     if (running)
       return WaitResult::CANCELLED;
 
-    int remaining_ms = timeout.GetRemainingSigned();
-    if (remaining_ms <= 0)
+    auto remaining = timeout.GetRemainingSigned();
+    if (remaining.count() <= 0)
       return WaitResult::TIMEOUT;
 
-    cond.timed_wait(mutex, remaining_ms);
+    cond.wait_for(lock, remaining);
   }
 
   return WaitResult::READY;
 }
 
-void
-BufferedPort::DataReceived(const void *data, size_t length)
+bool
+BufferedPort::DataReceived(const void *data, size_t length) noexcept
 {
   if (running) {
-    handler.DataReceived(data, length);
+    return handler.DataReceived(data, length);
   } else {
     const uint8_t *p = (const uint8_t *)data;
 
-    ScopeLock protect(mutex);
+    std::lock_guard<Mutex> lock(mutex);
 
     buffer.Shift();
     auto r = buffer.Write();
     if (r.size == 0)
       /* the buffer is already full, discard excess data */
-      return;
+      return true;
 
     /* discard excess data */
     size_t nbytes = std::min(length, r.size);
@@ -137,6 +137,7 @@ BufferedPort::DataReceived(const void *data, size_t length)
     std::copy_n(p, nbytes, r.data);
     buffer.Append(nbytes);
 
-    cond.broadcast();
+    cond.notify_all();
+    return true;
   }
 }

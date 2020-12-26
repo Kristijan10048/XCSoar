@@ -26,8 +26,9 @@ Copyright_License {
 #include "Widget/LargeTextWidget.hpp"
 #include "Language/Language.hpp"
 #include "UIGlobals.hpp"
+#include "util/StaticString.hxx"
 
-#include <assert.h>
+#include <cassert>
 
 void
 HelpDialog(const TCHAR *Caption, const TCHAR *HelpText)
@@ -44,9 +45,8 @@ HelpDialog(const TCHAR *Caption, const TCHAR *HelpText)
     Caption = prefix;
 
   const auto &look = UIGlobals::GetDialogLook();
-  WidgetDialog dialog(look);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), Caption,
-                    new LargeTextWidget(look, HelpText));
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      look, Caption, new LargeTextWidget(look, HelpText));
   dialog.AddButton(_("Close"), mrCancel);
   dialog.ShowModal();
 }

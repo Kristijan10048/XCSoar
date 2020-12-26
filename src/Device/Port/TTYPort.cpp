@@ -23,10 +23,10 @@ Copyright_License {
 
 #include "TTYPort.hpp"
 #include "Asset.hpp"
-#include "OS/FileDescriptor.hxx"
-#include "OS/Error.hxx"
-#include "IO/Async/AsioUtil.hpp"
-#include "Util/StringFormat.hpp"
+#include "io/FileDescriptor.hxx"
+#include "system/Error.hxx"
+#include "io/async/AsioUtil.hpp"
+#include "util/StringFormat.hpp"
 
 #include <system_error>
 #include <boost/system/system_error.hpp>
@@ -34,17 +34,17 @@ Copyright_License {
 #include <sys/stat.h>
 #include <termios.h>
 
-#include <assert.h>
+#include <cassert>
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <windef.h> // for MAX_PATH
 
-TTYPort::TTYPort(boost::asio::io_service &io_service,
+TTYPort::TTYPort(boost::asio::io_context &io_context,
                  PortListener *_listener, DataHandler &_handler)
   :BufferedPort(_listener, _handler),
-   serial_port(io_service)
+   serial_port(io_context)
 {
 }
 
@@ -69,14 +69,10 @@ TTYPort::GetState() const
 bool
 TTYPort::Drain()
 {
-#ifdef __BIONIC__
-  /* bionic doesn't have tcdrain() */
-  return true;
-#else
   return tcdrain(serial_port.native_handle()) == 0;
-#endif
 }
 
+#ifndef __APPLE__
 gcc_pure
 static bool
 IsCharDev(const char *path)
@@ -84,10 +80,12 @@ IsCharDev(const char *path)
   struct stat st;
   return stat(path, &st) == 0 && S_ISCHR(st.st_mode);
 }
+#endif
 
 bool
 TTYPort::Open(const TCHAR *path, unsigned baud_rate)
 {
+#ifndef __APPLE__
   if (IsAndroid() && IsCharDev(path)) {
     /* attempt to give the XCSoar process permissions to access the
        USB serial adapter; this is mostly relevant to the Nook */
@@ -95,6 +93,7 @@ TTYPort::Open(const TCHAR *path, unsigned baud_rate)
     StringFormat(command, MAX_PATH, "su -c 'chmod 666 %s'", path);
     system(command);
   }
+#endif
 
   boost::system::error_code ec;
   serial_port.open(path, ec);

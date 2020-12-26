@@ -25,9 +25,9 @@ Copyright_License {
 #define XCSOAR_SCREEN_MEMORY_COLOR_HPP
 
 #include "Screen/PortableColor.hpp"
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 
 /* Workaround: Some Win32 headers define OPAQUE and TRANSPARENT as preprocessor

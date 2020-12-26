@@ -29,14 +29,14 @@
 #include "Screen/Layout.hpp"
 #include "Screen/Font.hpp"
 #include "UIGlobals.hpp"
-#include "Util/Macros.hpp"
+#include "util/Macros.hpp"
 #include "Language/Language.hpp"
 #include "Units/Units.hpp"
 #include "Units/Descriptor.hpp"
 
 #include <algorithm>
 
-#include <assert.h>
+#include <cassert>
 
 PolarShapeEditWidget::PolarShapeEditWidget(const PolarShape &_shape,
                                            DataFieldListener *_listener)

@@ -24,12 +24,13 @@ Copyright_License {
 #ifndef XCSOAR_FILE_TYPE_HPP
 #define XCSOAR_FILE_TYPE_HPP
 
-#include <stdint.h>
+#include <cstdint>
 
 enum class FileType : uint8_t {
   UNKNOWN,
   AIRSPACE,
   WAYPOINT,
+  WAYPOINTDETAILS,
   MAP,
   FLARMNET,
 };

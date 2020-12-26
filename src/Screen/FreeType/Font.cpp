@@ -25,16 +25,17 @@ Copyright_License {
 #include "Screen/Debug.hpp"
 #include "Screen/Custom/Files.hpp"
 #include "Look/FontDescription.hpp"
+#include "util/TStringView.hxx"
 #include "Init.hpp"
 #include "Asset.hpp"
-#include "OS/Path.hpp"
+#include "system/Path.hpp"
 
 #ifndef ENABLE_OPENGL
-#include "Thread/Mutex.hpp"
+#include "thread/Mutex.hxx"
 #endif
 
 #ifndef _UNICODE
-#include "Util/UTF8.hpp"
+#include "util/UTF8.hpp"
 #endif
 
 #if defined(__clang__) && defined(__arm__)
@@ -48,8 +49,8 @@ Copyright_License {
 
 #include <algorithm>
 
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 
 #ifndef ENABLE_OPENGL
 /**
@@ -81,26 +82,30 @@ IsMono()
 #endif
 }
 
-static constexpr inline FT_Long
+static constexpr FT_Long
 FT_FLOOR(FT_Long x)
 {
   return (x & -64) / 64;
 }
 
-static constexpr inline FT_Long
+static constexpr FT_Long
 FT_CEIL(FT_Long x)
 {
   return FT_FLOOR(x + 63);
 }
 
 gcc_pure
-static std::pair<unsigned, const TCHAR *>
-NextChar(const TCHAR *p)
+static unsigned
+NextChar(TStringView &s) noexcept
 {
+  assert(!s.empty());
+
 #ifdef _UNICODE
-  return std::make_pair(unsigned(*p), p + 1);
+  return unsigned(s.shift());
 #else
-  return NextUTF8(p);
+  auto n = NextUTF8(s.data);
+  s.MoveFront(n.second);
+  return n.first;
 #endif
 }
 
@@ -133,7 +138,7 @@ static unsigned
 GetCapitalHeight(FT_Face face)
 {
 #ifndef ENABLE_OPENGL
-  const ScopeLock protect(freetype_mutex);
+  const std::lock_guard<Mutex> lock(freetype_mutex);
 #endif
 
   FT_UInt i = FT_Get_Char_Index(face, 'M');
@@ -227,21 +232,17 @@ Font::Destroy()
 
 template<typename F>
 static void
-ForEachChar(const TCHAR *text, F &&f)
+ForEachChar(TStringView text, F &&f)
 {
   assert(text != nullptr);
 #ifndef _UNICODE
   assert(ValidateUTF8(text));
 #endif
 
-  while (true) {
-      const auto n = NextChar(text);
-      if (n.first == 0)
-        break;
-
-      text = n.second;
-      f(n.first);
-    }
+  while (!text.empty()) {
+    const unsigned ch = NextChar(text);
+    f(ch);
+  }
 }
 
 template<typename T, typename F>
@@ -255,7 +256,7 @@ ForEachGlyph(const FT_Face face, unsigned ascent_height, T &&text,
   unsigned prev_index = 0;
 
 #ifndef ENABLE_OPENGL
-  const ScopeLock protect(freetype_mutex);
+  const std::lock_guard<Mutex> lock(freetype_mutex);
 #endif
 
   ForEachChar(std::forward<T>(text),
@@ -292,7 +293,7 @@ ForEachGlyph(const FT_Face face, unsigned ascent_height, T &&text,
 }
 
 PixelSize
-Font::TextSize(const TCHAR *text) const
+Font::TextSize(TStringView text) const noexcept
 {
   int maxx = 0;
 
@@ -401,7 +402,7 @@ RenderGlyph(uint8_t *buffer, size_t width, size_t height,
 }
 
 void
-Font::Render(const TCHAR *text, const PixelSize size, void *_buffer) const
+Font::Render(TStringView text, const PixelSize size, void *_buffer) const
 {
   uint8_t *buffer = (uint8_t *)_buffer;
   std::fill_n(buffer, BufferSize(size), 0);

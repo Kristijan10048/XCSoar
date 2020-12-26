@@ -24,15 +24,15 @@ Copyright_License {
 #ifndef XCSOAR_WEATHER_RASP_STORE_HPP
 #define XCSOAR_WEATHER_RASP_STORE_HPP
 
-#include "Util/StaticArray.hxx"
-#include "Util/StaticString.hxx"
-#include "OS/Path.hpp"
-#include "Time/BrokenTime.hpp"
-#include "Compiler.h"
+#include "util/StaticArray.hxx"
+#include "util/StaticString.hxx"
+#include "system/Path.hpp"
+#include "time/BrokenTime.hpp"
+#include "util/Compiler.h"
 
 #include <memory>
 
-#include <assert.h>
+#include <cassert>
 #include <tchar.h>
 
 #define RASP_FILENAME "xcsoar-rasp.dat"

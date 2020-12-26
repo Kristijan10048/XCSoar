@@ -23,9 +23,9 @@
 #ifndef ZERO_FINDER_HPP
 #define ZERO_FINDER_HPP
 
-#include "Compiler.h"
+#include "util/Compiler.h"
 
-#include <assert.h>
+#include <cassert>
 
 /**
  * Zero finding and minimisation search algorithm

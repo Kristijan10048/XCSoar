@@ -24,8 +24,8 @@ Copyright_License {
 #include "NativeLeScanCallback.hpp"
 #include "LeScanCallback.hpp"
 #include "Main.hpp"
-#include "Java/Class.hxx"
-#include "Java/String.hxx"
+#include "java/Class.hxx"
+#include "java/String.hxx"
 #include "org_xcsoar_NativeLeScanCallback.h"
 
 namespace NativeLeScanCallback {
@@ -42,9 +42,15 @@ Java_org_xcsoar_NativeLeScanCallback_onLeScan(JNIEnv *env, jobject obj,
   if (ptr == 0)
     return;
 
-  char address[64], name[256];
+  char address[64], name_buffer[256];
   Java::String::CopyTo(env, _address, address, sizeof(address));
-  Java::String::CopyTo(env, _name, name, sizeof(name));
+
+  const char *name;
+  if (_name != nullptr) {
+    Java::String::CopyTo(env, _name, name_buffer, sizeof(name_buffer));
+    name = name_buffer;
+  } else
+    name = address;
 
   LeScanCallback &cb = *(LeScanCallback *)(void *)ptr;
   cb.OnLeScan(address, name);
@@ -53,8 +59,7 @@ Java_org_xcsoar_NativeLeScanCallback_onLeScan(JNIEnv *env, jobject obj,
 void
 NativeLeScanCallback::Initialise(JNIEnv *env)
 {
-  if (android_api_level < 18 ||
-      !cls.FindOptional(env, "org/xcsoar/NativeLeScanCallback"))
+  if (!cls.FindOptional(env, "org/xcsoar/NativeLeScanCallback"))
     /* Bluetooth LE not supported on this Android version */
     return;
 
